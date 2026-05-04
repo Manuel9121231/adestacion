@@ -1129,20 +1129,21 @@ async function apiFetch(url, options = {}) {
 
     if (url.includes('/api/all-data')) {
       const [salas, equipos, registros] = await Promise.all([
-        client.from('salas').select('*'),
-        client.from('equipos').select('*, salas(nombre)'),
-        client.from('registros').select('*').order('timestamp', { ascending: false }).limit(200)
+        client.from('salas').select('*').order('nombre'),
+        client.from('equipos').select('*, salas(nombre)').order('nombre'),
+        client.from('registros').select('*').order('timestamp', { ascending: false }).limit(500)
       ]);
-      const now = new Date();
-      const hoy = now.toISOString().split('T')[0];
-      const haceUnaSemana = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      if (salas.error) throw salas.error;
+      if (equipos.error) throw equipos.error;
+      if (registros.error) throw registros.error;
+
       const regs = registros.data || [];
-      
       const formattedMaquinas = (equipos.data || []).map(m => {
         const frec = m.frecuencia_dias || 7;
         let estadoMant = 'pendiente';
         if (m.ultimo_mantenimiento) {
-          const dif = (now - new Date(m.ultimo_mantenimiento)) / (1000 * 60 * 60 * 24);
+          const dif = (new Date() - new Date(m.ultimo_mantenimiento)) / (1000 * 60 * 60 * 24);
           if (dif > frec) estadoMant = 'vencido'; else if (dif > frec * 0.8) estadoMant = 'proximo'; else estadoMant = 'ok';
         }
         return { ...m, sala_nombre: m.salas ? m.salas.nombre : 'Sin sala', estado_mantenimiento: estadoMant };
@@ -1150,17 +1151,43 @@ async function apiFetch(url, options = {}) {
 
       const porDiaMap = {}; const porMaquinaMap = {};
       regs.forEach(r => {
-        const dia = r.timestamp.split('T')[0];
-        porDiaMap[dia] = (porDiaMap[dia] || 0) + 1;
-        porMaquinaMap[r.maquina_nombre] = (porMaquinaMap[r.maquina_nombre] || 0) + 1;
+        if (r.timestamp) {
+          const dia = r.timestamp.split('T')[0];
+          porDiaMap[dia] = (porDiaMap[dia] || 0) + 1;
+        }
+        if (r.maquina_nombre) {
+          porMaquinaMap[r.maquina_nombre] = (porMaquinaMap[r.maquina_nombre] || 0) + 1;
+        }
       });
 
       return {
         ok: true,
         data: {
-          salas: salas.data, maquinas: formattedMaquinas,
-          historial: regs.map(r => ({ id: r.id, maquina: r.maquina_nombre, sala: r.sala_nombre, operario: r.operario_nombre, iniciado_en: r.timestamp, completado_en: r.timestamp, observaciones: r.notas || '', tipo: r.tipo, resuelta: r.resuelta || false, en_seguimiento: r.en_seguimiento || false, comentario_resolucion: r.comentario_resolucion, fotos: r.photos || [], tiene_fotos: (r.photos && r.photos.length > 0) })),
-          dashboard: { hoy: regs.filter(r => r.timestamp.startsWith(hoy)).length, semana: regs.filter(r => r.timestamp >= haceUnaSemana).length, pendientes: formattedMaquinas.filter(m => m.estado_mantenimiento === 'vencido' || m.estado_mantenimiento === 'pendiente').length, proximos: formattedMaquinas.filter(m => m.estado_mantenimiento === 'proximo').length, porDia: Object.entries(porDiaMap).map(([dia, total]) => ({ dia, total })).sort((a,b) => a.dia.localeCompare(b.dia)), porMaquina: Object.entries(porMaquinaMap).map(([nombre, total_sesiones]) => ({ nombre, total_sesiones })).sort((a,b) => b.total_sesiones - a.total_sesiones) }
+          salas: salas.data, 
+          maquinas: formattedMaquinas,
+          historial: regs.map(r => ({ 
+            id: r.id, 
+            maquina: r.maquina_nombre || 'Desconocida', 
+            sala: r.sala_nombre || 'Sin sala', 
+            operario: r.operario_nombre || 'Anónimo', 
+            iniciado_en: r.timestamp, 
+            completado_en: r.timestamp, 
+            observaciones: r.notas || '', 
+            tipo: r.tipo, 
+            resuelta: r.resuelta || false, 
+            en_seguimiento: r.en_seguimiento || false, 
+            comentario_resolucion: r.comentario_resolucion, 
+            fotos: r.photos || [], 
+            tiene_fotos: (r.photos && r.photos.length > 0) 
+          })),
+          dashboard: { 
+            hoy: regs.filter(r => r.timestamp && r.timestamp.startsWith(new Date().toISOString().split('T')[0])).length, 
+            semana: regs.filter(r => r.timestamp && new Date(r.timestamp) >= new Date(Date.now() - 7*24*60*60*1000)).length, 
+            pendientes: formattedMaquinas.filter(m => m.estado_mantenimiento === 'vencido' || m.estado_mantenimiento === 'pendiente').length, 
+            proximos: formattedMaquinas.filter(m => m.estado_mantenimiento === 'proximo').length, 
+            porDia: Object.entries(porDiaMap).map(([dia, total]) => ({ dia, total })).sort((a,b) => a.dia.localeCompare(b.dia)), 
+            porMaquina: Object.entries(porMaquinaMap).map(([nombre, total_sesiones]) => ({ nombre, total_sesiones })).sort((a,b) => b.total_sesiones - a.total_sesiones) 
+          }
         }
       };
     }

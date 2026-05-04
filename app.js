@@ -66,38 +66,38 @@ async function apiFetch(url, options = {}) {
   }
 
   if (url.includes('/api/incidencias') && method === 'POST') {
-    // 1. First, find all details of the machine (including sala)
+    // 1. Buscar detalles de la máquina
     const { data: machine, error: mError } = await client
       .from('equipos')
       .select('*, salas(nombre)')
       .or(`id.eq."${payload.assetId}",nombre.eq."${payload.assetId}"`)
-      .single();
+      .maybeSingle();
 
-    if (mError) {
-      console.error("Machine not found for incident:", payload.assetId);
-    }
-
-    // 2. Upload photos if any
+    // 2. Subir fotos si existen
     let photoUrls = [];
     if (payload.photos && payload.photos.length > 0) {
       photoUrls = await handlePhotoUploads(payload.photos);
     }
 
-    // 3. Insert record with FULL details
+    // 3. Insertar registro
     const { data: registro, error: rError } = await client
       .from('registros')
       .insert({
-        maquina_id: machine ? machine.id : payload.assetId,
-        maquina_nombre: machine ? machine.nombre : payload.assetId,
+        maquina_id: machine ? machine.id : null,
+        maquina_nombre: machine ? machine.nombre : (payload.assetId || 'Desconocida'),
         sala_nombre: (machine && machine.salas) ? machine.salas.nombre : 'Sin sala',
-        operario_nombre: 'Usuario (Incidencia)', // Fixed label for incidents
+        operario_nombre: 'Usuario (Web)',
         tipo: payload.type || 'Incidencia',
-        notas: payload.notas,
+        notas: payload.notas || '',
         photos: photoUrls,
-        timestamp: payload.timestamp || new Date().toISOString()
+        timestamp: new Date().toISOString()
       })
       .select()
       .single();
+
+    if (rError) throw rError;
+    return { json: async () => ({ ok: true, data: registro }) };
+  }
 
     if (rError) throw rError;
 

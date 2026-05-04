@@ -4,14 +4,20 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 console.log("Initializing Supabase Client...");
 
-if (!window.supabase) {
-  console.error("Supabase SDK not found! Check your internet connection or script tags.");
-} else {
+function initSupabase() {
+  const lib = window.supabase;
+  if (!lib) {
+    console.warn("Supabase SDK not ready yet, retrying...");
+    setTimeout(initSupabase, 100);
+    return;
+  }
+  
   try {
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.supabaseClient = supabaseClient;
+    window.supabaseClient = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log("✅ Supabase Client initialized successfully.");
   } catch (err) {
     console.error("❌ Error initializing Supabase:", err);
   }
 }
+
+initSupabase();
