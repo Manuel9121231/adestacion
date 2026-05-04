@@ -1250,7 +1250,14 @@ async function apiFetch(url, options = {}) {
     }
 
     return { ok: false, error: 'Endpoint not implemented' };
-  } catch (err) { console.error('Error apiFetch:', err); return { ok: false, error: err.message }; }
+  } catch (err) { 
+    console.error('🔴 Error apiFetch:', err); 
+    // Si es un error de columna faltante, dar una pista clara
+    if (err.message && err.message.includes('maquina_nombre')) {
+      alert("Error Crítico: La base de datos no tiene la columna 'maquina_nombre'. Por favor, ejecuta el script SQL de reparación.");
+    }
+    return { ok: false, error: err.message }; 
+  }
 }
 
 async function intentarLogin() {

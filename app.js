@@ -112,6 +112,13 @@ async function apiFetch(url, options = {}) {
   }
 
   return { json: async () => ({ ok: false, error: 'Endpoint not implemented in Supabase wrapper' }) };
+} catch (err) {
+  console.error('🔴 Error apiFetch (Operario):', err);
+  if (err.message && err.message.includes('maquina_nombre')) {
+    alert("Error de Base de Datos: Falta la columna 'maquina_nombre'. Contacta con el Administrador.");
+  }
+  throw err;
+}
 }
 
 async function handlePhotoUploads(base64Photos) {

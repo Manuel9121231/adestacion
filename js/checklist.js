@@ -433,9 +433,11 @@ async function apiFetch(url, options = {}) {
     }
 
     return { ok: false, error: 'Endpoint not implemented' };
-
   } catch (err) {
-    console.error('Error in Supabase Checklist API:', err);
+    console.error('🔴 Error apiFetch (Checklist):', err);
+    if (err.message && err.message.includes('maquina_nombre')) {
+      alert("Error Crítico: Falta la columna 'maquina_nombre' en la base de datos.");
+    }
     return { ok: false, error: err.message };
   }
 }
