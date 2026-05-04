@@ -164,6 +164,7 @@ const DASHBOARD_HTML = `
                 style="width:160px;padding:8px 12px;font-size:13px">
                 <option value="">Todas las salas</option>
               </select>
+              <button class="btn btn-outline" onclick="abrirModalGestionSalas()" id="btnGestionarSalas">🏠 Salas</button>
               <button class="btn btn-primary" onclick="abrirModalNuevaMaquina()" id="btnNuevaMaquina">+ Nueva máquina</button>
             </div>
           </div>
@@ -582,5 +583,43 @@ const DASHBOARD_HTML = `
       </div>
     </div>
   </div>
+
+  <!-- ── Modal: Gestión Salas ── -->
+  <div class="overlay" id="modalGestionSalas">
+    <div class="modal" style="max-width:500px; width: 90%">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">🏠 Gestionar Salas</div>
+          <div style="font-size:12px;color:var(--text-muted)">Crea o elimina salas de trabajo</div>
+        </div>
+        <button class="modal-close" onclick="cerrarModal('modalGestionSalas')">✕</button>
+      </div>
+      
+      <div class="form-group" style="background:var(--bg-secondary); padding:16px; border-radius:12px; margin-bottom:20px">
+        <label class="form-label">Nombre de la nueva sala</label>
+        <div style="display:flex; gap:8px">
+          <input type="text" id="nuevaSalaNombre" class="form-control" placeholder="Ej: Laboratorio Prototipado">
+          <button class="btn btn-primary" onclick="crearSala()">+ Añadir</button>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="max-height:300px; overflow-y:auto; background:rgba(0,0,0,0.2)">
+        <table style="width:100%">
+          <thead>
+            <tr>
+              <th style="padding:10px">Nombre</th>
+              <th style="padding:10px; text-align:right">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="listaSalasGestion"></tbody>
+        </table>
+      </div>
+
+      <div class="modal-footer" style="margin-top:20px">
+        <button class="btn btn-outline" onclick="cerrarModal('modalGestionSalas')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   </div>
 `;

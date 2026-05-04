@@ -390,11 +390,7 @@ function renderMaquinas() {
     : datosMaquinas;
 
   if (!lista.length) {
-    if (isCargando) {
-       grid.innerHTML = skeletonMaquinas();
-    } else {
-       grid.innerHTML = '<div class="empty-state"><div class="icon">🖨️</div><p>No hay máquinas en esta sala</p></div>';
-    }
+    grid.innerHTML = '<div class="empty-state"><div class="icon">🖨️</div><p>No hay máquinas registradas</p></div>';
     return;
   }
 
@@ -403,12 +399,12 @@ function renderMaquinas() {
       ? `Último: ${formatFechaHora(m.ultimo_mantenimiento)}`
       : 'Sin mantenimiento registrado';
 
-    const dims = (m.ancho_mm && m.alto_mm && m.profundidad_mm)
-      ? `📐 ${m.ancho_mm} × ${m.alto_mm} × ${m.profundidad_mm} mm`
-      : '';
-
     return `
-      <div class="maquina-card fade-in" onclick="verHistorialMaquina('${m.nombre}')" style="cursor:pointer" title="Ver historial completo">
+      <div class="maquina-card fade-in" 
+           draggable="true" 
+           ondragstart="handleDragStart(event, '${m.id}')"
+           onclick="verHistorialMaquina('${m.id}')" 
+           style="cursor:grab" title="Arrastra para mover de sala">
         <div class="maquina-header">
           <div>
             <div class="maquina-nombre">${m.nombre}</div>
@@ -416,38 +412,33 @@ function renderMaquinas() {
           </div>
         </div>
         <div class="maquina-info">
-          <span>🏭 ${m.sala_nombre}</span>
+          <span style="font-size:11px; color:var(--accent)">📍 ${m.sala_nombre || 'Sin sala'}</span>
           <span>⚙️ ${m.modelo || 'Sin modelo'}</span>
-          ${dims ? `<span>${dims}</span>` : ''}
           <span>🕐 ${ultimo}</span>
-          ${m.notas ? `<span style="color:var(--text-muted);font-size:11px">📝 ${m.notas}</span>` : ''}
         </div>
         <div class="maquina-actions">
-          ${rolActual === 'admin' ? `
-            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">📱 QR</button>
-            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); verHistorialMaquina('${m.id}')" style="background:rgba(79, 142, 247, 0.1); border-color:var(--accent)">📋 Historial</button>
-            <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarMaquina('${m.id}')">✏️ Editar</button>
-            <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="event.stopPropagation(); eliminarMaquina('${m.id}')" title="Eliminar máquina">🗑️</button>
-          ` : `
-            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">📱 QR</button>
-          `}
+           <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarMaquina('${m.id}')">✏️</button>
+           <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation(); eliminarMaquina('${m.id}')">🗑️</button>
         </div>
       </div>
     `;
   }
 
-  function seccionEspacio(titulo, icono, color, maquinas) {
-    if (!maquinas.length) return '';
+  function seccionEspacio(idSala, titulo, icono, color, maquinas) {
     return `
-      <div class="espacio-section" style="margin-bottom:32px">
-        <div class="espacio-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px 16px;background:${color};border-radius:12px;border-left:4px solid var(--primary)">
+      <div class="espacio-section drop-zone" 
+           ondragover="handleDragOver(event)" 
+           ondragleave="handleDragLeave(event)"
+           ondrop="handleDrop(event, '${idSala}')"
+           style="margin-bottom:32px; padding:16px; border-radius:16px; transition: all 0.3s; border: 2px dashed transparent; background: ${color}">
+        <div class="espacio-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
           <span style="font-size:22px">${icono}</span>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--text-primary)">${titulo}</div>
             <div style="font-size:12px;color:var(--text-muted)">${maquinas.length} máquina${maquinas.length !== 1 ? 's' : ''}</div>
           </div>
         </div>
-        <div class="grid-maquinas-inner">
+        <div class="grid-maquinas-inner" style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; display: grid;">
           ${maquinas.map(tarjetaMaquina).join('')}
         </div>
       </div>
@@ -455,24 +446,65 @@ function renderMaquinas() {
   }
 
   let htmlResult = '';
-  const bgColors = ['rgba(79,142,247,0.08)', 'rgba(16,185,129,0.08)', 'rgba(245,158,11,0.08)', 'rgba(139,92,246,0.08)', 'rgba(236,72,153,0.08)'];
-  const iconos = ['🛠️', '🤖', '🖨️', '⚙️', '🏗️'];
+  const bgColors = ['rgba(79,142,247,0.05)', 'rgba(16,185,129,0.05)', 'rgba(245,158,11,0.05)', 'rgba(139,92,246,0.05)'];
+  const iconos = ['🏭', '🤖', '⚙️', '🏗️'];
 
   datosSalas.forEach((sala, index) => {
     if (salaFiltro && String(sala.id) !== String(salaFiltro)) return;
     const maquinasSala = lista.filter(m => m.sala_id === sala.id);
-    if (maquinasSala.length > 0) {
-      const color = bgColors[index % bgColors.length];
-      const icono = iconos[index % iconos.length];
-      htmlResult += seccionEspacio(sala.nombre, icono, color, maquinasSala);
-    }
+    const color = bgColors[index % bgColors.length];
+    const icono = iconos[index % iconos.length];
+    htmlResult += seccionEspacio(sala.id, sala.nombre, icono, color, maquinasSala);
   });
 
-  const maquinasSinSala = lista.filter(m => !m.sala_id);
-  if (maquinasSinSala.length > 0) {
-    htmlResult += seccionEspacio('Otras Máquinas', '🖨️', 'rgba(107,114,128,0.08)', maquinasSinSala);
+  // Sección para máquinas sin sala asignada
+  const sinSala = lista.filter(m => !m.sala_id);
+  if (sinSala.length > 0 && !salaFiltro) {
+    htmlResult += seccionEspacio('', 'Sin Sala Asignada', '❓', 'rgba(100,100,100,0.05)', sinSala);
   }
+
   grid.innerHTML = htmlResult;
+}
+
+// ── Lógica Drag & Drop ──────────────────────────────────────────────────────
+function handleDragStart(e, id) {
+  e.dataTransfer.setData('text/plain', id);
+  e.currentTarget.style.opacity = '0.4';
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.style.borderColor = 'var(--accent)';
+  e.currentTarget.style.background = 'rgba(79,142,247,0.1)';
+}
+
+function handleDragLeave(e) {
+  e.currentTarget.style.borderColor = 'transparent';
+  e.currentTarget.style.background = ''; // Se restaura por CSS o inline original
+}
+
+async function handleDrop(e, idSalaDestino) {
+  e.preventDefault();
+  const idMaquina = e.dataTransfer.getData('text/plain');
+  e.currentTarget.style.borderColor = 'transparent';
+  e.currentTarget.style.background = '';
+
+  if (!idMaquina) return;
+
+  try {
+    const { error } = await window.supabaseClient
+      .from('equipos')
+      .update({ sala_id: idSalaDestino || null })
+      .eq('id', idMaquina);
+
+    if (error) throw error;
+
+    await recargarTodo();
+    renderMaquinas();
+  } catch (err) {
+    console.error("Error al mover máquina:", err);
+    alert("No se pudo mover la máquina");
+  }
 }
 
 function filtrarMaquinas() { renderMaquinas(); }
@@ -1431,4 +1463,118 @@ function iniciarTour() {
     ]
   });
   driverObj.drive();
+}
+
+// ── Gestión de Salas ────────────────────────────────────────────────────────
+function abrirModalGestionSalas() {
+  abrirModal('modalGestionSalas');
+  renderListaSalas();
+}
+
+function renderListaSalas() {
+  const tbody = document.getElementById('listaSalasGestion');
+  if (!tbody) return;
+
+  if (datosSalas.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--text-muted)">No hay salas creadas.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = datosSalas.map(s => `
+    <tr>
+      <td style="padding:10px">
+        <input type="text" class="form-control" value="${s.nombre}" 
+          style="padding:4px 8px; font-weight:600; background:transparent"
+          onchange="editarSala('${s.id}', this.value)"
+        >
+      </td>
+      <td style="padding:10px;text-align:right">
+        <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:rgba(239,68,68,0.2)" 
+          onclick="borrarSala('${s.id}', '${s.nombre}')">
+          🗑️
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function editarSala(id, nuevoNombre) {
+  if (!nuevoNombre.trim()) return;
+  try {
+    const { error } = await window.supabaseClient
+      .from('salas')
+      .update({ nombre: nuevoNombre })
+      .eq('id', id);
+
+    if (error) throw error;
+    await recargarTodo();
+    poblarSelectsSalas();
+  } catch (err) {
+    console.error("Error al editar sala:", err);
+  }
+}
+
+async function crearSala() {
+  const input = document.getElementById('nuevaSalaNombre');
+  const nombre = input.value.trim();
+  if (!nombre) return alert("Escribe un nombre para la sala");
+
+  try {
+    const { data, error } = await window.supabaseClient
+      .from('salas')
+      .insert([{ nombre }])
+      .select();
+
+    if (error) throw error;
+
+    input.value = '';
+    await recargarTodo();
+    renderListaSalas();
+    poblarSelectsSalas();
+    alert("✅ Sala creada correctamente");
+  } catch (err) {
+    console.error("Error al crear sala:", err);
+    alert("Error al crear la sala");
+  }
+}
+
+async function borrarSala(id, nombre) {
+  const maquinasEnSala = datosMaquinas.filter(m => m.sala_id === id);
+  if (maquinasEnSala.length > 0) {
+    return alert(`No puedes borrar la sala "${nombre}" porque tiene ${maquinasEnSala.length} máquinas asociadas.`);
+  }
+
+  try {
+    const { error } = await window.supabaseClient
+      .from('salas')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    await recargarTodo();
+    renderListaSalas();
+    poblarSelectsSalas();
+  } catch (err) {
+    console.error("Error al borrar sala:", err);
+  }
+}
+
+function poblarSelectsSalas() {
+  ['filtroSalaMaquinas', 'filtroSala', 'filtroSalaQR', 'nuevoMaquinaSala'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const currentVal = el.value;
+    if (id !== 'nuevoMaquinaSala') {
+      el.innerHTML = '<option value="">Todas las salas</option>';
+    } else {
+      el.innerHTML = '<option value="">Seleccione una sala...</option>';
+    }
+    datosSalas.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id; opt.textContent = s.nombre;
+      el.appendChild(opt);
+    });
+    el.value = currentVal;
+  });
 }

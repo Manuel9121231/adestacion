@@ -253,23 +253,37 @@ tr:hover td { background: var(--bg-card-hover); }
 
 /* ── Modal / Overlay ─────────────────────────────────────────────────────── */
 .overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(4px);
-  z-index: 200; display: none;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 2000; display: none;
   place-items: center;
+  padding: 20px;
+  overflow-y: auto;
 }
 .overlay.open { display: grid; }
 .modal {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 28px; width: 90%; max-width: 480px;
-  box-shadow: var(--shadow);
-  animation: scaleIn 0.2s ease;
+  border-radius: 20px;
+  padding: 24px; width: 100%; max-width: 550px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+  animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
+
+/* Scroll interno para el contenido del modal */
+.modal > div:not(.modal-header):not(.modal-footer) {
+  overflow-y: auto;
+  padding-right: 8px;
+  flex: 1;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .modal-title { font-size: 18px; font-weight: 700; }
@@ -591,13 +605,14 @@ tr:hover td { background: var(--bg-card-hover); }
   .grid-maquinas-inner { grid-template-columns: 1fr; }
 
   /* Modal */
-  .overlay { align-items: flex-end; padding-bottom: 0; }
+  .overlay { align-items: flex-end; padding: 0; }
   .modal {
-    padding: 20px 16px 24px;
+    padding: 20px 16px 32px;
     width: 100%;
     max-width: 100% !important;
-    border-radius: 16px 16px 0 0;
+    border-radius: 24px 24px 0 0;
     margin: 0;
+    max-height: 85vh;
   }
 
   /* Botones en máquinas */
