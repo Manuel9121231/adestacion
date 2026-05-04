@@ -1128,10 +1128,9 @@ async function apiFetch(url, options = {}) {
     }
 
     if (url.includes('/api/all-data')) {
-      const [salas, equipos, usuarios, registros] = await Promise.all([
+      const [salas, equipos, registros] = await Promise.all([
         client.from('salas').select('*'),
         client.from('equipos').select('*, salas(nombre)'),
-        client.from('usuarios').select('*').eq('activo', true),
         client.from('registros').select('*').order('timestamp', { ascending: false }).limit(200)
       ]);
       const now = new Date();
@@ -1159,7 +1158,7 @@ async function apiFetch(url, options = {}) {
       return {
         ok: true,
         data: {
-          salas: salas.data, maquinas: formattedMaquinas, usuarios: usuarios.data,
+          salas: salas.data, maquinas: formattedMaquinas,
           historial: regs.map(r => ({ id: r.id, maquina: r.maquina_nombre, sala: r.sala_nombre, operario: r.operario_nombre, iniciado_en: r.timestamp, completado_en: r.timestamp, observaciones: r.notas || '', tipo: r.tipo, resuelta: r.resuelta || false, en_seguimiento: r.en_seguimiento || false, comentario_resolucion: r.comentario_resolucion, fotos: r.photos || [], tiene_fotos: (r.photos && r.photos.length > 0) })),
           dashboard: { hoy: regs.filter(r => r.timestamp.startsWith(hoy)).length, semana: regs.filter(r => r.timestamp >= haceUnaSemana).length, pendientes: formattedMaquinas.filter(m => m.estado_mantenimiento === 'vencido' || m.estado_mantenimiento === 'pendiente').length, proximos: formattedMaquinas.filter(m => m.estado_mantenimiento === 'proximo').length, porDia: Object.entries(porDiaMap).map(([dia, total]) => ({ dia, total })).sort((a,b) => a.dia.localeCompare(b.dia)), porMaquina: Object.entries(porMaquinaMap).map(([nombre, total_sesiones]) => ({ nombre, total_sesiones })).sort((a,b) => b.total_sesiones - a.total_sesiones) }
         }
