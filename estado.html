@@ -3,255 +3,469 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Estado de Equipos — Gestión Impresoras</title>
+  <title>Estado de Equipos</title>
   <link rel="icon" type="image/png" href="favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0f0f1a;
-      --card-bg: #1a1a2e;
-      --text: #ffffff;
-      --text-muted: #94a3b8;
-      --success: #10b981;
-      --danger: #ff4757;
-      --warning: #f59e0b;
-      --border: rgba(255, 255, 255, 0.08);
-      --accent: #4f8ef7;
+      --bg:        #080c14;
+      --surface:   #0d1219;
+      --row-bg:    #111824;
+      --row-alt:   #0f1520;
+      --ok:        #00d97e;
+      --ok-bg:     rgba(0, 217, 126, 0.08);
+      --ok-border: rgba(0, 217, 126, 0.18);
+      --err:       #ff3b5c;
+      --err-bg:    rgba(255, 59, 92, 0.08);
+      --err-border:rgba(255, 59, 92, 0.18);
+      --text:      #e8eeff;
+      --muted:     #3b4d6a;
+      --dim:       #6b7fa0;
+      --accent:    #3d8bff;
+      --border:    rgba(255,255,255,0.06);
+      --row-h:     62px;
     }
 
-    * { margin: 0; padding: 0; box-box: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-    body {
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
       background: var(--bg);
       color: var(--text);
-      padding: 60px 40px;
-      min-height: 100vh;
-      overflow-x: hidden;
     }
 
-    .container {
-      max-width: 1600px;
-      margin: 0 auto;
-    }
+    /* ── LAYOUT: header | body | progress ── */
+    body { display: grid; grid-template-rows: 60px 1fr 6px; }
 
+    /* ═══════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════ */
     header {
-      text-align: left;
-      margin-bottom: 80px;
-      border-left: 6px solid var(--accent);
-      padding-left: 30px;
-    }
-
-    header h1 {
-      font-size: 56px;
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      text-transform: uppercase;
-    }
-
-    header p {
-      color: var(--text-muted);
-      font-size: 20px;
-      margin-top: 10px;
-    }
-
-    .status-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-      gap: 30px;
-    }
-
-    .machine-card {
-      background: var(--card-bg);
-      border: 2px solid var(--border);
-      border-radius: 30px;
-      padding: 40px;
-      position: relative;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 220px;
-    }
-
-    .machine-card.is-repair {
-      border-color: rgba(255, 71, 87, 0.3);
-      box-shadow: 0 0 40px rgba(255, 71, 87, 0.05);
-    }
-
-    .machine-card.is-operative {
-      border-color: rgba(16, 185, 129, 0.3);
-      box-shadow: 0 0 40px rgba(16, 185, 129, 0.05);
-    }
-
-    .machine-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .machine-code {
-      font-size: 16px;
-      font-weight: 900;
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.05);
-      padding: 8px 16px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-    }
-
-    .machine-name {
-      font-size: 32px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      letter-spacing: -0.02em;
-    }
-
-    .machine-sala {
-      font-size: 18px;
-      color: var(--text-muted);
-    }
-
-    .status-indicator {
       display: flex;
       align-items: center;
-      gap: 15px;
-      font-weight: 900;
-      font-size: 18px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-top: 30px;
+      gap: 20px;
+      padding: 0 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
     }
 
-    .dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      position: relative;
+    .h-accent {
+      width: 4px; height: 28px;
+      background: linear-gradient(180deg, var(--accent), #7c3aed);
+      border-radius: 3px;
     }
 
-    .dot::after {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      border-radius: 50%;
-      background: currentColor;
-      filter: blur(8px);
-      opacity: 0.8;
-      animation: pulse 2s infinite;
+    .h-title { font-size: 20px; font-weight: 900; letter-spacing: -.03em; }
+
+    .h-sala {
+      font-size: 14px; font-weight: 700;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      padding: 5px 16px; border-radius: 50px;
+      color: var(--dim);
+    }
+    .h-sala b { color: var(--text); }
+
+    .h-gap { flex: 1; }
+
+    .nav-dots { display: flex; gap: 8px; align-items: center; }
+    .ndot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted); transition: all .3s;
+    }
+    .ndot.on {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      width: 24px; border-radius: 4px;
     }
 
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.8); opacity: 0.2; }
-      100% { transform: scale(1); opacity: 0.8; }
+    .chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 18px; border-radius: 50px;
+      font-size: 15px; font-weight: 800;
+    }
+    .chip-ok  { background: var(--ok-bg);  color: var(--ok);  border: 1px solid var(--ok-border); }
+    .chip-err { background: var(--err-bg); color: var(--err); border: 1px solid var(--err-border); }
+    .cdot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .chip-ok .cdot { box-shadow: 0 0 6px var(--ok); animation: pulse 2s infinite; }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    .h-time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+    /* ═══════════════════════════════════════
+       MAIN — dos paneles
+    ═══════════════════════════════════════ */
+    .panels {
+      display: grid;
+      /* columnas ajustadas dinámicamente desde JS */
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      overflow: hidden;
     }
 
-    .status-operative { color: var(--success); }
-    .status-repair { color: var(--danger); }
-
-    .loader {
+    /* ═══════════════════════════════════════
+       PANEL (ok / err)
+    ═══════════════════════════════════════ */
+    .panel {
       display: flex;
-      justify-content: center;
-      padding: 100px;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+    .panel:last-child { border-right: none; }
+
+    /* Cabecera del panel */
+    .panel-hdr {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 28px;
+      height: 48px;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
     }
 
+    .panel-hdr.ok  { background: var(--ok-bg);  color: var(--ok);  border-bottom-color: var(--ok-border); }
+    .panel-hdr.err { background: var(--err-bg); color: var(--err); border-bottom-color: var(--err-border); }
+
+    .panel-hdr .pdot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+    .panel-hdr.ok .pdot { box-shadow: 0 0 6px var(--ok); animation: pulse 2s infinite; }
+
+    .panel-cnt { margin-left: auto; font-size: 14px; font-weight: 900; opacity: .8; }
+
+    /* Lista de filas */
+    .row-list {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Fila de máquina — altura fija, legible */
+    .mrow {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 28px;
+      height: var(--row-h);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .mrow:nth-child(odd)  { background: var(--row-bg); }
+    .mrow:nth-child(even) { background: var(--row-alt); }
+
+    /* Dot de estado */
+    .row-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .ok  .row-dot { background: var(--ok);  box-shadow: 0 0 10px var(--ok); animation: pulse 2.5s infinite; }
+    .err .row-dot { background: var(--err); box-shadow: 0 0 6px var(--err); }
+
+    /* Nombre — ocupa todo el espacio disponible */
+    .row-name {
+      flex: 1;
+      font-size: 22px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: -.01em;
+    }
+    .err .row-name { color: var(--dim); }
+
+    /* Tipo (FDM, SLA…) */
+    .row-type {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    /* Código */
+    .row-code {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--dim);
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.07);
+      padding: 5px 14px;
+      border-radius: 8px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      flex-shrink: 0;
+      min-width: 90px;
+      text-align: center;
+    }
+
+    /* Estado badge (solo en columna err) */
+    .row-badge {
+      font-size: 12px; font-weight: 800;
+      letter-spacing: .07em; text-transform: uppercase;
+      padding: 5px 12px; border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .badge-err { color: var(--err); background: var(--err-bg); border: 1px solid var(--err-border); }
+
+    /* Panel vacío */
+    .panel-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    /* ═══════════════════════════════════════
+       PROGRESS BAR
+    ═══════════════════════════════════════ */
+    .progress-track { background: rgba(255,255,255,.05); }
+    #pbar { height: 100%; background: linear-gradient(90deg, var(--accent), #7c3aed); }
+
+    /* ═══════════════════════════════════════
+       LOADER
+    ═══════════════════════════════════════ */
+    #loader {
+      grid-column: 1/-1;
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; font-size: 16px; color: var(--dim);
+    }
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid rgba(255,255,255,0.1);
+      width: 30px; height: 30px;
+      border: 3px solid rgba(255,255,255,.06);
       border-top-color: var(--accent);
       border-radius: 50%;
-      animation: spin 1s linear infinite;
+      animation: spin .8s linear infinite;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 600px) {
-      header h1 { font-size: 26px; }
-      .status-grid { grid-template-columns: 1fr; }
-    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
 </head>
 <body>
 
-  <div class="container">
-    <header>
-      <h1>Disponibilidad de Equipos</h1>
-    </header>
+<!-- HEADER -->
+<header>
+  <div class="h-accent"></div>
+  <span class="h-title">Disponibilidad de Equipos</span>
+  <div class="h-sala">Sala: <b id="hSala">—</b></div>
+  <div class="h-gap"></div>
+  <div class="nav-dots" id="navDots"></div>
+  <div class="chip chip-ok"><div class="cdot"></div><span id="cntOk">—</span>&nbsp;disponibles</div>
+  <div class="chip chip-err"><div class="cdot"></div><span id="cntErr">—</span>&nbsp;fuera de servicio</div>
+  <span class="h-time" id="hTime">—</span>
+</header>
 
-    <div id="loader" class="loader">
-      <div class="spinner"></div>
-    </div>
+<!-- PANELS (el contenido se inyecta por JS) -->
+<div class="panels" id="panels">
+  <div id="loader"><div class="spinner"></div> Cargando equipos…</div>
+</div>
 
-    <div class="status-grid" id="statusGrid">
-      <!-- Inyectado por JS -->
-    </div>
-  </div>
+<!-- BARRA DE PROGRESO (tiempo hasta siguiente sala) -->
+<div class="progress-track"><div id="pbar" style="width:0;height:100%"></div></div>
 
-  <script>
-    async function loadStatus() {
-      try {
-        if (!window.supabaseClient) {
-          console.warn('Esperando a que el cliente Supabase esté listo...');
-          setTimeout(loadStatus, 500);
-          return;
-        }
-        const client = window.supabaseClient;
-        
-        // Obtenemos máquinas y salas
-        const { data: maquinas } = await client
-          .from('equipos')
-          .select('*, salas(nombre)');
+<script>
+  const SLIDE_MS   = 10000; // ms por sala
+  const REFRESH_MS = 30000; // refresco de datos
 
-        // Obtenemos incidencias abiertas
-        const { data: openInc } = await client
-          .from('registros')
-          .select('maquina_id')
-          .eq('tipo', 'Incidencia')
-          .eq('resuelta', false);
+  let salasArr = [];
+  let curIdx   = 0;
+  let slideTimer = null;
+  const ICONS = ['🖨','⚙️','🔧','🖥','📡','🏭'];
+  const iconMap = {};
 
-        const idsEnReparacion = new Set(openInc.map(i => i.maquina_id));
-        
-        renderGrid(maquinas, idsEnReparacion);
-        document.getElementById('loader').style.display = 'none';
-      } catch (err) {
-        console.error(err);
-      }
+  /* ══════════════════════════════════════════
+     CARGA DE DATOS
+  ══════════════════════════════════════════ */
+  async function loadStatus() {
+    try {
+      if (!window.supabaseClient) { setTimeout(loadStatus, 600); return; }
+      const c = window.supabaseClient;
+
+      const [mRes, iRes] = await Promise.all([
+        c.from('equipos').select('id, nombre, codigo, tipo, estado, salas(nombre)').order('nombre'),
+        c.from('registros').select('maquina_id').eq('tipo','Incidencia').eq('resuelta', false)
+      ]);
+
+      if (mRes.error) throw mRes.error;
+      if (iRes.error) throw iRes.error;
+
+      const enRep = new Set((iRes.data || []).map(i => i.maquina_id));
+
+      // Agrupar por sala
+      const bySala = {};
+      let totOk = 0, totErr = 0;
+
+      (mRes.data || []).forEach(m => {
+        const sala = m.salas?.nombre || 'Sin sala';
+        if (!bySala[sala]) bySala[sala] = { ok: [], err: [] };
+
+        const inactiva = (m.estado || '').toLowerCase().trim() !== 'activa';
+        const incidencia = enRep.has(m.id);
+        const down = inactiva || incidencia;
+
+        const motivo = incidencia ? 'Incidencia' : inactiva ? (m.estado || 'Inactiva') : 'Disponible';
+        const entry = { nombre: m.nombre || '—', codigo: m.codigo || 'S/ID', tipo: m.tipo || '', motivo };
+
+        if (down) { bySala[sala].err.push(entry); totErr++; }
+        else      { bySala[sala].ok.push(entry);  totOk++;  }
+      });
+
+      document.getElementById('cntOk').textContent  = totOk;
+      document.getElementById('cntErr').textContent = totErr;
+      document.getElementById('hTime').textContent  =
+        new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+      buildSlides(Object.entries(bySala).sort(([a],[b]) => a.localeCompare(b)));
+      document.getElementById('loader').style.display = 'none';
+
+    } catch (e) {
+      console.error(e);
+      document.getElementById('loader').style.display = 'flex';
+      document.getElementById('loader').innerHTML =
+        '<span style="color:var(--err)">⚠ Error al cargar. Reintentando…</span>';
+      setTimeout(loadStatus, 10000);
     }
+  }
 
-    function renderGrid(maquinas, idsEnReparacion) {
-      const grid = document.getElementById('statusGrid');
-      grid.innerHTML = maquinas.map(m => {
-        const enReparacion = idsEnReparacion.has(m.id);
-        const statusClass = enReparacion ? 'status-repair' : 'status-operative';
-        const cardClass = enReparacion ? 'is-repair' : 'is-operative';
-        const statusText = enReparacion ? 'Fuera de Servicio' : 'Disponible';
-        const dotColor = enReparacion ? 'var(--danger)' : 'var(--success)';
+  /* ══════════════════════════════════════════
+     SLIDES / CAROUSEL
+  ══════════════════════════════════════════ */
+  function buildSlides(entries) {
+    salasArr = entries;
 
-        return `
-          <div class="machine-card ${cardClass}">
-            <div class="machine-header">
-              <div>
-                <div class="machine-name">${m.nombre}</div>
-                <div class="machine-sala">📍 ${m.salas?.nombre || 'General'}</div>
-              </div>
-              <div class="machine-code">${m.codigo || 'S/ID'}</div>
-            </div>
-            
-            <div class="status-indicator ${statusClass}">
-              <div class="dot" style="background: ${dotColor}; color: ${dotColor}"></div>
-              ${statusText}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
+    // Dots de navegación
+    const navEl = document.getElementById('navDots');
+    navEl.innerHTML = entries.length > 1
+      ? entries.map((_,i) => `<div class="ndot${i===curIdx?' on':''}"></div>`).join('')
+      : '';
 
-    document.addEventListener('DOMContentLoaded', () => {
-      loadStatus();
-      setInterval(loadStatus, 30000); // Auto-refresco cada 30 segundos
+    // Asignar icono a sala nueva
+    entries.forEach(([sala]) => {
+      if (!iconMap[sala])
+        iconMap[sala] = ICONS[Object.keys(iconMap).length % ICONS.length];
     });
-  </script>
+
+    // Dibujar el slide actual
+    showSlide(curIdx);
+
+    // Timer de rotación
+    clearInterval(slideTimer);
+    if (entries.length > 1) {
+      slideTimer = setInterval(nextSlide, SLIDE_MS);
+      startProgressBar();
+    } else {
+      // Una sola sala: barra estática
+      const p = document.getElementById('pbar');
+      p.style.cssText = 'width:100%;height:100%;transition:none';
+    }
+  }
+
+  function showSlide(idx) {
+    if (!salasArr.length) return;
+    curIdx = idx;
+
+    const [sala, { ok, err }] = salasArr[idx];
+    const total = ok.length + err.length;
+
+    document.getElementById('hSala').textContent = sala;
+
+    // Proporción de columnas: más ancho a la que tiene más máquinas
+    const panels = document.getElementById('panels');
+    const okFr  = Math.max(ok.length,  1);
+    const errFr = Math.max(err.length, 1);
+    panels.style.gridTemplateColumns = `${okFr + 1}fr ${errFr + 1}fr`;
+
+    panels.innerHTML = panelHTML('ok',  'Disponibles',      ok,  total) +
+                       panelHTML('err', 'Fuera de Servicio', err, total);
+
+    // Dots
+    document.querySelectorAll('.ndot').forEach((d,i) => d.classList.toggle('on', i===idx));
+  }
+
+  function nextSlide() {
+    showSlide((curIdx + 1) % salasArr.length);
+    startProgressBar();
+  }
+
+  /* ══════════════════════════════════════════
+     HTML DE PANEL Y FILAS
+  ══════════════════════════════════════════ */
+  function panelHTML(type, label, machines, total) {
+    const isErr = type === 'err';
+    const rowsHTML = machines.length
+      ? machines.map((m, i) => rowHTML(m, isErr)).join('')
+      : `<div class="panel-empty">${isErr ? '✓ Todas disponibles' : '— Ninguna fuera de servicio'}</div>`;
+
+    return `
+      <div class="panel">
+        <div class="panel-hdr ${type}">
+          <div class="pdot"></div>
+          ${label}
+          <span class="panel-cnt">${machines.length} / ${total}</span>
+        </div>
+        <div class="row-list">${rowsHTML}</div>
+      </div>`;
+  }
+
+  function rowHTML(m, isErr) {
+    const cls = isErr ? 'err' : 'ok';
+    const badge = isErr
+      ? `<span class="row-badge badge-err">${esc(m.motivo)}</span>`
+      : '';
+    return `
+      <div class="mrow ${cls}">
+        <div class="row-dot"></div>
+        <span class="row-name">${esc(m.nombre)}</span>
+        ${m.tipo ? `<span class="row-type">${esc(m.tipo)}</span>` : ''}
+        <span class="row-code">${esc(m.codigo)}</span>
+        ${badge}
+      </div>`;
+  }
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s || '');
+    return d.innerHTML;
+  }
+
+  /* ══════════════════════════════════════════
+     BARRA DE PROGRESO
+  ══════════════════════════════════════════ */
+  function startProgressBar() {
+    const p = document.getElementById('pbar');
+    p.style.cssText = 'width:0%;height:100%;transition:none';
+    p.offsetWidth;
+    p.style.cssText = `width:100%;height:100%;transition:width ${SLIDE_MS}ms linear`;
+  }
+
+  /* ══════════════════════════════════════════
+     RELOJ EN TIEMPO REAL
+  ══════════════════════════════════════════ */
+  function tickClock() {
+    document.getElementById('hTime').textContent =
+      new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  }
+
+  /* ══════════════════════════════════════════
+     INIT
+  ══════════════════════════════════════════ */
+  document.addEventListener('DOMContentLoaded', () => {
+    loadStatus();
+    setInterval(loadStatus, REFRESH_MS);
+    setInterval(tickClock, 1000);
+  });
+</script>
 </body>
 </html>
