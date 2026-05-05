@@ -24,217 +24,175 @@
       --accent:    #3d8bff;
       --border:    rgba(255,255,255,0.06);
       --row-h:     62px;
+      --row-name-fs: 22px;
+      --row-code-fs: 14px;
     }
 
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
     html, body {
-      height: 100%;
-      overflow: hidden;
+      height: 100%; overflow: hidden;
       font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      background: var(--bg); color: var(--text);
     }
 
-    /* ── LAYOUT: header | body | progress ── */
-    body { display: grid; grid-template-rows: 60px 1fr 6px; }
+    body { display: grid; grid-template-rows: 90px 1fr 6px; }
 
-    /* ═══════════════════════════════════════
-       HEADER
-    ═══════════════════════════════════════ */
+    /* ══ HEADER ═══════════════════════════════════════════ */
     header {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
-      gap: 20px;
-      padding: 0 32px;
+      gap: 0;
+      padding: 0 40px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
     }
 
+    .h-left { display: flex; align-items: center; gap: 16px; }
     .h-accent {
-      width: 4px; height: 28px;
+      width: 5px; height: 44px;
       background: linear-gradient(180deg, var(--accent), #7c3aed);
-      border-radius: 3px;
+      border-radius: 4px; flex-shrink: 0;
     }
+    .h-titles { display: flex; flex-direction: column; gap: 4px; }
+    .h-title  { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
+    .h-sala   { font-size: 30px; font-weight: 900; letter-spacing: -.03em; color: var(--text); }
 
-    .h-title { font-size: 20px; font-weight: 900; letter-spacing: -.03em; }
-
-    .h-sala {
-      font-size: 14px; font-weight: 700;
-      background: rgba(255,255,255,.05);
-      border: 1px solid var(--border);
-      padding: 5px 16px; border-radius: 50px;
-      color: var(--dim);
-    }
-    .h-sala b { color: var(--text); }
-
-    .h-gap { flex: 1; }
-
+    .h-center { display: flex; justify-content: center; align-items: center; gap: 12px; }
     .nav-dots { display: flex; gap: 8px; align-items: center; }
     .ndot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--muted); transition: all .3s;
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800;
+      background: rgba(255,255,255,.06); color: var(--muted);
+      border: 1px solid rgba(255,255,255,.08);
+      transition: all .25s; cursor: pointer; user-select: none;
     }
+    .ndot:hover { background: rgba(255,255,255,.12); color: var(--text); }
     .ndot.on {
-      background: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
-      width: 24px; border-radius: 4px;
+      background: var(--accent); color: #fff;
+      box-shadow: 0 0 12px var(--accent);
+      border-color: var(--accent);
     }
 
+    /* Botón pause/play */
+    .pause-btn {
+      background: none; border: none;
+      color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; flex-shrink: 0;
+      padding: 4px; margin-right: 8px;
+    }
+    .pause-btn:hover { color: var(--text); transform: scale(1.1); }
+    .pause-btn.paused { color: var(--accent); }
+    .pause-btn svg { width: 22px; height: 22px; }
+
+    .h-right { display: flex; align-items: center; gap: 16px; }
     .chip {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 18px; border-radius: 50px;
-      font-size: 15px; font-weight: 800;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 8px 24px; border-radius: 14px; gap: 2px;
     }
     .chip-ok  { background: var(--ok-bg);  color: var(--ok);  border: 1px solid var(--ok-border); }
     .chip-err { background: var(--err-bg); color: var(--err); border: 1px solid var(--err-border); }
-    .cdot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-    .chip-ok .cdot { box-shadow: 0 0 6px var(--ok); animation: pulse 2s infinite; }
+    .chip-num { font-size: 36px; font-weight: 900; line-height: 1; letter-spacing: -.04em; }
+    .chip-lbl { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .8; }
+    .chip-ok .chip-num { }
+
+    .h-sep { width: 1px; height: 48px; background: var(--border); }
+    .h-time-block { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .h-time { font-size: 28px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .h-tlbl { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
 
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 
-    .h-time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
-
-    /* ═══════════════════════════════════════
-       MAIN — dos paneles
-    ═══════════════════════════════════════ */
+    /* ══ PANELES ══════════════════════════════════════════ */
     .panels {
       display: grid;
-      /* columnas ajustadas dinámicamente desde JS */
       grid-template-columns: 1fr 1fr;
-      gap: 0;
       overflow: hidden;
     }
 
-    /* ═══════════════════════════════════════
-       PANEL (ok / err)
-    ═══════════════════════════════════════ */
     .panel {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      display: flex; flex-direction: column; overflow: hidden;
       border-right: 1px solid var(--border);
     }
     .panel:last-child { border-right: none; }
 
-    /* Cabecera del panel */
     .panel-hdr {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 0 28px;
-      height: 48px;
-      flex-shrink: 0;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .12em;
-      text-transform: uppercase;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 28px; height: 48px; flex-shrink: 0;
+      font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
       border-bottom: 1px solid var(--border);
     }
-
     .panel-hdr.ok  { background: var(--ok-bg);  color: var(--ok);  border-bottom-color: var(--ok-border); }
     .panel-hdr.err { background: var(--err-bg); color: var(--err); border-bottom-color: var(--err-border); }
-
     .panel-hdr .pdot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
-    .panel-hdr.ok .pdot { box-shadow: 0 0 6px var(--ok); animation: pulse 2s infinite; }
-
+    .panel-hdr.ok .pdot { box-shadow: 0 0 6px var(--ok); }
     .panel-cnt { margin-left: auto; font-size: 14px; font-weight: 900; opacity: .8; }
 
-    /* Lista de filas */
-    .row-list {
-      flex: 1;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
+    .row-list { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 
-    /* Fila de máquina — altura fija, legible */
+    /* ══ FILA DE MÁQUINA ══════════════════════════════════ */
     .mrow {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      padding: 0 28px;
-      height: var(--row-h);
+      display: flex; align-items: center; gap: 20px;
+      padding: 0 28px; flex-shrink: 0;
       border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      height: var(--row-h);
     }
-
     .mrow:nth-child(odd)  { background: var(--row-bg); }
     .mrow:nth-child(even) { background: var(--row-alt); }
+    .mrow.ok  { border-left: 4px solid rgba(0,217,126,.4); }
+    .mrow.err { border-left: 4px solid rgba(255,59,92,.4); opacity: .82; }
 
-    /* Dot de estado */
-    .row-dot {
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .ok  .row-dot { background: var(--ok);  box-shadow: 0 0 10px var(--ok); animation: pulse 2.5s infinite; }
+    .row-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .ok  .row-dot { background: var(--ok);  box-shadow: 0 0 8px var(--ok); }
     .err .row-dot { background: var(--err); box-shadow: 0 0 6px var(--err); }
 
-    /* Nombre — ocupa todo el espacio disponible */
     .row-name {
-      flex: 1;
-      font-size: 22px;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      letter-spacing: -.01em;
+      flex: 1; font-weight: 700; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; letter-spacing: -.01em;
+      font-size: var(--row-name-fs); transition: font-size .3s;
+      min-width: 0;
     }
     .err .row-name { color: var(--dim); }
 
-    /* Tipo (FDM, SLA…) */
-    .row-type {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
-      flex-shrink: 0;
+    /* Bloque de info central — toma el espacio sobrante */
+    .row-info {
+      flex: 1; display: flex; flex-direction: column; justify-content: center;
+      gap: 3px; overflow: hidden; padding: 0 4px;
     }
+    .row-nota {
+      font-weight: 500; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; color: var(--dim);
+    }
+    .row-mant {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 4px; width: fit-content;
+    }
+    .mant-ok   { color: var(--ok);  background: rgba(0,217,126,.1); }
+    .mant-warn { color: #f59e0b;    background: rgba(245,158,11,.12); }
+    .mant-due  { color: var(--err); background: rgba(255,59,92,.12); }
 
-    /* Código */
+    .row-type { font-weight: 600; color: var(--muted); flex-shrink: 0; }
+
     .row-code {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--dim);
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.07);
-      padding: 5px 14px;
-      border-radius: 8px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      flex-shrink: 0;
-      min-width: 90px;
-      text-align: center;
+      display: none; /* oculto — no significativo para el usuario final */
     }
 
-    /* Estado badge (solo en columna err) */
     .row-badge {
-      font-size: 12px; font-weight: 800;
-      letter-spacing: .07em; text-transform: uppercase;
-      padding: 5px 12px; border-radius: 6px;
-      flex-shrink: 0;
+      font-size: 12px; font-weight: 800; letter-spacing: .07em;
+      text-transform: uppercase; padding: 5px 12px; border-radius: 6px; flex-shrink: 0;
     }
     .badge-err { color: var(--err); background: var(--err-bg); border: 1px solid var(--err-border); }
 
-    /* Panel vacío */
     .panel-empty {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      font-size: 18px;
-      color: var(--muted);
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: var(--muted);
     }
 
-    /* ═══════════════════════════════════════
-       PROGRESS BAR
-    ═══════════════════════════════════════ */
-    .progress-track { background: rgba(255,255,255,.05); }
-    #pbar { height: 100%; background: linear-gradient(90deg, var(--accent), #7c3aed); }
-
-    /* ═══════════════════════════════════════
-       LOADER
-    ═══════════════════════════════════════ */
+    /* ══ LOADER / PROGRESS ════════════════════════════════ */
     #loader {
       grid-column: 1/-1;
       display: flex; align-items: center; justify-content: center;
@@ -243,228 +201,287 @@
     .spinner {
       width: 30px; height: 30px;
       border: 3px solid rgba(255,255,255,.06);
-      border-top-color: var(--accent);
-      border-radius: 50%;
+      border-top-color: var(--accent); border-radius: 50%;
       animation: spin .8s linear infinite;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    .progress-track { background: rgba(255,255,255,.05); }
+    #pbar { height: 100%; background: linear-gradient(90deg, var(--accent), #7c3aed); }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
-  <div class="h-accent"></div>
-  <span class="h-title">Disponibilidad de Equipos</span>
-  <div class="h-sala">Sala: <b id="hSala">—</b></div>
-  <div class="h-gap"></div>
-  <div class="nav-dots" id="navDots"></div>
-  <div class="chip chip-ok"><div class="cdot"></div><span id="cntOk">—</span>&nbsp;disponibles</div>
-  <div class="chip chip-err"><div class="cdot"></div><span id="cntErr">—</span>&nbsp;fuera de servicio</div>
-  <span class="h-time" id="hTime">—</span>
+  <div class="h-left">
+    <div class="h-accent"></div>
+    <div class="h-titles">
+      <span class="h-title">Disponibilidad de Equipos</span>
+      <span class="h-sala" id="hSala">—</span>
+    </div>
+  </div>
+  <div class="h-center">
+    <button class="pause-btn" id="pauseBtn" onclick="togglePause()" title="Pausar / Reanudar rotación" style="display:none">
+      <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="6" y="4" width="4" height="16" rx="1.5"/>
+        <rect x="14" y="4" width="4" height="16" rx="1.5"/>
+      </svg>
+    </button>
+    <div class="nav-dots" id="navDots"></div>
+  </div>
+  <div class="h-right">
+    <div class="chip chip-ok">
+      <span class="chip-num" id="cntOk">—</span>
+      <span class="chip-lbl">Disponibles</span>
+    </div>
+    <div class="chip chip-err">
+      <span class="chip-num" id="cntErr">—</span>
+      <span class="chip-lbl">Fuera servicio</span>
+    </div>
+    <div class="h-sep"></div>
+    <div class="h-time-block">
+      <span class="h-time" id="hTime">—</span>
+      <span class="h-tlbl">Hora</span>
+    </div>
+  </div>
 </header>
 
-<!-- PANELS (el contenido se inyecta por JS) -->
 <div class="panels" id="panels">
   <div id="loader"><div class="spinner"></div> Cargando equipos…</div>
 </div>
 
-<!-- BARRA DE PROGRESO (tiempo hasta siguiente sala) -->
 <div class="progress-track"><div id="pbar" style="width:0;height:100%"></div></div>
 
 <script>
-  const SLIDE_MS   = 10000; // ms por sala
-  const REFRESH_MS = 30000; // refresco de datos
+  const SLIDE_MS   = 10000;
+  const REFRESH_MS = 30000;
+  const HEADER_H   = 90;
+  const PROG_H     = 6;
+  const PANEL_HDR  = 48;
 
-  let salasArr = [];
-  let curIdx   = 0;
-  let slideTimer = null;
+  let salasArr = [], curIdx = 0, slideTimer = null, paused = false;
   const ICONS = ['🖨','⚙️','🔧','🖥','📡','🏭'];
   const iconMap = {};
 
-  /* ══════════════════════════════════════════
-     CARGA DE DATOS
-  ══════════════════════════════════════════ */
+  /* ── DATOS ──────────────────────────────────────────── */
   async function loadStatus() {
     try {
       if (!window.supabaseClient) { setTimeout(loadStatus, 600); return; }
       const c = window.supabaseClient;
 
       const [mRes, iRes] = await Promise.all([
-        c.from('equipos').select('id, nombre, codigo, tipo, estado, salas(nombre)').order('nombre'),
-        c.from('registros').select('maquina_id').eq('tipo','Incidencia').eq('resuelta', false)
+        c.from('equipos').select('id,nombre,codigo,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
+        c.from('registros').select('maquina_id').eq('tipo','Incidencia').eq('resuelta',false)
       ]);
-
       if (mRes.error) throw mRes.error;
       if (iRes.error) throw iRes.error;
 
-      const enRep = new Set((iRes.data || []).map(i => i.maquina_id));
-
-      // Agrupar por sala
+      const enRep = new Set((iRes.data||[]).map(i => i.maquina_id));
       const bySala = {};
       let totOk = 0, totErr = 0;
 
-      (mRes.data || []).forEach(m => {
+      (mRes.data||[]).forEach(m => {
         const sala = m.salas?.nombre || 'Sin sala';
-        if (!bySala[sala]) bySala[sala] = { ok: [], err: [] };
-
-        const inactiva = (m.estado || '').toLowerCase().trim() !== 'activa';
+        if (!bySala[sala]) bySala[sala] = { ok:[], err:[] };
+        const inactiva   = (m.estado||'').toLowerCase().trim() !== 'activa';
         const incidencia = enRep.has(m.id);
-        const down = inactiva || incidencia;
-
-        const motivo = incidencia ? 'Incidencia' : inactiva ? (m.estado || 'Inactiva') : 'Disponible';
-        const entry = { nombre: m.nombre || '—', codigo: m.codigo || 'S/ID', tipo: m.tipo || '', motivo };
-
+        const down       = inactiva || incidencia;
+        const motivo = incidencia ? 'Incidencia' : (m.estado || 'Inactiva');
+        const entry  = {
+          nombre: m.nombre||'—', codigo: m.codigo||'S/ID',
+          tipo: m.tipo||'', notas: m.notas||'',
+          motivo,
+          mant: mantDias(m.ultimo_mantenimiento, m.frecuencia_dias)
+        };
         if (down) { bySala[sala].err.push(entry); totErr++; }
         else      { bySala[sala].ok.push(entry);  totOk++;  }
       });
 
       document.getElementById('cntOk').textContent  = totOk;
       document.getElementById('cntErr').textContent = totErr;
-      document.getElementById('hTime').textContent  =
-        new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
       buildSlides(Object.entries(bySala).sort(([a],[b]) => a.localeCompare(b)));
       document.getElementById('loader').style.display = 'none';
 
-    } catch (e) {
+    } catch(e) {
       console.error(e);
-      document.getElementById('loader').style.display = 'flex';
       document.getElementById('loader').innerHTML =
         '<span style="color:var(--err)">⚠ Error al cargar. Reintentando…</span>';
       setTimeout(loadStatus, 10000);
     }
   }
 
-  /* ══════════════════════════════════════════
-     SLIDES / CAROUSEL
-  ══════════════════════════════════════════ */
+  /* Días hasta próximo mantenimiento (negativo = vencido) */
+  function mantDias(ultimo, frecuencia) {
+    if (!ultimo || !frecuencia) return null;
+    const next = new Date(ultimo);
+    next.setDate(next.getDate() + frecuencia);
+    return Math.round((next - Date.now()) / 86400000);
+  }
+
+  /* ── CAROUSEL ───────────────────────────────────────── */
   function buildSlides(entries) {
     salasArr = entries;
 
-    // Dots de navegación
     const navEl = document.getElementById('navDots');
-    navEl.innerHTML = entries.length > 1
-      ? entries.map((_,i) => `<div class="ndot${i===curIdx?' on':''}"></div>`).join('')
-      : '';
+    if (entries.length > 1) {
+      navEl.innerHTML = entries.map((_,i) =>
+        `<div class="ndot${i===curIdx?' on':''}" onclick="goToSlide(${i})">${i+1}</div>`
+      ).join('');
+      document.getElementById('pauseBtn').style.display = 'flex';
+    } else {
+      navEl.innerHTML = '';
+      document.getElementById('pauseBtn').style.display = 'none';
+    }
 
-    // Asignar icono a sala nueva
     entries.forEach(([sala]) => {
-      if (!iconMap[sala])
-        iconMap[sala] = ICONS[Object.keys(iconMap).length % ICONS.length];
+      if (!iconMap[sala]) iconMap[sala] = ICONS[Object.keys(iconMap).length % ICONS.length];
     });
 
-    // Dibujar el slide actual
     showSlide(curIdx);
-
-    // Timer de rotación
     clearInterval(slideTimer);
-    if (entries.length > 1) {
+    if (entries.length > 1 && !paused) {
       slideTimer = setInterval(nextSlide, SLIDE_MS);
-      startProgressBar();
-    } else {
-      // Una sola sala: barra estática
-      const p = document.getElementById('pbar');
-      p.style.cssText = 'width:100%;height:100%;transition:none';
+      animBar();
+    } else if (entries.length <= 1) {
+      document.getElementById('pbar').style.cssText = 'width:100%;height:100%;transition:none';
     }
   }
 
   function showSlide(idx) {
     if (!salasArr.length) return;
     curIdx = idx;
-
-    const [sala, { ok, err }] = salasArr[idx];
+    const [sala, {ok, err}] = salasArr[idx];
     const total = ok.length + err.length;
 
     document.getElementById('hSala').textContent = sala;
 
-    // Proporción de columnas: más ancho a la que tiene más máquinas
     const panels = document.getElementById('panels');
-    const okFr  = Math.max(ok.length,  1);
-    const errFr = Math.max(err.length, 1);
-    panels.style.gridTemplateColumns = `${okFr + 1}fr ${errFr + 1}fr`;
+    // La columna de fuera de servicio siempre mínimo 30% aunque tenga 1 máquina.
+    // La columna disponibles máximo 70%. Si no hay ninguna en un lado, 50/50.
+    const total2 = ok.length + err.length || 1;
+    const errPct = err.length === 0 ? 30 : Math.max(30, Math.round(err.length / total2 * 100));
+    const okPct  = 100 - errPct;
+    panels.style.gridTemplateColumns = `${okPct}fr ${errPct}fr`;
 
-    panels.innerHTML = panelHTML('ok',  'Disponibles',      ok,  total) +
-                       panelHTML('err', 'Fuera de Servicio', err, total);
+    // Altura de fila dinámica (usa window.innerHeight para no depender del DOM)
+    const listH  = window.innerHeight - HEADER_H - PROG_H - PANEL_HDR;
+    const maxRows = Math.max(ok.length, err.length, 1);
+    const rowH   = Math.max(44, Math.min(110, Math.floor(listH / maxRows)));
+    const nameFs = Math.round(15 + (rowH - 44) * (30 - 15) / (110 - 44));
+    const codeFs = Math.round(11 + (rowH - 44) * (16 - 11) / (110 - 44));
+    const typeFs = Math.round(11 + (rowH - 44) * (14 - 11) / (110 - 44));
 
-    // Dots
-    document.querySelectorAll('.ndot').forEach((d,i) => d.classList.toggle('on', i===idx));
+    panels.style.setProperty('--row-h',       rowH   + 'px');
+    panels.style.setProperty('--row-name-fs', nameFs + 'px');
+    panels.style.setProperty('--row-code-fs', codeFs + 'px');
+
+    panels.innerHTML = panelHTML('ok',  'Disponibles',       ok,  total, nameFs, codeFs, typeFs) +
+                       panelHTML('err', 'Fuera de Servicio', err, total, nameFs, codeFs, typeFs);
+
+    // Reaplicar (innerHTML resetea estilos inline del elemento)
+    panels.style.setProperty('--row-h',       rowH   + 'px');
+    panels.style.setProperty('--row-name-fs', nameFs + 'px');
+    panels.style.setProperty('--row-code-fs', codeFs + 'px');
+
+    document.querySelectorAll('.ndot').forEach((d,i) => { d.classList.toggle('on', i===idx); });
   }
 
-  function nextSlide() {
-    showSlide((curIdx + 1) % salasArr.length);
-    startProgressBar();
+  function nextSlide() { if (!paused) { showSlide((curIdx+1) % salasArr.length); animBar(); } }
+
+  function goToSlide(idx) {
+    showSlide(idx);
+    if (!paused) { clearInterval(slideTimer); slideTimer = setInterval(nextSlide, SLIDE_MS); animBar(); }
   }
 
-  /* ══════════════════════════════════════════
-     HTML DE PANEL Y FILAS
-  ══════════════════════════════════════════ */
-  function panelHTML(type, label, machines, total) {
-    const isErr = type === 'err';
-    const rowsHTML = machines.length
-      ? machines.map((m, i) => rowHTML(m, isErr)).join('')
+  function togglePause() {
+    paused = !paused;
+    const btn  = document.getElementById('pauseBtn');
+    const icon = document.getElementById('pauseIcon');
+    btn.classList.toggle('paused', paused);
+    if (paused) {
+      clearInterval(slideTimer);
+      // Congela la barra en su posición actual
+      const p = document.getElementById('pbar');
+      const w = p.getBoundingClientRect().width / p.parentElement.getBoundingClientRect().width * 100;
+      p.style.cssText = `width:${w.toFixed(1)}%;height:100%;transition:none`;
+      icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+    } else {
+      slideTimer = setInterval(nextSlide, SLIDE_MS);
+      animBar();
+      icon.innerHTML = '<rect x="6" y="4" width="4" height="16" rx="1.5"/><rect x="14" y="4" width="4" height="16" rx="1.5"/>';
+    }
+  }
+
+  /* ── HTML ───────────────────────────────────────────── */
+  function panelHTML(type, label, machines, total, nameFs, codeFs, typeFs) {
+    const isErr  = type === 'err';
+    const rows   = machines.length
+      ? machines.map(m => rowHTML(m, isErr, nameFs, codeFs, typeFs)).join('')
       : `<div class="panel-empty">${isErr ? '✓ Todas disponibles' : '— Ninguna fuera de servicio'}</div>`;
-
-    return `
-      <div class="panel">
-        <div class="panel-hdr ${type}">
-          <div class="pdot"></div>
-          ${label}
-          <span class="panel-cnt">${machines.length} / ${total}</span>
-        </div>
-        <div class="row-list">${rowsHTML}</div>
-      </div>`;
+    return `<div class="panel">
+      <div class="panel-hdr ${type}">
+        <div class="pdot"></div>${label}
+        <span class="panel-cnt">${machines.length} / ${total}</span>
+      </div>
+      <div class="row-list">${rows}</div>
+    </div>`;
   }
 
-  function rowHTML(m, isErr) {
-    const cls = isErr ? 'err' : 'ok';
-    const badge = isErr
-      ? `<span class="row-badge badge-err">${esc(m.motivo)}</span>`
-      : '';
-    return `
-      <div class="mrow ${cls}">
-        <div class="row-dot"></div>
-        <span class="row-name">${esc(m.nombre)}</span>
-        ${m.tipo ? `<span class="row-type">${esc(m.tipo)}</span>` : ''}
-        <span class="row-code">${esc(m.codigo)}</span>
-        ${badge}
-      </div>`;
+  function rowHTML(m, isErr, nameFs, codeFs, typeFs) {
+    const cls   = isErr ? 'err' : 'ok';
+    const badge = isErr ? `<span class="row-badge badge-err">${esc(m.motivo)}</span>` : '';
+    // Bloque de información central: notas + mantenimiento
+    let infoHTML = '';
+    if (m.notas) {
+      infoHTML += `<span class="row-nota" style="font-size:${Math.round(nameFs*.6)}px">${esc(m.notas)}</span>`;
+    }
+    if (m.mant !== null) {
+      const d    = m.mant;
+      const mcls = d < 0 ? 'mant-due' : d <= 3 ? 'mant-warn' : 'mant-ok';
+      const mtxt = d < 0
+        ? `⚠ Mantenimiento vencido hace ${Math.abs(d)}d`
+        : d === 0 ? '⚠ Mantenimiento hoy'
+        : `🔧 Mant. en ${d}d`;
+      if (d <= 3) {
+        infoHTML += `<span class="row-mant ${mcls}" style="font-size:${Math.round(nameFs*.55)}px">${mtxt}</span>`;
+      }
+    }
+
+    // Solo inyectar el bloque info si hay contenido real
+    return `<div class="mrow ${cls}">
+      <div class="row-dot"></div>
+      <span class="row-name" style="font-size:${nameFs}px">${esc(m.nombre)}</span>
+      ${infoHTML ? `<div class="row-info">${infoHTML}</div>` : ''}
+      ${m.tipo ? `<span class="row-type" style="font-size:${typeFs}px">${esc(m.tipo)}</span>` : ''}
+      <span class="row-code" style="font-size:${codeFs}px">${esc(m.codigo)}</span>
+      ${badge}
+    </div>`;
   }
 
   function esc(s) {
-    const d = document.createElement('div');
-    d.textContent = String(s || '');
-    return d.innerHTML;
+    const d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML;
   }
 
-  /* ══════════════════════════════════════════
-     BARRA DE PROGRESO
-  ══════════════════════════════════════════ */
-  function startProgressBar() {
+  function animBar() {
     const p = document.getElementById('pbar');
     p.style.cssText = 'width:0%;height:100%;transition:none';
     p.offsetWidth;
     p.style.cssText = `width:100%;height:100%;transition:width ${SLIDE_MS}ms linear`;
   }
 
-  /* ══════════════════════════════════════════
-     RELOJ EN TIEMPO REAL
-  ══════════════════════════════════════════ */
-  function tickClock() {
+  function tick() {
     document.getElementById('hTime').textContent =
-      new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }
 
-  /* ══════════════════════════════════════════
-     INIT
-  ══════════════════════════════════════════ */
   document.addEventListener('DOMContentLoaded', () => {
     loadStatus();
     setInterval(loadStatus, REFRESH_MS);
-    setInterval(tickClock, 1000);
+    setInterval(tick, 1000);
+    tick();
   });
 </script>
 </body>
