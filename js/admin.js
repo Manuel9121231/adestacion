@@ -502,8 +502,7 @@ async function handleDrop(e, idSalaDestino) {
     await recargarTodo();
     renderMaquinas();
   } catch (err) {
-    console.error("Error al mover máquina:", err);
-    alert("No se pudo mover la máquina");
+    showFeedback('Error al mover', 'No se ha podido cambiar la máquina de sala.', '❌');
   }
 }
 
@@ -544,8 +543,9 @@ async function guardarMaquina() {
     cerrarModal('modalMaquina');
     await cargarDatosBase();
     renderMaquinas();
+    showFeedback('Máquina guardada', 'Los cambios se han guardado correctamente.', '✅');
   } else {
-    alert('Error al guardar: ' + (res.error || 'Error desconocido'));
+    showFeedback('Error al guardar', (res.error || 'No se pudieron guardar los cambios.'), '❌');
   }
 }
 
@@ -600,13 +600,19 @@ async function crearMaquina() {
 }
 
 async function eliminarMaquina(id) {
-  if (!confirm('¿Estás seguro de que deseas eliminar esta máquina por completo? Se borrarán también sus registros de mantenimiento.')) return;
+  const ok = await customConfirm(
+    'Eliminar máquina',
+    '¿Estás seguro? Se eliminarán también todos sus registros de mantenimiento. Esta acción no se puede deshacer.',
+    '🗑️'
+  );
+  if (!ok) return;
   const res = await apiFetch(`/api/maquina/${id}`, { method: 'DELETE' });
   if (res.ok) {
     await cargarDatosBase();
     renderMaquinas();
+    showFeedback('Máquina eliminada', 'La máquina y sus registros asociados han sido eliminados.', '✅');
   } else {
-    alert('Error al eliminar: ' + res.error);
+    showFeedback('Error al eliminar', res.error, '❌');
   }
 }
 
@@ -675,7 +681,7 @@ function imprimirTodosLosQRs() {
     ? datosMaquinas.filter(m => String(m.sala_id) === String(salaFiltro))
     : datosMaquinas;
 
-  if (!lista.length) return alert('No hay máquinas para imprimir');
+  if (!lista.length) return showFeedback('Sin máquinas', 'No hay máquinas seleccionadas para imprimir.', '⚠️');
 
   const printWindow = window.open('', '_blank');
   let baseOrigin = serverHost;
@@ -806,8 +812,8 @@ function renderizarContenidoHistorial(data, tbody, empty) {
     let resBadge = '';
     if (isInc) {
       resBadge = resuelta 
-        ? `<span class="estado-badge ok" style="margin-left:8px;font-size:10px;cursor:pointer" onclick="event.stopPropagation(); toggleResolucionIncidencia('${r.id}', false)">✅ Resuelta</span>`
-        : `<span class="estado-badge vencido" style="margin-left:8px;font-size:10px;cursor:pointer" onclick="event.stopPropagation(); toggleResolucionIncidencia('${r.id}', true)">🚨 Pendiente</span>`;
+        ? `<span class="estado-badge ok" style="margin-left:8px;font-size:10px">✅ Resuelta</span>`
+        : `<span class="estado-badge vencido" style="margin-left:8px;font-size:10px">🚨 Pendiente</span>`;
     }
 
     return `
@@ -844,7 +850,7 @@ function renderizarContenidoHistorial(data, tbody, empty) {
 async function toggleResolucionIncidencia(id, nuevoEstado) {
   let comentario = '';
   if (nuevoEstado) {
-    comentario = prompt('Escribe un breve comentario sobre la solución (opcional):');
+    comentario = await customPrompt('Resolver Incidencia', 'Escribe un breve comentario sobre la solución (opcional):');
     if (comentario === null) return; // Cancelado
   }
 
@@ -864,7 +870,7 @@ async function toggleResolucionIncidencia(id, nuevoEstado) {
       renderIncidencias(filtroActual);
     }
   } else {
-    alert('No se pudo actualizar el estado: ' + res.error);
+    showFeedback('Error de estado', 'No se pudo actualizar el estado de la incidencia: ' + res.error, '❌');
   }
 }
 
@@ -892,28 +898,36 @@ async function verDetalleSesion(id) {
   container.innerHTML = `
     <div class="detail-container">
       <div class="detail-header-info" style="${isInc ? 'border-bottom: 2px solid var(--danger)' : ''}; margin-bottom: 20px;">
-        <div class="detail-machine"><span class="machine-icon">${isInc ? '🚨' : '🖨️'}</span><div><div class="machine-name">${sesion.maquina}</div><div class="machine-sala">📍 ${sesion.sala}</div></div></div>
+        <div class="detail-machine">
+          <div class="machine-icon" style="font-size:28px">${isInc ? '🚨' : '🛠️'}</div>
+          <div>
+            <div class="machine-name">${sesion.maquina}</div>
+            <div class="machine-sala">📍 ${sesion.sala}</div>
+          </div>
+        </div>
         <div style="display:flex;gap:8px">
           <div class="estado-badge ${isInc?'vencido':'ok'}">${isInc?'Incidencia':'Mantenimiento'}</div>
-          ${isInc ? `<div class="estado-badge ${resuelta?'ok':'vencido'}" style="cursor:pointer" onclick="toggleResolucionIncidencia('${sesion.id}', ${!resuelta}); cerrarModal('modalDetalle');">${resuelta?'✅ Resuelta':'🚨 Pendiente'}</div>` : ''}
+          ${isInc ? `<div class="estado-badge ${resuelta?'ok':'vencido'}">${resuelta?'✅ Resuelta':'🚨 Pendiente'}</div>` : ''}
         </div>
       </div>
 
-      <div style="display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap">
-        <!-- Columna Izquierda: Información -->
-        <div style="flex: 1; min-width: 280px;">
-          <div class="detail-stats-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 16px;">
-            <div class="detail-stat"><div class="label">👷 Operario</div><div class="value" style="font-size:14px">${sesion.operario}</div></div>
-            <div class="detail-stat"><div class="label">📅 Fecha</div><div class="value" style="font-size:14px">${formatFechaHora(sesion.completado_en)}</div></div>
+      <div class="detail-layout-grid">
+        <!-- Columna Izquierda: Información Principal -->
+        <div>
+          <div class="detail-stats-grid" style="margin-bottom: 16px;">
+            <div class="detail-stat"><div class="label">👷 Operario</div><div class="value">${sesion.operario}</div></div>
+            <div class="detail-stat"><div class="label">📅 Fecha</div><div class="value">${formatFechaHora(sesion.completado_en)}</div></div>
           </div>
           
-          <div class="detail-section" style="margin-bottom: 20px;">
+          <div class="detail-section" style="margin-bottom: 16px;">
             <div class="section-label">${isInc ? '🚩 Informe de Fallo' : '📝 Observaciones'}</div>
-            <div class="detail-notes" style="font-size:13px; ${isInc ? 'background:rgba(239, 68, 68, 0.05); border-left:4px solid var(--danger)' : ''}">${sesion.observaciones || 'Sin notas'}</div>
+            <div class="detail-notes" style="font-size:13px; ${isInc ? 'background:rgba(239, 68, 68, 0.05); border-left:4px solid var(--danger)' : ''}">
+              ${sesion.observaciones || 'Sin notas'}
+            </div>
           </div>
 
           ${sesion.comentario_resolucion ? `
-            <div class="detail-section" style="margin-bottom: 20px;">
+            <div class="detail-section" style="margin-bottom: 16px;">
               <div class="section-label">✅ Solución / Resolución</div>
               <div class="detail-notes" style="font-size:13px; background:rgba(16, 185, 129, 0.05); border-left:4px solid var(--success); color:var(--success); font-weight:600">
                 ${sesion.comentario_resolucion}
@@ -921,27 +935,34 @@ async function verDetalleSesion(id) {
             </div>
           ` : ''}
 
-          <div style="display:flex; flex-direction:column; gap:12px">
-            <button class="btn btn-outline btn-full" onclick="cerrarModal('modalDetalle'); verHistorialMaquina('${sesion.maquina}')" style="background:var(--bg-secondary); padding: 10px; font-size: 13px;">📋 Ver Historial de la máquina</button>
-            
+          <div style="display:flex; gap:10px; margin-top: 12px">
             ${isInc && !resuelta ? `
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:16px; background:rgba(255,255,255,0.05); border-radius:12px; border:1px solid var(--border)">
-                <button class="btn btn-outline" onclick="editarDescripcionIncidencia('${sesion.id}')">✏️ Editar Reporte</button>
-                <button class="btn btn-primary" onclick="toggleResolucionIncidencia('${sesion.id}', true)">✅ Resolver</button>
-              </div>
+              <button class="btn btn-outline btn-sm flex-1" onclick="editarDescripcionIncidencia('${sesion.id}')">✏️ Editar Reporte</button>
+              <button class="btn btn-primary btn-sm flex-1" onclick="toggleResolucionIncidencia('${sesion.id}', true)">✅ Resolver</button>
             ` : ''}
           </div>
         </div>
 
-        <!-- Columna Derecha: Fotos -->
-        ${sesion.fotos && sesion.fotos.length > 0 ? `
-          <div style="width: 200px; flex-shrink: 0;">
-            <div class="section-label">🖼️ Evidencias</div>
-            <div style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
-              ${sesion.fotos.map(f => `<img src="${f}" onclick="window.open('${f}')" style="width:100%; height: 140px; object-fit: cover; border-radius:10px; cursor:zoom-in; border:1px solid var(--border)" loading="lazy">`).join('')}
+        <!-- Columna Derecha: Fotos y Acciones rápidas -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          ${sesion.fotos && sesion.fotos.length > 0 ? `
+            <div>
+              <div class="section-label" style="margin-bottom: 8px">🖼️ Evidencias (${sesion.fotos.length})</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                ${sesion.fotos.map(f => `<img src="${f}" onclick="window.open('${f}')" style="width:100%; height: 80px; object-fit: cover; border-radius:8px; cursor:zoom-in; border:1px solid var(--border)" loading="lazy">`).join('')}
+              </div>
             </div>
-          </div>
-        ` : ''}
+          ` : `
+            <div style="text-align:center; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed var(--border)">
+              <div style="font-size:24px; opacity: 0.3; margin-bottom: 4px">📷</div>
+              <div style="font-size:11px; color: var(--text-muted)">Sin fotos adjuntas</div>
+            </div>
+          `}
+          
+          <button class="btn btn-outline btn-sm btn-full" onclick="cerrarModal('modalDetalle'); verHistorialMaquina('${sesion.maquina}')" style="background:var(--bg-secondary); font-size: 11px;">📋 Ver Historial Máquina</button>
+          
+          <button class="btn btn-danger btn-sm btn-full" onclick="eliminarIncidencia('${sesion.id}')" style="margin-top: 8px; opacity: 0.8;">🗑️ Eliminar de la lista</button>
+        </div>
       </div>
     </div>
   `;
@@ -962,8 +983,9 @@ async function verDetalleSesion(id) {
     if (segRes.ok && segRes.data) {
       const notas = segRes.data;
       if (notas.length === 0) {
-        timeline.innerHTML = '<div style="text-align:center;padding:10px;opacity:0.5;font-size:12px">No hay notas registradas aún. El técnico puede empezar a documentar aquí.</div>';
+        timeline.innerHTML = '<div style="text-align:center;padding:10px;opacity:0.5;font-size:12px">No hay notas registradas aún.</div>';
       } else {
+        timeline.classList.add('timeline-compact');
         timeline.innerHTML = notas.map(n => `
           <div class="timeline-item">
             <div class="timeline-meta">
@@ -1007,14 +1029,14 @@ async function guardarNuevaNota() {
     // Recargar el detalle para ver la nueva nota
     verDetalleSesion(id);
   } else {
-    alert('Error al guardar la nota: ' + res.error);
+    showFeedback('Error al anotar', 'No se ha podido guardar la nota de seguimiento: ' + res.error, '❌');
   }
   btn.disabled = false;
   btn.innerHTML = '<span>➕ Añadir Nota</span>';
 }
 
 async function editarDescripcionIncidencia(id) {
-  const nuevaDesc = prompt('Edita el reporte de la incidencia:');
+  const nuevaDesc = await customPrompt('Editar Reporte', 'Edita el reporte de la incidencia:', '');
   if (nuevaDesc === null) return;
   
   const res = await apiFetch(`/api/incidencia/${id}/editar`, {
@@ -1023,12 +1045,32 @@ async function editarDescripcionIncidencia(id) {
   });
 
   if (res.ok) {
-    alert('Reporte actualizado correctamente');
+    showFeedback('Reporte actualizado', 'La descripción del reporte se ha modificado correctamente.', '✅');
     // Recargar datos y refrescar vista
     await cargarDatosBase();
     verDetalleSesion(id);
   } else {
-    alert('Error al editar: ' + res.error);
+    showFeedback('Error al editar', res.error, '❌');
+  }
+}
+
+async function eliminarIncidencia(id) {
+  const ok = await customConfirm(
+    'Eliminar registro',
+    '¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.',
+    '🗑️'
+  );
+  if (!ok) return;
+  
+  const res = await apiFetch(`/api/sesion/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    cerrarModal('modalDetalle');
+    showFeedback('Registro eliminado', 'La incidencia ha sido eliminada correctamente.', '✅');
+    await cargarDatosBase();
+    cargarHistorial();
+    renderIncidencias();
+  } else {
+    showFeedback('Error al eliminar', res.error, '❌');
   }
 }
 
@@ -1125,10 +1167,16 @@ async function renderUsuarios() {
 async function cambiarRolUsuario(userId, nuevoRol) {
   const session = window.sgiAdminSession || {};
   if (session.type !== 'superadmin') {
-    alert('Solo el administrador principal puede cambiar roles.');
+    showFeedback('Acceso Denegado', 'Solo el administrador principal puede gestionar roles de usuario.', '🔒');
     return;
   }
-  if (!confirm(`¿Cambiar el rol de este usuario a "${nuevoRol}"?`)) return;
+  const rolLabel = { admin: 'Administrador', tecnico: 'Técnico', usuario: 'Usuario' }[nuevoRol] || nuevoRol;
+  const ok = await customConfirm(
+    'Cambiar rol de usuario',
+    `¿Confirmas el cambio de rol a "${rolLabel}"? El usuario recibirá los nuevos permisos de inmediato.`,
+    '🛡️'
+  );
+  if (!ok) return;
 
   try {
     const client = window.supabaseClient;
@@ -1136,7 +1184,7 @@ async function cambiarRolUsuario(userId, nuevoRol) {
     if (error) throw error;
     renderUsuarios();
   } catch(err) {
-    alert('Error al cambiar rol: ' + err.message);
+    showFeedback('Error de permisos', 'No se ha podido cambiar el rol: ' + err.message, '❌');
   }
 }
 
@@ -1248,6 +1296,13 @@ async function apiFetch(url, options = {}) {
       return { ok: true, data: (data || []).map(r => ({ id: r.id, maquina: r.maquina_nombre, sala: r.sala_nombre, operario: r.operario_nombre, iniciado_en: r.timestamp, completado_en: r.timestamp, observaciones: r.notas || '', tipo: r.tipo, resuelta: r.resuelta || false, fotos: r.photos || [], tiene_fotos: (r.photos && r.photos.length > 0) })) };
     }
 
+    if (url.includes('/api/sesion/') && method === 'DELETE') {
+      const id = url.split('/')[3];
+      const { error } = await client.from('registros').delete().eq('id', id);
+      if (error) throw error;
+      return { ok: true };
+    }
+
     if (url.includes('/api/sesion/') && url.includes('/resolver')) {
       const id = url.split('/')[3];
       const { error } = await client.from('registros').update({ 
@@ -1313,7 +1368,7 @@ async function apiFetch(url, options = {}) {
     console.error('🔴 Error apiFetch:', err); 
     // Si es un error de columna faltante, dar una pista clara
     if (err.message && err.message.includes('maquina_nombre')) {
-      alert("Error Crítico: La base de datos no tiene la columna 'maquina_nombre'. Por favor, ejecuta el script SQL de reparación.");
+      showFeedback('Error Crítico', "La base de datos no tiene la columna 'maquina_nombre'. Por favor, ejecuta el script SQL de reparación.", '🚨');
     }
     return { ok: false, error: err.message }; 
   }
@@ -1337,14 +1392,15 @@ async function intentarLogin() {
   errorEl.innerHTML = 'Verificando...';
   if (btn) btn.disabled = true;
 
-  // 1. Superadmin hardcodeado
+  // 1. Superadmin (Credenciales específicas del usuario)
   if (username === 'adestacion' && password === 'HEF4hjrb|@#uwehrU2') {
-    localStorage.setItem('sgi_admin_session', JSON.stringify({
+    const sessionData = {
       type: 'superadmin',
       username: 'adestacion',
-      nombre: 'Administrador Principal'
-    }));
-    localStorage.removeItem('admin_pin');
+      nombre: 'Administrador Principal',
+      loginTime: new Date().getTime()
+    };
+    localStorage.setItem('sgi_admin_session', JSON.stringify(sessionData));
     location.reload();
     return;
   }
@@ -1517,7 +1573,7 @@ async function editarSala(id, nuevoNombre) {
 async function crearSala() {
   const input = document.getElementById('nuevaSalaNombre');
   const nombre = input.value.trim();
-  if (!nombre) return alert("Escribe un nombre para la sala");
+  if (!nombre) return showFeedback('Nombre requerido', "Debes escribir un nombre para la nueva sala.", '⚠️');
 
   try {
     const { data, error } = await window.supabaseClient
@@ -1531,17 +1587,16 @@ async function crearSala() {
     await recargarTodo();
     renderListaSalas();
     poblarSelectsSalas();
-    alert("✅ Sala creada correctamente");
+    showFeedback('Sala creada', 'La nueva sala se ha registrado correctamente en el sistema.', '✅');
   } catch (err) {
-    console.error("Error al crear sala:", err);
-    alert("Error al crear la sala");
+    showFeedback('Error al crear', "No se ha podido registrar la sala en la base de datos.", '❌');
   }
 }
 
 async function borrarSala(id, nombre) {
   const maquinasEnSala = datosMaquinas.filter(m => m.sala_id === id);
   if (maquinasEnSala.length > 0) {
-    return alert(`No puedes borrar la sala "${nombre}" porque tiene ${maquinasEnSala.length} máquinas asociadas.`);
+    return showFeedback('Sala con Máquinas', `No puedes borrar la sala "${nombre}" porque tiene ${maquinasEnSala.length} máquinas asociadas.`, '⚠️');
   }
 
   try {
@@ -1577,4 +1632,53 @@ function poblarSelectsSalas() {
     });
     el.value = currentVal;
   });
+}
+
+// ── Helpers de UI (Nuevos) ───────────────────────────────────────────────────
+function customConfirm(titulo, msg, icon = '⚠️') {
+  return new Promise((resolve) => {
+    document.getElementById('confirmTitle').textContent = titulo;
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmIcon').textContent = icon;
+    abrirModal('modalConfirm');
+
+    window.confirmResolve = () => {
+      cerrarModal('modalConfirm');
+      resolve(true);
+    };
+    window.confirmReject = () => {
+      cerrarModal('modalConfirm');
+      resolve(false);
+    };
+  });
+}
+
+function customPrompt(titulo, label, defaultValue = '') {
+  return new Promise((resolve) => {
+    document.getElementById('promptTitle').textContent = titulo;
+    document.getElementById('promptLabel').textContent = label;
+    const input = document.getElementById('promptInput');
+    input.value = defaultValue;
+    
+    abrirModal('modalPrompt');
+    setTimeout(() => input.focus(), 100);
+
+    window.promptResolve = () => {
+      const val = input.value.trim();
+      cerrarModal('modalPrompt');
+      resolve(val);
+    };
+    
+    window.promptReject = () => {
+      cerrarModal('modalPrompt');
+      resolve(null);
+    };
+  });
+}
+
+function showFeedback(titulo, msg, icon = '✅') {
+  document.getElementById('feedbackTitle').textContent = titulo;
+  document.getElementById('feedbackMsg').textContent = msg;
+  document.getElementById('feedbackIcon').textContent = icon;
+  abrirModal('modalFeedback');
 }

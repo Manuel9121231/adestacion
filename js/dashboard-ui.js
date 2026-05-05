@@ -361,7 +361,7 @@ const DASHBOARD_HTML = `
     <div class="modal card" style="max-width:340px; text-align:center">
       <div class="modal-header">
         <div class="modal-title" id="qrNombre">Máquina</div>
-        <button class="btn-close" onclick="cerrarModal('modalQR')">✕</button>
+        <button class="modal-close" onclick="cerrarModal('modalQR')">✕</button>
       </div>
       <div style="margin-bottom:8px; color:var(--text-muted); font-size:14px" id="qrSala">Sala</div>
       <div id="qrImgContainer" style="display:flex; justify-content:center; margin:20px 0; min-height:256px"></div>
@@ -525,6 +525,7 @@ const DASHBOARD_HTML = `
         <button class="modal-close" onclick="cerrarModal('modalDetalle')">✕</button>
       </div>
       
+      <div>
       <div id="detalleContenido" style="margin-bottom:24px"></div>
 
       <!-- Sección de Seguimiento (Solo para Incidencias) -->
@@ -533,7 +534,7 @@ const DASHBOARD_HTML = `
           💬 Hilo de Seguimiento Técnico
         </h3>
         
-        <div id="seguimientoTimeline" class="timeline-container" style="max-height:250px; overflow-y:auto; margin-bottom:20px; padding-right:10px">
+        <div id="seguimientoTimeline" class="timeline-container" style="margin-bottom:20px; padding-right:10px">
           <!-- Las notas se inyectarán aquí -->
         </div>
 
@@ -546,6 +547,7 @@ const DASHBOARD_HTML = `
             </button>
           </div>
         </div>
+      </div>
       </div>
 
       <div class="modal-footer" style="margin-top:20px">
@@ -617,6 +619,48 @@ const DASHBOARD_HTML = `
 
       <div class="modal-footer" style="margin-top:20px">
         <button class="btn btn-outline" onclick="cerrarModal('modalGestionSalas')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── Modal: Prompt Personalizado ── -->
+  <div class="overlay" id="modalPrompt">
+    <div class="modal" style="max-width:450px">
+      <div class="modal-header">
+        <div class="modal-title" id="promptTitle">Título</div>
+        <button class="modal-close" onclick="cerrarModal('modalPrompt')">✕</button>
+      </div>
+      <div class="form-group" style="overflow:visible !important">
+        <label class="form-label" id="promptLabel">Instrucciones</label>
+        <textarea id="promptInput" class="form-control" rows="4" style="resize:none"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="window.promptReject?.()">Cancelar</button>
+        <button class="btn btn-primary" onclick="window.promptResolve?.()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Feedback / Alerta ── -->
+  <div class="overlay" id="modalFeedback">
+    <div class="modal" style="max-width:350px; text-align:center; padding: 32px 24px">
+      <div style="font-size:52px; margin-bottom:16px" id="feedbackIcon">✅</div>
+      <div class="modal-title" id="feedbackTitle" style="margin-bottom:12px; font-size:20px">Título</div>
+      <p id="feedbackMsg" style="color:var(--text-muted); font-size:14px; margin-bottom:28px; line-height:1.5">Mensaje</p>
+      <button class="btn btn-primary btn-full" onclick="cerrarModal('modalFeedback')">Continuar</button>
+    </div>
+  </div>
+
+  <!-- ── Modal: Confirmación ── -->
+  <div class="overlay" id="modalConfirm">
+    <div class="modal" style="max-width:400px; text-align:center; padding: 36px 28px">
+      <div style="font-size:52px; margin-bottom:16px; line-height:1" id="confirmIcon">⚠️</div>
+      <div class="modal-title" id="confirmTitle" style="margin-bottom:10px; font-size:18px">¿Estás seguro?</div>
+      <p id="confirmMsg" style="color:var(--text-muted); font-size:14px; margin-bottom:28px; line-height:1.6">Esta acción no se puede deshacer.</p>
+      <div style="display:flex; gap:12px">
+        <button class="btn btn-outline btn-full" onclick="window.confirmReject?.()">Cancelar</button>
+        <button class="btn btn-danger btn-full" id="confirmAcceptBtn" onclick="window.confirmResolve?.()">Confirmar</button>
       </div>
     </div>
   </div>
