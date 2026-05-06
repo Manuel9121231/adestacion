@@ -1,4 +1,4 @@
-# Sistema de Gestión de Impresoras (SGI) - Documentación Técnica
+# Sistema de Gestión de Impresoras de la Estación - Documentación Técnica
 
 ## Modelo Entidad-Relación (ER)
 Este modelo define la estructura de datos optimizada para la trazabilidad y el seguimiento de incidencias.
