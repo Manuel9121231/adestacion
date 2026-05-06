@@ -117,39 +117,28 @@ const DASHBOARD_HTML = `
               <div class="kpi-value" id="kpi-proximos">–</div>
               <div class="kpi-label">Próximas a vencer</div>
             </div>
-          </div>
+</div>
 
-          <div class="chart-grid">
-            <div class="chart-card">
-              <div class="chart-title">📈 Actividad últimos 30 días</div>
-              <div class="chart-bar-wrap" id="chartDias"></div>
-            </div>
-            <div class="chart-card">
-              <div class="chart-title">🖨️ Mantenimientos por máquina</div>
-              <div class="chart-bar-wrap" id="chartMaquinas"></div>
-            </div>
-          </div>
-
-          <div class="table-wrap">
-            <div class="table-header">
-              <div class="table-title">📋 Últimos mantenimientos realizados</div>
-              <button class="btn btn-outline btn-sm" onclick="navigateTo('historial')">Ver todos →</button>
-            </div>
-            <div style="overflow-x:auto">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Máquina</th>
-                    <th>Sala</th>
-                    <th>Operario</th>
-                    <th>Fecha y hora</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody id="dashboardUltimos"></tbody>
-              </table>
-            </div>
-          </div>
+           <div class="table-wrap">
+             <div class="table-header">
+               <div class="table-title">📋 Últimos mantenimientos realizados</div>
+               <button class="btn btn-outline btn-sm" onclick="navigateTo('historial')">Ver todos →</button>
+             </div>
+             <div style="overflow-x:auto">
+               <table>
+                 <thead>
+                   <tr>
+                     <th>Máquina</th>
+                     <th>Sala</th>
+                     <th>Operario</th>
+                     <th>Fecha y hora</th>
+                     <th>Estado</th>
+                   </tr>
+                 </thead>
+                 <tbody id="dashboardUltimos"></tbody>
+               </table>
+             </div>
+           </div>
         </div>
 
         <!-- ══════════ MÁQUINAS ══════════ -->

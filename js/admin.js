@@ -22,7 +22,7 @@ async function detectarServidor() {
   }
 }
 
-let rolActual = 'admin'; // Se actualiza al cargar la sesión
+let rolActual = 'admin'; // Se actualiza al cargar la sesión ('admin' | 'tecnico' | 'superadmin')
 
 // ── Obtener nombre del admin actual ──
 function getNombreAdmin() {
@@ -39,6 +39,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!sessionStr) return; // Esperar al login manual
   const sgiSession = JSON.parse(sessionStr || '{}');
   window.sgiAdminSession = sgiSession;
+
+  // Actualizar rol actual desde la sesión
+  if (sgiSession.type === 'superadmin') rolActual = 'admin'; // superadmin tiene todos los permisos
+  else if (sgiSession.type === 'tecnico') rolActual = 'tecnico';
+  else rolActual = 'admin';
 
   try {
     isCargando = true;
@@ -235,11 +240,12 @@ const sectionTitles = {
 };
 
 function navigateTo(section) {
-  // Verificación de roles (solo admin puede ver gestión de máquinas, QR y usuarios)
-  const rutasRestringidas = ['usuarios', 'qrcodes'];
+  // Verificación de roles (solo admin puede ver gestión de usuarios)
+  // Técnicos pueden acceder a QR codes
+  const rutasSoloAdmin = ['usuarios'];
   let idToShow = section;
   
-  if (rolActual !== 'admin' && rutasRestringidas.includes(section)) {
+  if (rolActual !== 'admin' && rutasSoloAdmin.includes(section)) {
     idToShow = 'restringido';
   }
 
@@ -309,35 +315,8 @@ function actualizarVistaDashboard(stats, historial) {
   const kpiProx = document.getElementById('kpi-proximos');
   if (kpiProx) kpiProx.textContent = d.proximos;
 
-  // Gráfica de días
-  renderBarChart('chartDias', (d.porDia || []).slice(-14).map(r => ({
-    label: formatFechaDia(r.dia), value: r.total
-  })));
-
-  // Gráfica de máquinas
-  const maqData = (d.porMaquina || []).map(r => ({ label: r.nombre, value: r.total_sesiones }));
-  renderBarChart('chartMaquinas', maqData.slice(0, 12));
-
   // Últimos mantenimientos
   if (historial) renderUltimosMantenimientos(historial.slice(0, 8));
-}
-
-function renderBarChart(containerId, items) {
-  const container = document.getElementById(containerId);
-  if (!container || !items.length) {
-    container.innerHTML = '<div class="empty-state" style="padding:24px"><div class="icon">📊</div><p>Sin datos aún</p></div>';
-    return;
-  }
-  const max = Math.max(...items.map(i => i.value), 1);
-  container.innerHTML = items.map(i => `
-    <div class="chart-bar-row">
-      <div class="chart-bar-label" title="${i.label}">${truncate(i.label, 12)}</div>
-      <div class="chart-bar-track">
-        <div class="chart-bar-fill" style="width:${(i.value / max * 100).toFixed(1)}%"></div>
-      </div>
-      <div class="chart-bar-val">${i.value}</div>
-    </div>
-  `).join('');
 }
 
 function renderUltimosMantenimientos(registros) {
@@ -930,7 +909,7 @@ async function verDetalleSesion(id) {
           <div class="detail-section" style="margin-bottom: 16px;">
             <div class="section-label">${isInc ? '🚩 Informe de Fallo' : '📝 Observaciones'}</div>
             <div class="detail-notes" style="font-size:13px; ${isInc ? 'background:rgba(239, 68, 68, 0.05); border-left:4px solid var(--danger)' : ''}">
-              ${sesion.observaciones || 'Sin notas'}
+              ${(sesion.observaciones || 'Sin notas').trim()}
             </div>
           </div>
 
@@ -938,7 +917,7 @@ async function verDetalleSesion(id) {
             <div class="detail-section" style="margin-bottom: 16px;">
               <div class="section-label">✅ Solución / Resolución</div>
               <div class="detail-notes" style="font-size:13px; background:rgba(16, 185, 129, 0.05); border-left:4px solid var(--success); color:var(--success); font-weight:600">
-                ${sesion.comentario_resolucion}
+                ${sesion.comentario_resolucion.trim()}
               </div>
             </div>
           ` : ''}
@@ -1419,9 +1398,13 @@ async function apiFetch(url, options = {}) {
 async function intentarLogin() {
   const usernameInput = document.getElementById('adminUsernameInput');
   const passwordInput = document.getElementById('adminPinInput');
-  const errorEl = document.getElementById('loginError');
-  const card = document.getElementById('loginCard');
-  const btn = document.getElementById('btnLoginAdmin');
+
+  // 1. Superadmin (Acceso de emergencia mediante Hashing SHA-256)
+  // Nota: Solo se usa si Supabase falla o para mantenimiento principal.
+  const _sha256 = async (s) => {
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
+  };
 
   const username = (usernameInput?.value || '').trim();
   const password = (passwordInput?.value || '').trim();
@@ -1434,8 +1417,20 @@ async function intentarLogin() {
   errorEl.innerHTML = 'Verificando...';
   if (btn) btn.disabled = true;
 
-  // 1. Superadmin (Credenciales específicas del usuario)
-  if (username === 'adestacion' && password === 'HEF4hjrb|@#uwehrU2') {
+  // Verificar credenciales superadmin mediante SHA-256
+  async function sha256(str) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  
+  const hashUser = await sha256(username);
+  const hashPass = await sha256(password);
+  
+  // Hashes SHA-256 de las credenciales (más seguros que base64)
+  const VALID_USER_HASH = '4f0f0db7a8a7ef9871a2967d28fe0d0d3c2e8d12269bcfa971715fd596f2cdce';
+  const VALID_PASS_HASH = '8a9a6c01421bd7d0734fff789f01329627087ae1649fc05c4c650d1e1e1df5c5';
+  
+  if (hashUser === VALID_USER_HASH && hashPass === VALID_PASS_HASH) {
     const sessionData = {
       type: 'superadmin',
       username: 'adestacion',
@@ -1447,7 +1442,7 @@ async function intentarLogin() {
     return;
   }
 
-  // 2. Supabase Auth + verificar rol admin en tabla perfiles
+  // 2. Supabase Auth + verificar rol admin o tecnico en tabla perfiles
   try {
     const client = window.supabaseClient;
     if (!client) throw new Error('Sin conexión al servidor');
@@ -1465,13 +1460,14 @@ async function intentarLogin() {
     } catch(e) { console.warn('Perfil no encontrado:', e.message); }
 
     const rol = perfil?.rol || 'usuario';
-    if (rol !== 'admin') {
+    // Permitir acceso a admin y tecnico
+    if (rol !== 'admin' && rol !== 'tecnico') {
       await client.auth.signOut();
-      throw new Error('No tienes permisos de administrador.');
+      throw new Error('No tienes permisos de administrador o técnico.');
     }
 
     localStorage.setItem('sgi_admin_session', JSON.stringify({
-      type: 'admin',
+      type: rol, // 'admin' o 'tecnico'
       userId: data.user.id,
       email: data.user.email,
       nombre: perfil?.nombre || data.user.email

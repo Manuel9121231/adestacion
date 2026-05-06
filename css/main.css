@@ -718,8 +718,9 @@ tr:hover td { background: var(--bg-card-hover); }
 .detail-notes {
   background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px;
   border: 1px solid var(--border); font-size: 0.95rem; line-height: 1.6; color: var(--text-secondary);
-  white-space: pre-wrap;
+  white-space: pre-line;
   word-break: break-word;
+  text-align: left;
 }
 .detail-photos { display: flex; flex-wrap: wrap; gap: 12px; }
 .detail-photo-wrapper {

@@ -123,6 +123,58 @@
       opacity: 0.5;
     }
 
+    /* User session bar */
+    .session-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: rgba(15, 15, 26, 0.9);
+      backdrop-filter: blur(15px);
+      padding: 10px 24px;
+      display: none;
+      justify-content: flex-end;
+      align-items: center;
+      z-index: 1000;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+
+    .session-bar.visible {
+      display: flex;
+    }
+
+    .session-info {
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .btn-switch {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-switch:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-logout {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; }
+
     /* ── Scroll hint ─────────────────────────────────── */
     .scroll-hint {
       position: fixed;
@@ -199,13 +251,20 @@
 </head>
 <body>
 
+  <!-- Session Bar (Top Right) -->
+  <div class="session-bar" id="sessionBar">
+    <div class="session-info" id="sessionInfo"></div>
+    <a href="registro.html" class="btn-switch">🔄 Cambiar cuenta</a>
+    <button class="btn-logout" onclick="cerrarSesionIndex()">🚪 Salir</button>
+  </div>
+
   <div class="hero">
     <h1>Gestión de Impresoras</h1>
     <p>Selecciona tu portal de acceso</p>
   </div>
 
   <div class="home-grid">
-    <a href="seleccion.html" class="nav-card">
+    <a href="seleccion.html" class="nav-card" id="operarioCard" style="display:none">
       <span class="icon">📱</span>
       <div class="card-text">
         <h2>Portal Operario</h2>
@@ -213,7 +272,7 @@
       </div>
     </a>
 
-    <a href="estado.html" class="nav-card">
+    <a href="estado.html" class="nav-card" id="estadoCard">
       <span class="icon">🏢</span>
       <div class="card-text">
         <h2>Estado Público</h2>
@@ -221,7 +280,7 @@
       </div>
     </a>
 
-    <a href="registro.html" class="nav-card">
+    <a href="registro.html" class="nav-card" id="accesoCard">
       <span class="icon">👤</span>
       <div class="card-text">
         <h2>Acceso Usuarios</h2>
@@ -229,7 +288,7 @@
       </div>
     </a>
 
-    <a href="dashboard.html" class="nav-card">
+    <a href="dashboard.html" class="nav-card" id="adminCard" style="display:none">
       <span class="icon">🔐</span>
       <div class="card-text">
         <h2>Administración</h2>
@@ -259,6 +318,53 @@
       });
     }
 
+    // Verificar sesión y mostrar barra de usuario + tarjetas según rol
+    function verificarSesion() {
+      const adminSession = localStorage.getItem('sgi_admin_session');
+      const userSession = localStorage.getItem('sgi_user_session');
+      const sessionBar = document.getElementById('sessionBar');
+      const sessionInfo = document.getElementById('sessionInfo');
+      const adminCard = document.getElementById('adminCard');
+      const operarioCard = document.getElementById('operarioCard');
+      const accesoCard = document.getElementById('accesoCard');
+
+      if (adminSession) {
+        try {
+          const session = JSON.parse(adminSession);
+          sessionBar.classList.add('visible');
+          sessionInfo.innerHTML = `<span style="opacity:0.6; font-weight:400; font-size:11px; margin-right:4px;">SESIÓN:</span> ${session.nombre || session.username}`;
+          adminCard.style.display = 'flex';
+          operarioCard.style.display = 'flex';
+          accesoCard.style.display = 'none'; // Ocultar login si ya está logueado
+        } catch(e) {}
+      } else if (userSession) {
+        try {
+          const session = JSON.parse(userSession);
+          sessionBar.classList.add('visible');
+          sessionInfo.innerHTML = `<span style="opacity:0.6; font-weight:400; font-size:11px; margin-right:4px;">USUARIO:</span> ${session.nombre || session.email}`;
+          operarioCard.style.display = 'flex';
+          accesoCard.style.display = 'none'; // Ocultar login si ya está logueado
+          
+          if (session.rol === 'admin' || session.rol === 'tecnico') {
+            adminCard.style.display = 'flex';
+          }
+        } catch(e) {}
+      } else {
+        // No hay sesión
+        sessionBar.classList.remove('visible');
+        adminCard.style.display = 'none';
+        operarioCard.style.display = 'none';
+        accesoCard.style.display = 'flex';
+      }
+    }
+
+    // Cerrar sesión desde el index
+    function cerrarSesionIndex() {
+      localStorage.removeItem('sgi_admin_session');
+      localStorage.removeItem('sgi_user_session');
+      location.reload();
+    }
+
     // Ocultar el scroll hint al hacer scroll
     const hint = document.getElementById('scrollHint');
     if (hint) {
@@ -267,6 +373,9 @@
         else hint.classList.remove('hidden');
       }, { passive: true });
     }
+
+    // Verificar sesión al cargar
+    verificarSesion();
   </script>
 </body>
 </html>

@@ -12,8 +12,25 @@ let selectedPhotos = [];
 // ── Arranque ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
-  maquinaId = urlParams.get('maquinaId'); // Corrección: quitar 'const' para usar global
+  maquinaId = urlParams.get('maquinaId');
   console.log("ID de máquina recibido de la URL:", maquinaId);
+
+  // --- VERIFICACIÓN DE SESIÓN ---
+  const client = window.supabaseClient;
+  const { data: { session } } = await client.auth.getSession();
+  
+  if (!session) {
+    console.warn("Usuario no autenticado. Redirigiendo a login...");
+    window.location.href = 'registro.html?redirect=operario.html' + (maquinaId ? '?maquinaId=' + maquinaId : '');
+    return;
+  }
+  
+  // Guardar datos del usuario logueado
+  operarioData = {
+    id: session.user.id,
+    email: session.user.email,
+    nombre: session.user.user_metadata?.nombre || session.user.email
+  };
 
   if (!maquinaId) {
     showError('No se especificó ninguna máquina en la URL. Escanea el código QR de nuevo.');
@@ -81,6 +98,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       text.textContent = 'Máquina Operativa';
     }
 
+    // Mostrar datos del usuario
+    const dispName = document.getElementById('displayUserName');
+    const dispEmail = document.getElementById('displayUserEmail');
+    if (dispName) dispName.textContent = operarioData.nombre;
+    if (dispEmail) dispEmail.textContent = operarioData.email;
+    
+    // Sincronizar inputs ocultos para compatibilidad
+    if (document.getElementById('userNameInput')) document.getElementById('userNameInput').value = operarioData.nombre;
+    if (document.getElementById('userEmailInput')) document.getElementById('userEmailInput').value = operarioData.email;
+
+    // Verificar rol para mostrar botón Admin
+    try {
+      const { data: perfil } = await client.from('perfiles').select('rol').eq('id', operarioData.id).single();
+      const rol = perfil?.rol || 'usuario';
+      if (rol === 'admin' || rol === 'tecnico') {
+        const btnAdminHtml = `<button onclick="window.location.href='dashboard.html'" style="background:rgba(79, 142, 247, 0.1); border:1px solid var(--accent-maint); color:var(--accent-maint); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; white-space: nowrap;">🛡️ Admin</button>`;
+        const navContainer = document.getElementById('portalNavButtons');
+        if (navContainer) navContainer.innerHTML += btnAdminHtml;
+      }
+    } catch(e) { console.warn("No se pudo verificar el rol:", e); }
+
     const pNm = document.getElementById('portalMaquinaNombre');
     const pSl = document.getElementById('portalMaquinaSala');
     if (pNm) pNm.textContent = maquinaData.nombre;
@@ -91,6 +129,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     showError('Error de conexión con el servidor: ' + e.message);
   }
 });
+
+// --- FUNCIONES ADICIONALES ---
+
+async function cerrarSesionOperario() {
+  const client = window.supabaseClient;
+  if (client) {
+    await client.auth.signOut();
+  }
+  localStorage.removeItem('sgi_admin_session');
+  localStorage.removeItem('sgi_user_session');
+  window.location.href = 'index.html';
+}
 
 // ── Navegación ────────────────────────────────────────────────────────────────
 function showScreen(name) {
@@ -105,8 +155,6 @@ function showError(msg) {
 
 function seleccionarModo(modo) {
   modoActual = modo === 'incidencia' ? 'Incidencia' : 'Mantenimiento';
-  
-  // En ambos casos, ahora vamos directo al formulario de reporte
   iniciarSesion();
 }
 
@@ -116,43 +164,35 @@ function setOpTipo(tipo) {
   const iCard = document.getElementById('op-tipo-inc');
   
   if (tipo === 'Mantenimiento') {
-    mCard.classList.add('active');
-    iCard.classList.remove('active-inc');
+    if (mCard) mCard.classList.add('active');
+    if (iCard) iCard.classList.remove('active-inc');
   } else {
-    mCard.classList.remove('active');
-    iCard.classList.add('active-inc');
+    if (mCard) mCard.classList.remove('active');
+    if (iCard) iCard.classList.add('active-inc');
   }
-  console.log('Tipo de reporte cambiado a:', modoActual);
 }
 
 // ── Reporte ───────────────────────────────────────────────────────────────────
 async function iniciarSesion() {
   const res = await apiFetch('/api/sesion/iniciar', {
     method: 'POST',
-    body: { maquina_id: maquinaId }, // Ya no necesitamos operario_id aquí
+    body: { maquina_id: maquinaId },
   });
 
   if (res.ok) {
     sesionId = res.data.sesion_id;
-    
-    // Actualizar nombres en la UI de checklist
     document.getElementById('checkMaquinaNombre').textContent = maquinaData.nombre;
     document.getElementById('checkSalaNombre').textContent = maquinaData.sala_nombre;
-    
-    // Si veníamos de modo incidencia desde el portal, lo marcamos en el selector del formulario
     setOpTipo(modoActual);
-
     document.getElementById('reporteTextarea').value = '';
     document.getElementById('reporteError').style.display = 'none';
     actualizarBoton('');
-
     showScreen('checklist');
   } else {
     showError('Error al iniciar reporte');
   }
 }
 
-// ── Reporte ───────────────────────────────────────────────────────────────────
 function onReporteChange() {
   const texto = document.getElementById('reporteTextarea').value;
   document.getElementById('reporteError').style.display = 'none';
@@ -185,7 +225,6 @@ function onPhotoSelected() {
     renderPhotoPreviews();
   };
   reader.readAsDataURL(file);
-  // Limpiar input para permitir seleccionar la misma foto o resetear el selector
   document.getElementById('photoInput').value = '';
 }
 
@@ -207,11 +246,11 @@ function renderPhotoPreviews() {
   const text = document.getElementById('photoText');
   const icon = document.getElementById('photoIcon');
   if (selectedPhotos.length > 0) {
-    text.textContent = `Añadir otra foto (${selectedPhotos.length})`;
-    icon.textContent = '📸';
+    if (text) text.textContent = `Añadir otra foto (${selectedPhotos.length})`;
+    if (icon) icon.textContent = '📸';
   } else {
-    text.textContent = 'Añadir foto de evidencia';
-    icon.textContent = '📷';
+    if (text) text.textContent = 'Añadir foto de evidencia';
+    if (icon) icon.textContent = '📷';
   }
 }
 
@@ -220,26 +259,8 @@ function removePhoto(index) {
   renderPhotoPreviews();
 }
 
-function cancelPhoto() {
-  selectedPhotos = [];
-  document.getElementById('photoInput').value = '';
-  renderPhotoPreviews();
-}
-
 async function enviarChecklist() {
-  const nombreUser = document.getElementById('userNameInput').value.trim();
-  const emailUser = document.getElementById('userEmailInput').value.trim().toLowerCase();
   const reporte = document.getElementById('reporteTextarea').value.trim();
-
-  if (!nombreUser || !emailUser) {
-    alert("Por favor, introduce tu nombre y email para identificarte (Clave Única).");
-    return;
-  }
-  
-  if (!emailUser.includes('@')) {
-    alert("Introduce un email válido.");
-    return;
-  }
 
   if (reporte.length < 1) {
     document.getElementById('reporteError').style.display = 'block';
@@ -248,46 +269,22 @@ async function enviarChecklist() {
 
   const btn = document.getElementById('btnEnviar');
   btn.disabled = true;
-  btn.textContent = '⏳ Verificando Identidad...';
-
-  // --- AUTO-ALTA DE USUARIO ---
-  const client = window.supabaseClient;
-  const { data: userExists } = await client
-    .from('usuarios')
-    .select('id')
-    .eq('email', emailUser)
-    .single();
-
-  let userId;
-  if (!userExists) {
-    console.log("Nuevo usuario detectado. Realizando Auto-alta...");
-    const { data: newUser } = await client.from('usuarios').insert({
-      nombre: nombreUser,
-      email: emailUser,
-      rol: 'usuario',
-      activo: true
-    }).select('id').single();
-    userId = newUser.id;
-  } else {
-    userId = userExists.id;
-  }
-
   btn.textContent = '⏳ Enviando reporte...';
 
   const res = await apiFetch(`/api/sesion/${sesionId}/completar`, {
     method: 'POST',
     body: { 
       observaciones: reporte,
-      usuario_id: userId,
-      nombre_usuario: nombreUser, 
-      email_usuario: emailUser, // Trazabilidad por email
+      usuario_id: operarioData.id,
+      nombre_usuario: operarioData.nombre, 
+      email_usuario: operarioData.email,
       fotos: selectedPhotos 
     },
   });
 
   if (res.ok) {
     document.getElementById('exitoMaquina').textContent = maquinaData.nombre;
-    document.getElementById('exitoOperario').textContent = nombreUser;
+    document.getElementById('exitoOperario').textContent = operarioData.nombre;
     document.getElementById('exitoFecha').textContent = new Date().toLocaleString('es-ES');
     showScreen('exito');
   } else {
@@ -302,114 +299,62 @@ function reiniciar() {
   sesionId = null;
   selectedPhotos = [];
   modoActual = 'Mantenimiento';
-  
-  // Limpiar campos del formulario
-  const userInp = document.getElementById('userNameInput');
   const reportTxt = document.getElementById('reporteTextarea');
-  if (userInp) userInp.value = '';
   if (reportTxt) reportTxt.value = '';
-  
-  // Resetear botón de envío
   const btn = document.getElementById('btnEnviar');
   if (btn) {
     btn.disabled = true;
     btn.className = 'btn-enviar bloqueado';
     btn.textContent = '✏️ Rellena el reporte para continuar';
   }
-
-  // Ocultar errores
   const errDiv = document.getElementById('reporteError');
   if (errDiv) errDiv.style.display = 'none';
-  
-  cancelPhoto(); // Limpiar UI de foto
+  renderPhotoPreviews();
   showScreen('portal');
 }
 
 async function handlePhotoUploads(base64Photos) {
   const client = window.supabaseClient;
   const urls = [];
-  console.log(`Iniciando subida de ${base64Photos.length} fotos a Storage...`);
-  
   for (let i = 0; i < base64Photos.length; i++) {
     try {
       const b64 = base64Photos[i];
       const blob = await (await fetch(b64)).blob();
       const fileName = `${Date.now()}_${i}.jpg`;
-      
       const { data, error } = await client.storage
         .from('photos')
         .upload(fileName, blob, { contentType: 'image/jpeg' });
-      
-      if (error) {
-        console.error('Error al subir foto a Supabase:', error);
-        continue;
-      }
-      
+      if (error) continue;
       const { data: { publicUrl } } = client.storage.from('photos').getPublicUrl(data.path);
       urls.push(publicUrl);
-    } catch (e) {
-      console.error('Fallo técnico en la subida:', e);
-    }
+    } catch (e) {}
   }
   return urls;
 }
 
-// --- SUPABASE WRAPPER FOR CHECKLIST ---
 async function apiFetch(url, options = {}) {
   const method = options.method || 'GET';
   const payload = options.body;
   const client = window.supabaseClient;
 
   try {
-    if (url.includes('/api/maquina/') && method === 'GET') {
-      const id = url.split('/')[3];
-      const { data, error } = await client
-        .from('equipos')
-        .select('*, salas(nombre)')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      const formatted = {
-        ...data,
-        sala_nombre: data.salas ? data.salas.nombre : 'Sin sala'
-      };
-      return { ok: true, data: formatted };
-    }
-
-    if (url.includes('/api/operarios/verificar-pin')) {
-      const { data, error } = await client
-        .from('operarios')
-        .select('*')
-        .eq('pin', payload.pin)
-        .eq('activo', true)
-        .single();
-      
-      if (error || !data) return { ok: false, error: 'PIN incorrecto' };
-      return { ok: true, data };
-    }
-
     if (url.includes('/api/sesion/iniciar')) {
-      // For Supabase, we don't strictly need to start a session in a separate table
-      // unless we want to track working time. For now, matching the dummy logic.
       return { ok: true, data: { sesion_id: 'temp_sesion' } };
     }
 
     if (url.includes('/api/sesion/') && url.includes('/completar')) {
-      // 1. Upload photos to Supabase Storage if any
       let photoUrls = [];
       if (payload.fotos && payload.fotos.length > 0) {
         photoUrls = await handlePhotoUploads(payload.fotos);
       }
 
-      // 2. Use the names from the global state to ensure they aren't null
       const registroPayload = {
         maquina_id: maquinaId,
         usuario_id: payload.usuario_id,
         maquina_nombre: maquinaData?.nombre || 'Desconocida',
         sala_nombre: maquinaData?.sala_nombre || 'Sin sala',
         operario_nombre: payload.nombre_usuario || 'Anonimo', 
-        operario_email: payload.email_usuario || 'desconocido@email.com', // Trazabilidad
+        operario_email: payload.email_usuario || 'desconocido@email.com',
         tipo: modoActual,
         notas: payload.observaciones,
         photos: photoUrls, 
@@ -424,20 +369,14 @@ async function apiFetch(url, options = {}) {
 
       if (rError) throw rError;
 
-      // 3. Update last maintenance date on the machine
       await client.from('equipos')
         .update({ ultimo_mantenimiento: new Date().toISOString() })
         .eq('id', maquinaId);
 
       return { ok: true, data: registro };
     }
-
     return { ok: false, error: 'Endpoint not implemented' };
   } catch (err) {
-    console.error('🔴 Error apiFetch (Checklist):', err);
-    if (err.message && err.message.includes('maquina_nombre')) {
-      alert("Error Crítico: Falta la columna 'maquina_nombre' en la base de datos.");
-    }
     return { ok: false, error: err.message };
   }
 }
