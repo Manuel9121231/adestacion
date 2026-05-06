@@ -1161,6 +1161,7 @@ async function renderUsuarios() {
               ${u.rol !== 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--accent);border-color:var(--accent)" onclick="cambiarRolUsuario('${u.id}','admin')">🛡️ Hacer Admin</button>` : ''}
               ${u.rol === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="cambiarRolUsuario('${u.id}','usuario')">👤 Quitar Admin</button>` : ''}
               ${u.rol !== 'tecnico' ? `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success)" onclick="cambiarRolUsuario('${u.id}','tecnico')">🔧 Hacer Técnico</button>` : ''}
+              <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="eliminarUsuario('${u.id}')" title="Eliminar usuario permanentemente">🗑️ Eliminar</button>
             </div>
           ` : '<span style="color:var(--text-muted);font-size:12px">Solo superadmin puede cambiar roles</span>'}
         </td>
@@ -1170,6 +1171,31 @@ async function renderUsuarios() {
   } catch(err) {
     console.error('Error cargando perfiles:', err);
     container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--danger)">⚠️ Error al cargar usuarios: ${err.message}<br><br><small>Asegúrate de haber creado la tabla <code>perfiles</code> en Supabase.</small></td></tr>`;
+  }
+}
+
+async function eliminarUsuario(userId) {
+  const session = window.sgiAdminSession || {};
+  if (session.type !== 'superadmin') {
+    showFeedback('Acceso Denegado', 'Solo el administrador principal puede eliminar usuarios.', '🔒');
+    return;
+  }
+  const ok = await customConfirm(
+    'Eliminar Usuario',
+    '¿Estás seguro de que deseas eliminar este usuario? Su perfil y accesos se borrarán del sistema. Esta acción no se puede deshacer.',
+    '⚠️'
+  );
+  if (!ok) return;
+
+  try {
+    const client = window.supabaseClient;
+    const { error } = await client.from('perfiles').delete().eq('id', userId);
+    if (error) throw error;
+    
+    showFeedback('Usuario Eliminado', 'El perfil de usuario ha sido eliminado correctamente.', '✅');
+    renderUsuarios();
+  } catch (err) {
+    showFeedback('Error', 'No se pudo eliminar el usuario: ' + err.message, '❌');
   }
 }
 
