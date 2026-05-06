@@ -123,33 +123,6 @@
       opacity: 0.5;
     }
 
-    /* ── Scroll hint ─────────────────────────────────── */
-    .scroll-hint {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      color: var(--text-muted);
-      font-size: 11px;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      opacity: 0.6;
-      animation: bounce 1.8s ease-in-out infinite;
-      pointer-events: none;
-      transition: opacity .4s;
-      z-index: 10;
-    }
-    .scroll-hint svg { width: 20px; height: 20px; }
-    .scroll-hint.hidden { opacity: 0; }
-    @keyframes bounce {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50%       { transform: translateX(-50%) translateY(6px); }
-    }
-
     @media (max-width: 600px) {
       body {
         justify-content: flex-start;
@@ -238,13 +211,6 @@
     </a>
   </div>
 
-  <div class="scroll-hint" id="scrollHint">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="6 9 12 15 18 9"/>
-    </svg>
-    <span>Ver más</span>
-  </div>
-
   <div class="footer">
     &copy; 2026 Sistema de Gestión de Impresoras · PWA Ready
   </div>
@@ -257,15 +223,6 @@
           .then(reg => console.log('✅ Service Worker registrado', reg))
           .catch(err => console.error('❌ Error al registrar SW', err));
       });
-    }
-
-    // Ocultar el scroll hint al hacer scroll
-    const hint = document.getElementById('scrollHint');
-    if (hint) {
-      window.addEventListener('scroll', () => {
-        if (window.scrollY > 40) hint.classList.add('hidden');
-        else hint.classList.remove('hidden');
-      }, { passive: true });
     }
 
     // ── Lógica de Confirmación de Email ──────────────────
