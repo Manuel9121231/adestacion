@@ -507,15 +507,31 @@
 
         if (error) throw error;
 
-        // Guardar email para OTP verification
-        emailRegistro = email;
-        localStorage.setItem('sgi_reg_email', email);
-        localStorage.setItem('sgi_reg_nombre', nombre);
+        // Si el usuario ya viene con sesión (Confirmación de email desactivada en Supabase)
+        if (data.session) {
+          try {
+            await client.from('perfiles').upsert({
+              id: data.user.id,
+              email: email,
+              nombre: nombre,
+              rol: 'usuario',
+              activo: true
+            });
+          } catch(e) {}
+          await client.auth.signOut();
+          activarStep('panelRegistro', 'regStep3');
+        } else {
+          // Guardar email para OTP verification
+          emailRegistro = email;
+          localStorage.setItem('sgi_reg_email', email);
+          localStorage.setItem('sgi_reg_nombre', nombre);
 
-        document.getElementById('regOtpSubtitle').textContent =
-          `Hemos enviado un código de 6 dígitos a ${email}. Introdúcelo para activar tu cuenta.`;
+          document.getElementById('regOtpSubtitle').innerHTML =
+            `Hemos enviado un código de 6 dígitos a ${email}. Introdúcelo para activar tu cuenta.<br><br>
+             <strong style="color:var(--text-muted);font-size:11px;">¿No te llega el código? Pide al Administrador que desactive la "Confirmación de Email" en los ajustes de Supabase.</strong>`;
 
-        activarStep('panelRegistro', 'regStep2');
+          activarStep('panelRegistro', 'regStep2');
+        }
 
       } catch (err) {
         console.error(err);

@@ -786,7 +786,8 @@ async function cargarHistorial() {
   const hasFilters = sala || maquina || operario || desde || hasta;
   
   if (!hasFilters && datosHistorial.length > 0) {
-    renderizarContenidoHistorial(datosHistorial, tbody, empty);
+    const mantenimientos = datosHistorial.filter(r => r.tipo === 'Mantenimiento');
+    renderizarContenidoHistorial(mantenimientos, tbody, empty);
     return;
   }
 
@@ -798,7 +799,13 @@ async function cargarHistorial() {
     if (empty) empty.style.display = 'block';
     return;
   }
-  renderizarContenidoHistorial(res.data, tbody, empty);
+  const mantenimientosRes = res.data.filter(r => r.tipo === 'Mantenimiento');
+  if (mantenimientosRes.length === 0) {
+    if(tbody) tbody.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  renderizarContenidoHistorial(mantenimientosRes, tbody, empty);
 }
 
 function renderizarContenidoHistorial(data, tbody, empty) {
@@ -830,7 +837,7 @@ function renderizarContenidoHistorial(data, tbody, empty) {
           </div>
         </td>
         <td data-label="Sala">${r.sala}</td>
-        <td data-label="Operario">
+        <td data-label="Operario" style="max-width: 150px; white-space: normal; word-break: break-word;">
           <div style="font-weight:700">${r.operario}</div>
           <div style="font-size:10px; color:var(--text-muted)">${r.operario_email || '–'}</div>
         </td>
@@ -905,9 +912,10 @@ async function verDetalleSesion(id) {
             <div class="machine-sala">📍 ${sesion.sala}</div>
           </div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center;">
           <div class="estado-badge ${isInc?'vencido':'ok'}">${isInc?'Incidencia':'Mantenimiento'}</div>
           ${isInc ? `<div class="estado-badge ${resuelta?'ok':'vencido'}">${resuelta?'✅ Resuelta':'🚨 Pendiente'}</div>` : ''}
+          <button class="btn btn-icon" style="background:transparent;border:none;color:var(--danger);padding:4px;font-size:16px;cursor:pointer;" onclick="eliminarIncidencia('${sesion.id}')" title="Eliminar registro">❌</button>
         </div>
       </div>
 
@@ -958,10 +966,6 @@ async function verDetalleSesion(id) {
               <div style="font-size:11px; color: var(--text-muted)">Sin fotos adjuntas</div>
             </div>
           `}
-          
-          <button class="btn btn-outline btn-sm btn-full" onclick="cerrarModal('modalDetalle'); verHistorialMaquina('${sesion.maquina}')" style="background:var(--bg-secondary); font-size: 11px;">📋 Ver Historial Máquina</button>
-          
-          <button class="btn btn-danger btn-sm btn-full" onclick="eliminarIncidencia('${sesion.id}')" style="margin-top: 8px; opacity: 0.8;">🗑️ Eliminar de la lista</button>
         </div>
       </div>
     </div>
@@ -1036,7 +1040,12 @@ async function guardarNuevaNota() {
 }
 
 async function editarDescripcionIncidencia(id) {
-  const nuevaDesc = await customPrompt('Editar Reporte', 'Edita el reporte de la incidencia:', '');
+  const resDet = await apiFetch(`/api/sesion/${id}/detalle`);
+  let currentDesc = '';
+  if (resDet.ok && resDet.data.sesion) {
+    currentDesc = resDet.data.sesion.observaciones;
+  }
+  const nuevaDesc = await customPrompt('Editar Reporte', 'Edita el reporte de la incidencia:', currentDesc);
   if (nuevaDesc === null) return;
   
   const res = await apiFetch(`/api/incidencia/${id}/editar`, {

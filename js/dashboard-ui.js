@@ -378,62 +378,64 @@ const DASHBOARD_HTML = `
         <div class="modal-title">✏️ Editar Máquina</div>
         <button class="modal-close" onclick="cerrarModal('modalMaquina')">✕</button>
       </div>
-      <input type="hidden" id="editMaquinaId">
-      <div class="grid-2">
-        <div class="form-group">
-          <label class="form-label">Código</label>
-          <input class="form-control" id="editCodigo" type="text" placeholder="Ej: IMP-01">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nombre *</label>
-          <input class="form-control" id="editNombre" type="text">
-        </div>
-      </div>
-      <div class="grid-2">
-        <div class="form-group">
-          <label class="form-label">Tipo</label>
-          <select class="form-control" id="editTipo">
-            <option>Impresora FDM</option>
-            <option>Impresora Resina</option>
-            <option>CNC / Fresadora</option>
-            <option>Cortadora Láser</option>
-            <option>Otro</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Modelo</label>
-          <input class="form-control" id="editModelo" type="text" placeholder="Ej: Prusa MK4">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Estado operativo</label>
-          <select class="form-control" id="editEstado">
-            <option value="activa">✅ Activa / Operativa</option>
-            <option value="en_revision">🔧 En revisión</option>
-            <option value="averiada">🚨 Averiada</option>
-            <option value="inactiva">⛔ Inactiva</option>
-          </select>
-        </div>
-      </div>
-      <div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:12px;padding:16px;margin-bottom:16px">
-        <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">📐 Dimensiones (mm)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Ancho</label>
-            <input class="form-control" id="editAncho" type="number" min="0" placeholder="220">
+      <div class="modal-body">
+        <input type="hidden" id="editMaquinaId">
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Código</label>
+            <input class="form-control" id="editCodigo" type="text" placeholder="Ej: IMP-01">
           </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Alto</label>
-            <input class="form-control" id="editAlto" type="number" min="0" placeholder="250">
-          </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Profundidad</label>
-            <input class="form-control" id="editProfundidad" type="number" min="0" placeholder="220">
+          <div class="form-group">
+            <label class="form-label">Nombre *</label>
+            <input class="form-control" id="editNombre" type="text">
           </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Notas / Especificaciones adicionales</label>
-        <textarea class="form-control" id="editNotas" rows="2" placeholder="Nozzle, material, configuración especial..."></textarea>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <select class="form-control" id="editTipo">
+              <option>Impresora FDM</option>
+              <option>Impresora Resina</option>
+              <option>CNC / Fresadora</option>
+              <option>Cortadora Láser</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modelo</label>
+            <input class="form-control" id="editModelo" type="text" placeholder="Ej: Prusa MK4">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado operativo</label>
+            <select class="form-control" id="editEstado">
+              <option value="activa">✅ Activa / Operativa</option>
+              <option value="en_revision">🔧 En revisión</option>
+              <option value="averiada">🚨 Averiada</option>
+              <option value="inactiva">⛔ Inactiva</option>
+            </select>
+          </div>
+        </div>
+        <div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:12px;padding:16px;margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">📐 Dimensiones (mm)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Ancho</label>
+              <input class="form-control" id="editAncho" type="number" min="0" placeholder="220">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Alto</label>
+              <input class="form-control" id="editAlto" type="number" min="0" placeholder="250">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Profundidad</label>
+              <input class="form-control" id="editProfundidad" type="number" min="0" placeholder="220">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notas / Especificaciones adicionales</label>
+          <textarea class="form-control" id="editNotas" rows="2" placeholder="Nozzle, material, configuración especial..."></textarea>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="cerrarModal('modalMaquina')">Cancelar</button>
@@ -449,66 +451,68 @@ const DASHBOARD_HTML = `
         <div class="modal-title">➕ Nueva Máquina</div>
         <button class="modal-close" onclick="cerrarModal('modalNuevaMaquina')">✕</button>
       </div>
-      <div id="msgNuevaMaquina"></div>
-      <div class="grid-2">
-        <div class="form-group">
-          <label class="form-label">Código <span style="color:var(--danger)">*</span></label>
-          <input class="form-control" id="nuevoMaquinaCodigo" type="text" placeholder="Ej: IMP-01">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nombre <span style="color:var(--danger)">*</span></label>
-          <input class="form-control" id="nuevoMaquinaNombre" type="text" placeholder="Ej: Impresora A-11">
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Sala <span style="color:var(--danger)">*</span></label>
-        <select class="form-control" id="nuevoMaquinaSala"></select>
-      </div>
-      <div class="grid-2">
-        <div class="form-group">
-          <label class="form-label">Tipo</label>
-          <select class="form-control" id="nuevoMaquinaTipo">
-            <option>Impresora FDM</option>
-            <option>Impresora Resina</option>
-            <option>CNC / Fresadora</option>
-            <option>Cortadora Láser</option>
-            <option>Otro</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Modelo</label>
-          <input class="form-control" id="nuevoMaquinaModelo" type="text" placeholder="Ej: Prusa MK4">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Estado operativo</label>
-          <select class="form-control" id="nuevoMaquinaEstado">
-            <option value="activa">✅ Activa / Operativa</option>
-            <option value="en_revision">🔧 En revisión</option>
-            <option value="averiada">🚨 Averiada</option>
-            <option value="inactiva">⛔ Inactiva</option>
-          </select>
-        </div>
-      </div>
-      <div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:12px;padding:16px;margin-bottom:16px">
-        <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">📐 Dimensiones (mm)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Ancho</label>
-            <input class="form-control" id="nuevoMaquinaAncho" type="number" min="0" placeholder="220">
+      <div class="modal-body">
+        <div id="msgNuevaMaquina"></div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Código <span style="color:var(--danger)">*</span></label>
+            <input class="form-control" id="nuevoMaquinaCodigo" type="text" placeholder="Ej: IMP-01">
           </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Alto</label>
-            <input class="form-control" id="nuevoMaquinaAlto" type="number" min="0" placeholder="250">
-          </div>
-          <div class="form-group" style="margin-bottom:0">
-            <label class="form-label">Profundidad</label>
-            <input class="form-control" id="nuevoMaquinaProfundidad" type="number" min="0" placeholder="220">
+          <div class="form-group">
+            <label class="form-label">Nombre <span style="color:var(--danger)">*</span></label>
+            <input class="form-control" id="nuevoMaquinaNombre" type="text" placeholder="Ej: Impresora A-11">
           </div>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Notas / Especificaciones adicionales</label>
-        <textarea class="form-control" id="nuevoMaquinaNotas" rows="2" placeholder="Nozzle, material, configuración especial..."></textarea>
+        <div class="form-group">
+          <label class="form-label">Sala <span style="color:var(--danger)">*</span></label>
+          <select class="form-control" id="nuevoMaquinaSala"></select>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <select class="form-control" id="nuevoMaquinaTipo">
+              <option>Impresora FDM</option>
+              <option>Impresora Resina</option>
+              <option>CNC / Fresadora</option>
+              <option>Cortadora Láser</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Modelo</label>
+            <input class="form-control" id="nuevoMaquinaModelo" type="text" placeholder="Ej: Prusa MK4">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado operativo</label>
+            <select class="form-control" id="nuevoMaquinaEstado">
+              <option value="activa">✅ Activa / Operativa</option>
+              <option value="en_revision">🔧 En revisión</option>
+              <option value="averiada">🚨 Averiada</option>
+              <option value="inactiva">⛔ Inactiva</option>
+            </select>
+          </div>
+        </div>
+        <div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:12px;padding:16px;margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">📐 Dimensiones (mm)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Ancho</label>
+              <input class="form-control" id="nuevoMaquinaAncho" type="number" min="0" placeholder="220">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Alto</label>
+              <input class="form-control" id="nuevoMaquinaAlto" type="number" min="0" placeholder="250">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Profundidad</label>
+              <input class="form-control" id="nuevoMaquinaProfundidad" type="number" min="0" placeholder="220">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notas / Especificaciones adicionales</label>
+          <textarea class="form-control" id="nuevoMaquinaNotas" rows="2" placeholder="Nozzle, material, configuración especial..."></textarea>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="cerrarModal('modalNuevaMaquina')">Cancelar</button>
@@ -645,20 +649,26 @@ const DASHBOARD_HTML = `
   <!-- ── Modal: Feedback / Alerta ── -->
   <div class="overlay" id="modalFeedback">
     <div class="modal" style="max-width:350px; text-align:center; padding: 32px 24px">
-      <div style="font-size:52px; margin-bottom:16px" id="feedbackIcon">✅</div>
-      <div class="modal-title" id="feedbackTitle" style="margin-bottom:12px; font-size:20px">Título</div>
-      <p id="feedbackMsg" style="color:var(--text-muted); font-size:14px; margin-bottom:28px; line-height:1.5">Mensaje</p>
-      <button class="btn btn-primary btn-full" onclick="cerrarModal('modalFeedback')">Continuar</button>
+      <div>
+        <div style="font-size:52px; margin-bottom:16px" id="feedbackIcon">✅</div>
+        <div class="modal-title" id="feedbackTitle" style="margin-bottom:12px; font-size:20px">Título</div>
+        <p id="feedbackMsg" style="color:var(--text-muted); font-size:14px; margin-bottom:28px; line-height:1.5">Mensaje</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center; margin-top:0">
+        <button class="btn btn-primary btn-full" onclick="cerrarModal('modalFeedback')">Continuar</button>
+      </div>
     </div>
   </div>
 
   <!-- ── Modal: Confirmación ── -->
   <div class="overlay" id="modalConfirm">
     <div class="modal" style="max-width:400px; text-align:center; padding: 36px 28px">
-      <div style="font-size:52px; margin-bottom:16px; line-height:1" id="confirmIcon">⚠️</div>
-      <div class="modal-title" id="confirmTitle" style="margin-bottom:10px; font-size:18px">¿Estás seguro?</div>
-      <p id="confirmMsg" style="color:var(--text-muted); font-size:14px; margin-bottom:28px; line-height:1.6">Esta acción no se puede deshacer.</p>
-      <div style="display:flex; gap:12px">
+      <div>
+        <div style="font-size:52px; margin-bottom:16px; line-height:1" id="confirmIcon">⚠️</div>
+        <div class="modal-title" id="confirmTitle" style="margin-bottom:10px; font-size:18px">¿Estás seguro?</div>
+        <p id="confirmMsg" style="color:var(--text-muted); font-size:14px; margin-bottom:28px; line-height:1.6">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer" style="margin-top:0">
         <button class="btn btn-outline btn-full" onclick="window.confirmReject?.()">Cancelar</button>
         <button class="btn btn-danger btn-full" id="confirmAcceptBtn" onclick="window.confirmResolve?.()">Confirmar</button>
       </div>
