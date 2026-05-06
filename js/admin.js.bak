@@ -1,0 +1,1711 @@
+'use strict';
+
+const API = 'https://script.google.com/macros/s/AKfycbwW2_UWpOS45F-3BbyVbUvtxIJ3b_OP_Pnl_cSgSwO-BXz9nSzqoTb8oxnh185za0M/exec'; // <--- URL DE LA WEB APP OPTIMIZADA
+let datosSalas = [];
+let datosMaquinas = [];
+let datosUsuarios = [];
+let datosHistorial = []; // Reutilizar datos ya cargados
+let isCargando = false;
+// Detectar base path (útil para GitHub Pages en subcarpetas)
+let serverHost = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+
+async function detectarServidor() {
+  try {
+    const res = await fetch('/api/info');
+    const json = await res.json();
+    if (json.ok && json.data.url) {
+      serverHost = json.data.url;
+      console.log("?? QR Host detectado:", serverHost);
+    }
+  } catch (e) {
+    console.warn("?? No se pudo obtener IP local del servidor, usando origin actual.");
+  }
+}
+
+let rolActual = 'admin'; // Se actualiza al cargar la sesión
+
+// ?? Obtener nombre del admin actual ??
+function getNombreAdmin() {
+  try {
+    const s = JSON.parse(localStorage.getItem('sgi_admin_session') || '{}');
+    return s.nombre || s.username || 'Administrador';
+  } catch { return 'Administrador'; }
+}
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const sessionStr = localStorage.getItem('sgi_admin_session');
+  detectarServidor(); // Cargar IP real para los QRs
+  if (!sessionStr) return; // Esperar al login manual
+  const sgiSession = JSON.parse(sessionStr || '{}');
+  window.sgiAdminSession = sgiSession;
+
+  try {
+    isCargando = true;
+    
+    // Inyectar interfaz de forma segura
+    const container = document.getElementById('dashboardContent');
+    if (container) {
+      container.innerHTML = DASHBOARD_HTML;
+    }
+
+    // Mostrar nombre del admin en sidebar footer
+    const adminName = getNombreAdmin();
+    const footerVersion = container?.querySelector('.sidebar-footer div');
+    if (footerVersion) {
+      footerVersion.textContent = `?? ${adminName}`;
+    }
+
+    const grid = document.getElementById('gridMaquinas');
+    if (grid) grid.innerHTML = skeletonMaquinas();
+    const tbody = document.getElementById('dashboardUltimos');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)"><span class="spinner" style="display:inline-block;margin-right:8px"></span>Conectando con Supabase...</td></tr>';
+    
+    // Cargar TODO en una sola llamada
+    await cargarDatosBase();
+    
+    // Auto-sincronización cada 2 minutos
+    setInterval(() => {
+      console.log('Sincronización automática con Supabase...');
+      recargarTodo();
+    }, 120000);
+  } catch (err) {
+    console.error('Error durante la carga inicial:', err);
+  } finally {
+    isCargando = false;
+  }
+});
+
+function skeletonMaquinas() {
+  const card = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;animation:pulse 1.5s ease-in-out infinite">
+    <div style="height:14px;background:var(--border);border-radius:6px;width:60%;margin-bottom:12px"></div>
+    <div style="height:10px;background:var(--border);border-radius:6px;width:40%;margin-bottom:20px"></div>
+    <div style="height:10px;background:var(--border);border-radius:6px;width:80%;margin-bottom:8px"></div>
+    <div style="height:10px;background:var(--border);border-radius:6px;width:70%"></div>
+  </div>`;
+  const inner = Array(6).fill(card).join('');
+  return `<div class="grid-maquinas-inner" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;display:grid">${inner}</div>`;
+}
+
+function skeletonTabla(cols = 5) {
+  const row = `<tr>
+    ${Array(cols).fill(`<td><div style="height:12px;background:var(--border);border-radius:6px;width:80%;animation:pulse 1.5s ease-in-out infinite"></div></td>`).join('')}
+  </tr>`;
+  return Array(5).fill(row).join('');
+}
+
+async function cargarDatosBase() {
+  console.time('Carga Inicial Bundled');
+  // Una sola llamada para traerlo TODO
+  const res = await apiFetch('/api/all-data');
+  console.timeEnd('Carga Inicial Bundled');
+  
+  if (res.ok && res.data) {
+    const d = res.data;
+    datosSalas = d.salas || [];
+    datosMaquinas = d.maquinas || [];
+    datosUsuarios = d.usuarios || [];
+    datosHistorial = d.historial || [];
+    
+    // Poblar dashboard con los datos ya recibidos
+    actualizarVistaDashboard(d.dashboard, d.historial);
+  }
+
+  // Actualizar la vista actual ahora que los datos están listos
+  renderActualSection();
+
+  // Poblar selects de salas
+  ['filtroSalaMaquinas', 'filtroSala', 'filtroSalaQR', 'nuevoMaquinaSala'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (id !== 'nuevoMaquinaSala') {
+      el.innerHTML = '<option value="">Todas las salas</option>';
+    } else {
+      el.innerHTML = '<option value="">Seleccione una sala...</option>';
+    }
+    datosSalas.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id; opt.textContent = s.nombre;
+      el.appendChild(opt);
+    });
+  });
+
+// El filtro de operario ahora es un input de texto, no necesita población inicial
+
+  // Actualizar badge alertas
+  const alertas = datosMaquinas.filter(m =>
+    m.estado_mantenimiento === 'vencido' || m.estado_mantenimiento === 'pendiente'
+  ).length;
+  const badge = document.getElementById('badge-alertas');
+  if (alertas > 0) { badge.textContent = alertas; badge.style.display = 'inline'; }
+  else badge.style.display = 'none';
+
+  // Badge máquinas total
+  const maqBadge = document.getElementById('badge-maquinas');
+  if (maqBadge) {
+    maqBadge.textContent = datosMaquinas.length;
+    maqBadge.style.display = datosMaquinas.length > 0 ? 'inline' : 'none';
+  }
+
+  // Badge incidencias pendientes
+  const pendientesCount = datosHistorial.filter(r => r.tipo === 'Incidencia' && !r.resuelta).length;
+  const incBadge = document.getElementById('badge-incidencias');
+  if (incBadge) {
+    incBadge.textContent = pendientesCount;
+    incBadge.style.display = pendientesCount > 0 ? 'inline' : 'none';
+  }
+}
+
+// ?? Incidencias ?????????????????????????????????????????????????????????????
+function renderIncidencias(filtro = 'todas') {
+  const grid = document.getElementById('gridTicketsIncidencias');
+  const empty = document.getElementById('incidenciasEmpty');
+  if (!grid) return;
+
+  // Actualizar estados de botones de filtro
+  ['todas', 'pendientes', 'resueltas'].forEach(f => {
+    const btn = document.getElementById(`btn-inc-${f}`);
+    if (btn) btn.classList.toggle('active', f === filtro);
+  });
+
+  let lista = datosHistorial.filter(r => r.tipo === 'Incidencia');
+  
+  // Cálculo de KPIs locales para el panel
+  const totalPendientes = lista.filter(r => !r.resuelta && !r.en_seguimiento).length;
+  const totalResueltas = lista.filter(r => r.resuelta).length;
+  const totalSeguimiento = lista.filter(r => !r.resuelta && r.en_seguimiento).length;
+
+  if (document.getElementById('kpi-inc-pendientes')) document.getElementById('kpi-inc-pendientes').textContent = totalPendientes;
+  if (document.getElementById('kpi-inc-resueltas')) document.getElementById('kpi-inc-resueltas').textContent = totalResueltas;
+  if (document.getElementById('kpi-inc-seguimiento')) document.getElementById('kpi-inc-seguimiento').textContent = totalSeguimiento;
+
+  if (filtro === 'pendientes') lista = lista.filter(r => !r.resuelta);
+  if (filtro === 'resueltas') lista = lista.filter(r => r.resuelta);
+
+  if (!lista.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+
+  empty.style.display = 'none';
+  grid.innerHTML = lista.map(r => {
+    const resuelta = r.resuelta || false;
+    const esSeguimiento = !resuelta && r.en_seguimiento; 
+    const statusClass = resuelta ? 'resuelto' : (esSeguimiento ? 'seguimiento' : 'urgente');
+    const statusText = resuelta ? '✅ Finalizado' : (esSeguimiento ? 'ðŸ“ En Seguimiento' : '🚨 Pendiente');
+
+    return `
+      <div class="ticket-card ${statusClass} fade-in" onclick="verDetalleSesion('${r.id}')">
+        <div class="ticket-status-strip"></div>
+        <div class="ticket-content">
+          <div class="ticket-header">
+            <div class="ticket-machine-info">
+              <span class="machine-name">${r.maquina}</span>
+              <span class="sala-name">ðŸ“ ${r.sala}</span>
+            </div>
+            <div class="status-indicator ${statusClass}">${statusText}</div>
+          </div>
+          
+          <div class="ticket-body">
+            <p class="ticket-description">${truncate(r.observaciones || 'Sin descripción detallada', 100)}</p>
+          </div>
+
+          <div class="ticket-footer">
+            <div class="ticket-meta">
+              <span class="meta-item">👤 ${r.operario}</span>
+              <span class="meta-item">📅 ${formatFechaHora(r.completado_en)}</span>
+            </div>
+            <div class="ticket-actions">
+               <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); verDetalleSesion('${r.id}')">Gestionar</button>
+               ${!resuelta ? `
+                 <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); toggleResolucionIncidencia('${r.id}', true)">Cerrar Ticket</button>
+               ` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Navegación ────────────────────────────────────────────────────────────────
+const sectionTitles = {
+  dashboard: ['Panel General', 'Resumen del sistema'],
+  maquinas: ['Máquinas', 'Estado y gestión de todas las máquinas'],
+  incidencias: ['Centro de Incidencias', 'Gestión de fallos técnicos y reparaciones'],
+  historial: ['Historial', 'Registro de mantenimientos e incidencias'],
+  qrcodes: ['Códigos QR', 'QR individuales para el operario móvil'],
+  usuarios: ['Usuarios del Sistema', 'Gestión de accesos y privilegios de usuario']
+};
+
+function navigateTo(section) {
+  // Verificación de roles (solo admin puede ver gestión de máquinas, QR y usuarios)
+  const rutasRestringidas = ['usuarios', 'qrcodes'];
+  let idToShow = section;
+  
+  if (rolActual !== 'admin' && rutasRestringidas.includes(section)) {
+    idToShow = 'restringido';
+  }
+
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  document.getElementById('section-' + idToShow).classList.add('active');
+  if (idToShow !== 'restringido') {
+    const navItem = document.getElementById('nav-' + section);
+    if(navItem) navItem.classList.add('active');
+  } else {
+    document.getElementById('topbarTitle').textContent = 'Acceso Denegado';
+    document.getElementById('topbarSubtitle').textContent = 'Sección restringida por permisos';
+    return;
+  }
+
+  const [title, sub] = sectionTitles[section] || [section, ''];
+  document.getElementById('topbarTitle').textContent = title;
+  document.getElementById('topbarSubtitle').textContent = sub;
+
+  // Cargar datos bajo demanda
+  if (section === 'maquinas') renderMaquinas();
+  if (section === 'incidencias') renderIncidencias();
+  if (section === 'historial') { cargarHistorial(); poblarFiltroMaquinasHistorial(); }
+  if (section === 'usuarios') renderUsuarios();
+  if (section === 'qrcodes') renderQRs();
+}
+
+function renderActualSection() {
+  const activeSection = document.querySelector('.section.active');
+  if (!activeSection) return;
+  const id = activeSection.id.replace('section-', '');
+  if (id === 'maquinas') renderMaquinas();
+  if (id === 'incidencias') renderIncidencias();
+  if (id === 'historial') cargarHistorial();
+  if (id === 'usuarios') renderUsuarios();
+  if (id === 'qrcodes') renderQRs();
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  sidebar.classList.toggle('open');
+  if (backdrop) backdrop.classList.toggle('open');
+}
+
+// ?? Dashboard ?????????????????????????????????????????????????????????????????
+async function cargarDashboard() {
+  // Ahora es solo un wrapper por si se llama manualmente
+  const res = await apiFetch('/api/dashboard');
+  if (res.ok) {
+     const histRes = await apiFetch('/api/historial?');
+     actualizarVistaDashboard(res.data, histRes.ok ? histRes.data : []);
+  }
+}
+
+function actualizarVistaDashboard(stats, historial) {
+  if (!stats) return;
+
+  const d = stats;
+  const kpiHoy = document.getElementById('kpi-hoy');
+  if (kpiHoy) kpiHoy.textContent = d.hoy;
+  const kpiSem = document.getElementById('kpi-semana');
+  if (kpiSem) kpiSem.textContent = d.semana;
+  const kpiPen = document.getElementById('kpi-pendientes');
+  if (kpiPen) kpiPen.textContent = d.pendientes;
+  const kpiProx = document.getElementById('kpi-proximos');
+  if (kpiProx) kpiProx.textContent = d.proximos;
+
+  // Gráfica de días
+  renderBarChart('chartDias', (d.porDia || []).slice(-14).map(r => ({
+    label: formatFechaDia(r.dia), value: r.total
+  })));
+
+  // Gráfica de máquinas
+  const maqData = (d.porMaquina || []).map(r => ({ label: r.nombre, value: r.total_sesiones }));
+  renderBarChart('chartMaquinas', maqData.slice(0, 12));
+
+  // Últimos mantenimientos
+  if (historial) renderUltimosMantenimientos(historial.slice(0, 8));
+}
+
+function renderBarChart(containerId, items) {
+  const container = document.getElementById(containerId);
+  if (!container || !items.length) {
+    container.innerHTML = '<div class="empty-state" style="padding:24px"><div class="icon">📊</div><p>Sin datos aún</p></div>';
+    return;
+  }
+  const max = Math.max(...items.map(i => i.value), 1);
+  container.innerHTML = items.map(i => `
+    <div class="chart-bar-row">
+      <div class="chart-bar-label" title="${i.label}">${truncate(i.label, 12)}</div>
+      <div class="chart-bar-track">
+        <div class="chart-bar-fill" style="width:${(i.value / max * 100).toFixed(1)}%"></div>
+      </div>
+      <div class="chart-bar-val">${i.value}</div>
+    </div>
+  `).join('');
+}
+
+function renderUltimosMantenimientos(registros) {
+  const tbody = document.getElementById('dashboardUltimos');
+  if (!registros.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px">Sin mantenimientos aún</td></tr>';
+    return;
+  }
+  tbody.innerHTML = registros.map(r => {
+    const isIncidencia = r.tipo === 'Incidencia';
+    const resuelta = r.resuelta || false;
+    const rowStyle = (isIncidencia && !resuelta) ? 'color: var(--danger); font-weight: 600;' : '';
+    const icon = isIncidencia ? (resuelta ? '?' : '??') : '???';
+
+    return `
+      <tr onclick="verDetalleSesion('${r.id}')" style="cursor:pointer">
+        <td data-label="Máquina"><span style="${rowStyle}">${icon} ${r.maquina}</span></td>
+        <td data-label="Sala"><span class="text-muted">${r.sala}</span></td>
+        <td data-label="Operario">${r.operario}</td>
+        <td data-label="Fecha y hora">${formatFechaHora(r.completado_en)}</td>
+        <td data-label="Estado">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <span class="estado-badge ${isIncidencia ? (resuelta ? 'ok' : 'vencido') : 'ok'}" style="font-size:10px">
+              ${isIncidencia ? (resuelta ? 'Resuelta' : 'Pendiente') : 'Completado'}
+            </span>
+            ${r.tiene_fotos ? `
+              <div style="position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <img src="${r.fotos[0]}" style="width:24px;height:24px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
+              </div>
+            ` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// —— Máquinas ——————————————————————————————————————————————————————————————————————
+function renderMaquinas() {
+  const salaFiltro = document.getElementById('filtroSalaMaquinas') ? document.getElementById('filtroSalaMaquinas').value : '';
+  const grid = document.getElementById('gridMaquinas');
+  
+  if (isCargando && !datosMaquinas.length) {
+    grid.innerHTML = skeletonMaquinas();
+    return;
+  }
+
+  const lista = salaFiltro
+    ? datosMaquinas.filter(m => String(m.sala_id) === String(salaFiltro))
+    : datosMaquinas;
+
+  if (!lista.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">📠</div><p>No hay máquinas registradas</p></div>';
+    return;
+  }
+
+  function tarjetaMaquina(m) {
+    const ultimo = m.ultimo_mantenimiento
+      ? `Último: ${formatFechaHora(m.ultimo_mantenimiento)}`
+      : 'Sin mantenimiento registrado';
+
+    return `
+      <div class="maquina-card fade-in" 
+           draggable="true" 
+           ondragstart="handleDragStart(event, '${m.id}')"
+           onclick="verHistorialMaquina('${m.id}')" 
+           style="cursor:grab" title="Arrastra para mover de sala">
+        <div class="maquina-header">
+          <div>
+            <div class="maquina-nombre">${m.nombre}</div>
+            <div class="maquina-tipo">${m.codigo || 'S/ID'} · ${m.tipo}</div>
+          </div>
+        </div>
+        <div class="maquina-info">
+          <span style="font-size:11px; color:var(--accent)">?? ${m.sala_nombre || 'Sin sala'}</span>
+          <span>?? ${m.modelo || 'Sin modelo'}</span>
+          <span>?? ${ultimo}</span>
+        </div>
+        <div class="maquina-actions">
+           <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarMaquina('${m.id}')">??</button>
+           <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation(); eliminarMaquina('${m.id}')">???</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function seccionEspacio(idSala, titulo, icono, color, maquinas) {
+    return `
+      <div class="espacio-section drop-zone" 
+           ondragover="handleDragOver(event)" 
+           ondragleave="handleDragLeave(event)"
+           ondrop="handleDrop(event, '${idSala}')"
+           style="margin-bottom:32px; padding:16px; border-radius:16px; transition: all 0.3s; border: 2px dashed transparent; background: ${color}">
+        <div class="espacio-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span style="font-size:22px">${icono}</span>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary)">${titulo}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${maquinas.length} máquina${maquinas.length !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+        <div class="grid-maquinas-inner" style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; display: grid;">
+          ${maquinas.map(tarjetaMaquina).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  let htmlResult = '';
+  const bgColors = ['rgba(79,142,247,0.05)', 'rgba(16,185,129,0.05)', 'rgba(245,158,11,0.05)', 'rgba(139,92,246,0.05)'];
+  const iconos = ['??', '??', '??', '???'];
+
+  datosSalas.forEach((sala, index) => {
+    if (salaFiltro && String(sala.id) !== String(salaFiltro)) return;
+    const maquinasSala = lista.filter(m => m.sala_id === sala.id);
+    const color = bgColors[index % bgColors.length];
+    const icono = iconos[index % iconos.length];
+    htmlResult += seccionEspacio(sala.id, sala.nombre, icono, color, maquinasSala);
+  });
+
+  // Sección para máquinas sin sala asignada
+  const sinSala = lista.filter(m => !m.sala_id);
+  if (sinSala.length > 0 && !salaFiltro) {
+    htmlResult += seccionEspacio('', 'Sin Sala Asignada', '?', 'rgba(100,100,100,0.05)', sinSala);
+  }
+
+  grid.innerHTML = htmlResult;
+}
+
+// ── Lógica Drag & Drop ──────────────────────────────────────────────────────
+function handleDragStart(e, id) {
+  e.dataTransfer.setData('text/plain', id);
+  e.currentTarget.style.opacity = '0.4';
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.style.borderColor = 'var(--accent)';
+  e.currentTarget.style.background = 'rgba(79,142,247,0.1)';
+}
+
+function handleDragLeave(e) {
+  e.currentTarget.style.borderColor = 'transparent';
+  e.currentTarget.style.background = ''; // Se restaura por CSS o inline original
+}
+
+async function handleDrop(e, idSalaDestino) {
+  e.preventDefault();
+  const idMaquina = e.dataTransfer.getData('text/plain');
+  e.currentTarget.style.borderColor = 'transparent';
+  e.currentTarget.style.background = '';
+
+  if (!idMaquina) return;
+
+  try {
+    const { error } = await window.supabaseClient
+      .from('equipos')
+      .update({ sala_id: idSalaDestino || null })
+      .eq('id', idMaquina);
+
+    if (error) throw error;
+
+    await recargarTodo();
+    renderMaquinas();
+  } catch (err) {
+    showFeedback('Error al mover', 'No se ha podido cambiar la máquina de sala.', '❌');
+  }
+}
+
+function filtrarMaquinas() { renderMaquinas(); }
+
+async function editarMaquina(id) {
+  const maq = datosMaquinas.find(m => m.id === id);
+  if (!maq) return;
+  document.getElementById('editMaquinaId').value = id;
+  document.getElementById('editCodigo').value = maq.codigo || '';
+  document.getElementById('editNombre').value = maq.nombre;
+  document.getElementById('editTipo').value = maq.tipo;
+  document.getElementById('editModelo').value = maq.modelo || '';
+  document.getElementById('editEstado').value = maq.estado || 'activa';
+  document.getElementById('editAncho').value = maq.ancho_mm || '';
+  document.getElementById('editAlto').value = maq.alto_mm || '';
+  document.getElementById('editProfundidad').value = maq.profundidad_mm || '';
+  document.getElementById('editNotas').value = maq.notas || '';
+  abrirModal('modalMaquina');
+}
+
+async function guardarMaquina() {
+  const id = document.getElementById('editMaquinaId').value;
+  const datos = {
+    codigo: document.getElementById('editCodigo').value.trim(),
+    nombre: document.getElementById('editNombre').value.trim(),
+    tipo: document.getElementById('editTipo').value,
+    modelo: document.getElementById('editModelo').value.trim(),
+    estado: document.getElementById('editEstado').value,
+    ancho_mm: parseInt(document.getElementById('editAncho').value) || null,
+    alto_mm: parseInt(document.getElementById('editAlto').value) || null,
+    profundidad_mm: parseInt(document.getElementById('editProfundidad').value) || null,
+    notas: document.getElementById('editNotas').value.trim() || null,
+  };
+  if (!datos.nombre) return;
+  const res = await apiFetch(`/api/maquina/${id}`, { method: 'PUT', body: datos });
+  if (res.ok) {
+    cerrarModal('modalMaquina');
+    await cargarDatosBase();
+    renderMaquinas();
+    showFeedback('Máquina guardada', 'Los cambios se han guardado correctamente.', '✅');
+  } else {
+    showFeedback('Error al guardar', (res.error || 'No se pudieron guardar los cambios.'), '?');
+  }
+}
+
+function abrirModalNuevaMaquina() {
+  document.getElementById('nuevoMaquinaCodigo').value = '';
+  document.getElementById('nuevoMaquinaNombre').value = '';
+  document.getElementById('nuevoMaquinaModelo').value = '';
+  document.getElementById('nuevoMaquinaTipo').value = 'Impresora FDM';
+  document.getElementById('nuevoMaquinaAncho').value = '';
+  document.getElementById('nuevoMaquinaAlto').value = '';
+  document.getElementById('nuevoMaquinaProfundidad').value = '';
+  document.getElementById('nuevoMaquinaNotas').value = '';
+  const estadoEl = document.getElementById('nuevoMaquinaEstado');
+  if (estadoEl) estadoEl.value = 'activa';
+  document.getElementById('msgNuevaMaquina').innerHTML = '';
+  abrirModal('modalNuevaMaquina');
+}
+
+async function crearMaquina() {
+  const nombre = document.getElementById('nuevoMaquinaNombre').value.trim();
+  const sala_id = document.getElementById('nuevoMaquinaSala').value;
+  const tipo = document.getElementById('nuevoMaquinaTipo').value;
+  const modelo = document.getElementById('nuevoMaquinaModelo').value.trim();
+  const estado = document.getElementById('nuevoMaquinaEstado')?.value || 'activa';
+  const ancho_mm = parseInt(document.getElementById('nuevoMaquinaAncho').value) || null;
+  const alto_mm = parseInt(document.getElementById('nuevoMaquinaAlto').value) || null;
+  const profundidad_mm = parseInt(document.getElementById('nuevoMaquinaProfundidad').value) || null;
+  const notas = document.getElementById('nuevoMaquinaNotas').value.trim() || null;
+  const msg = document.getElementById('msgNuevaMaquina');
+
+  if (!nombre || !sala_id) {
+    msg.innerHTML = '<div class="alert alert-warning">?? Nombre y Sala son obligatorios</div>';
+    return;
+  }
+
+  const res = await apiFetch('/api/maquinas', { 
+    method: 'POST', 
+    body: { 
+      codigo: document.getElementById('nuevoMaquinaCodigo').value.trim(),
+      nombre, sala_id, tipo, modelo, estado,
+      ancho_mm, alto_mm, profundidad_mm, notas
+    } 
+  });
+
+  if (res.ok) {
+    cerrarModal('modalNuevaMaquina');
+    await cargarDatosBase();
+    renderMaquinas();
+  } else {
+    msg.innerHTML = `<div class="alert alert-danger">? ${res.error}</div>`;
+  }
+}
+
+async function eliminarMaquina(id) {
+  const ok = await customConfirm(
+    'Eliminar máquina',
+    '¿Estás seguro? Se eliminarán también todos sus registros de mantenimiento. Esta acción no se puede deshacer.',
+    '???'
+  );
+  if (!ok) return;
+  const res = await apiFetch(`/api/maquina/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    await cargarDatosBase();
+    renderMaquinas();
+    showFeedback('Máquina eliminada', 'La máquina y sus registros asociados han sido eliminados.', '✅');
+  } else {
+    showFeedback('Error al eliminar', res.error, '?');
+  }
+}
+
+// ?? QR Codes ??????????????????????????????????????????????????????????????????
+function renderQRs() {
+  const salaFiltro = document.getElementById('filtroSalaQR').value;
+  const lista = salaFiltro
+    ? datosMaquinas.filter(m => String(m.sala_id) === String(salaFiltro))
+    : datosMaquinas;
+
+  const grid = document.getElementById('gridQRs');
+  if (isCargando && !datosMaquinas.length) {
+     grid.innerHTML = skeletonMaquinas();
+     return;
+  }
+  
+  grid.innerHTML = lista.map(m => `
+    <div class="maquina-card fade-in" style="cursor:pointer" onclick="verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">
+      <div class="maquina-header">
+        <div>
+          <div class="maquina-nombre">${m.nombre}</div>
+          <div class="maquina-tipo">${m.sala_nombre} · ${m.tipo}</div>
+        </div>
+        <span style="font-size:32px">??</span>
+      </div>
+      <div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:13px">
+        Haz clic para ver el código QR
+      </div>
+    </div>
+  `).join('');
+}
+
+function filtrarQRs() { renderQRs(); }
+
+async function verQR(id, nombre, sala) {
+  document.getElementById('qrNombre').textContent = nombre;
+  document.getElementById('qrSala').textContent = sala;
+  const qrContainer = document.getElementById('qrImgContainer');
+  qrContainer.innerHTML = '';
+  qrContainer.style.cursor = 'pointer';
+  
+  const targetUrl = `${serverHost}/operario.html?maquinaId=${id}`;
+  qrContainer.onclick = () => window.open(targetUrl, '_blank');
+  
+  document.getElementById('qrUrl').textContent = 'Generando...';
+  abrirModal('modalQR');
+
+  const qrUrlEl = document.getElementById('qrUrl');
+  qrUrlEl.textContent = targetUrl;
+  qrUrlEl.href = targetUrl;
+  qrUrlEl.style.textDecoration = 'underline'; // Asegurar que parezca clickeable
+  
+  new QRCode(qrContainer, {
+    text: targetUrl,
+    width: 256,
+    height: 256,
+    colorDark: "#1a1a2e",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+
+function imprimirTodosLosQRs() {
+  const salaFiltro = document.getElementById('filtroSalaQR').value;
+  const lista = salaFiltro
+    ? datosMaquinas.filter(m => String(m.sala_id) === String(salaFiltro))
+    : datosMaquinas;
+
+  if (!lista.length) return showFeedback('Sin máquinas', 'No hay máquinas seleccionadas para imprimir.', '⚠️');
+
+  const printWindow = window.open('', '_blank');
+  let baseOrigin = serverHost;
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Imprimir todos los QRs</title>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+      <style>
+        body { font-family: sans-serif; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; justify-content: center; }
+        .qr-label { border: 1px solid #eee; padding: 15px; border-radius: 8px; text-align: center; width: 220px; page-break-inside: avoid; }
+        .qr-name { font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+        .qr-sala { font-size: 12px; color: #666; margin-bottom: 10px; }
+        .qr-canvas { display: flex; justify-content: center; margin-bottom: 10px; }
+        .qr-url { font-size: 9px; color: #aaa; word-break: break-all; }
+        @media print { body { padding: 10px; } }
+      </style>
+    </head>
+    <body>
+      ${lista.map(m => `
+        <div class="qr-label">
+          <div class="qr-name">${m.nombre}</div>
+          <div class="qr-sala">${m.sala_nombre}</div>
+          <div class="qr-canvas" id="canvas-${m.id}"></div>
+          <a class="qr-url" href="${baseOrigin}/operario.html?maquinaId=${m.id}" target="_blank">${baseOrigin}/operario.html?maquinaId=${m.id}</a>
+        </div>
+      `).join('')}
+      <script>
+        window.onload = () => {
+          const maquinas = ${JSON.stringify(lista)};
+          maquinas.forEach(m => {
+            new QRCode(document.getElementById('canvas-' + m.id), {
+              text: "${baseOrigin}/operario.html?maquinaId=" + m.id,
+              width: 160,
+              height: 160
+            });
+          });
+          setTimeout(() => { window.print(); window.close(); }, 1200);
+        };
+      </script>
+    </body>
+    </html>
+  `;
+  printWindow.document.write(html);
+  printWindow.document.close();
+}
+
+function imprimirQR() {
+  const nombre = document.getElementById('qrNombre').textContent;
+  const sala = document.getElementById('qrSala').textContent;
+  const container = document.getElementById('qrImgContainer');
+  const imgElement = container.querySelector('img');
+  const img = imgElement ? imgElement.src : '';
+  const url = document.getElementById('qrUrl').textContent;
+  
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>QR - ${nombre}</title>
+    <style>body{font-family:sans-serif;text-align:center;padding:40px}
+    h2{margin-bottom:4px}p{color:#666;font-size:14px;margin-bottom:20px}
+    img{border:3px solid #000;border-radius:8px;width:240px}
+    .url{font-size:11px;color:#999;margin-top:16px;word-break:break-all}
+    </style></head><body>
+    <h2>${nombre}</h2><p>${sala}</p>
+    <img src="${img}">
+    <a class="url" href="${url}" target="_blank">${url}</a>
+    <script>window.onload=()=>{setTimeout(()=>window.print(),500)}</script>
+    </body></html>`);
+  w.document.close();
+}
+
+// ?? Historial ?????????????????????????????????????????????????????????????????
+async function poblarFiltroMaquinasHistorial() {
+  const sel = document.getElementById('filtroMaquina');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Todas las máquinas</option>';
+  datosMaquinas.forEach(m => {
+    const opt = document.createElement('option');
+    const label = m.codigo ? `[${m.codigo}] ${m.nombre}` : m.nombre;
+    opt.value = m.id; opt.textContent = `${label} (${m.sala_nombre})`;
+    sel.appendChild(opt);
+  });
+}
+
+async function cargarHistorial() {
+  const params = new URLSearchParams();
+  const sala = document.getElementById('filtroSala')?.value;
+  const maquina = document.getElementById('filtroMaquina')?.value;
+  const operario = document.getElementById('filtroOperario')?.value.trim();
+  const desde = document.getElementById('filtroDesde')?.value;
+  const hasta = document.getElementById('filtroHasta')?.value;
+
+  if (sala) params.append('sala_id', sala);
+  if (maquina) params.append('maquina_id', maquina);
+  if (operario) params.append('operario_nombre', operario);
+  if (desde) params.append('desde', desde);
+  if (hasta) params.append('hasta', hasta);
+
+  const tbody = document.getElementById('tablaHistorial');
+  const empty = document.getElementById('historialEmpty');
+  const hasFilters = sala || maquina || operario || desde || hasta;
+  
+  if (!hasFilters && datosHistorial.length > 0) {
+    renderizarContenidoHistorial(datosHistorial, tbody, empty);
+    return;
+  }
+
+  if (tbody) tbody.innerHTML = skeletonTabla(8);
+  const res = await apiFetch('/api/historial?' + params.toString());
+
+  if (!res.ok || !res.data.length) {
+    if(tbody) tbody.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  renderizarContenidoHistorial(res.data, tbody, empty);
+}
+
+function renderizarContenidoHistorial(data, tbody, empty) {
+  if (!tbody) return;
+  if (empty) empty.style.display = 'none';
+  tbody.innerHTML = data.map(r => {
+    const isInc = r.tipo === 'Incidencia';
+    const resuelta = r.resuelta || false;
+    
+    // Badge de resolución para incidencias
+    let resBadge = '';
+    if (isInc) {
+      resBadge = resuelta 
+        ? `<span class="estado-badge ok" style="margin-left:8px;font-size:10px">? Resuelta</span>`
+        : `<span class="estado-badge vencido" style="margin-left:8px;font-size:10px">?? Pendiente</span>`;
+    }
+
+    return `
+      <tr style="${isInc && !resuelta ? 'background: rgba(239, 68, 68, 0.03)' : ''}">
+        <td data-label="Tipo">
+          <span class="estado-badge ${isInc ? 'vencido' : 'ok'}" style="font-size:10px">
+            ${isInc ? '? INCIDENCIA' : '?? MANT.'}
+          </span>
+        </td>
+        <td data-label="Máquina">
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+            <span style="font-weight:600; color:var(--text-primary)">${r.maquina}</span>
+            ${resBadge}
+          </div>
+        </td>
+        <td data-label="Sala">${r.sala}</td>
+        <td data-label="Operario">
+          <div style="font-weight:700">${r.operario}</div>
+          <div style="font-size:10px; color:var(--text-muted)">${r.operario_email || '–'}</div>
+        </td>
+        <td data-label="Fecha" style="font-size:11px">${formatFechaHora(r.completado_en)}</td>
+        <td data-label="Observ." style="font-size:11px;color:var(--text-muted)">
+          <div style="display:flex;align-items:center;gap:12px;justify-content:space-between">
+            <span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.observaciones || '–'}</span>
+            ${r.tiene_fotos ? `<img src="${r.fotos[0]}" style="width:26px;height:26px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="event.stopPropagation(); window.open('${r.fotos[0]}','_blank')">` : ''}
+          </div>
+        </td>
+        <td data-label="Acciones"><button class="btn btn-outline btn-sm" onclick="verDetalleSesion('${r.id}')">Detalles</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+async function toggleResolucionIncidencia(id, nuevoEstado) {
+  let comentario = '';
+  if (nuevoEstado) {
+    comentario = await customPrompt('Resolver Incidencia', 'Escribe un breve comentario sobre la solución (opcional):');
+    if (comentario === null) return; // Cancelado
+  }
+
+  const res = await apiFetch(`/api/sesion/${id}/resolver`, { 
+    method: 'PUT', 
+    body: { 
+      resuelta: nuevoEstado,
+      comentario_resolucion: comentario 
+    } 
+  });
+  
+  if (res.ok) {
+    await cargarDatosBase();
+    if (document.getElementById('section-historial').classList.contains('active')) await cargarHistorial();
+    if (document.getElementById('section-incidencias').classList.contains('active')) {
+      const filtroActual = document.querySelector('.btn-outline.btn-sm.active[id^="btn-inc-"]')?.id.replace('btn-inc-', '') || 'todas';
+      renderIncidencias(filtroActual);
+    }
+  } else {
+    showFeedback('Error de estado', 'No se pudo actualizar el estado de la incidencia: ' + res.error, 'âŒ');
+  }
+}
+
+async function verDetalleSesion(id) {
+  cerrarModal('modalHistorialMaquina');
+  const container = document.getElementById('detalleContenido');
+  const titleEl = document.querySelector('#modalDetalle .modal-title');
+  if(!container) return;
+  container.innerHTML = '<div style="padding:40px;text-align:center"><span class="spinner"></span> Cargando...</div>';
+  abrirModal('modalDetalle');
+
+  const res = await apiFetch(`/api/sesion/${id}/detalle`);
+  if (!res.ok) {
+    container.innerHTML = `<div class="alert alert-danger">Error: ${res.error}</div>`;
+    return;
+  }
+
+  const { sesion } = res.data;
+  const isInc = sesion.tipo === 'Incidencia';
+  const resuelta = sesion.resuelta || false;
+
+  // Cambiar título del modal dinámicamente
+  if (titleEl) titleEl.textContent = isInc ? 'Detalles de la Incidencia' : 'Detalles del Mantenimiento';
+
+  container.innerHTML = `
+    <div class="detail-modern">
+      <!-- Cabecera de Estado -->
+      <div class="detail-hero" style="background: ${isInc ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)'}; border-left: 4px solid ${isInc ? 'var(--danger)' : 'var(--success)'}">
+        <div class="detail-hero-content">
+          <div class="hero-icon">${isInc ? '🚨' : 'ðŸ”§'}</div>
+          <div>
+            <h2 class="hero-title">${sesion.maquina}</h2>
+            <div class="hero-subtitle">ðŸ“ ${sesion.sala} Â· ${formatFechaHora(sesion.completado_en)}</div>
+          </div>
+        </div>
+        <div class="hero-badges">
+          <span class="badge ${isInc ? 'badge-danger' : 'badge-success'}">${isInc ? 'INCIDENCIA' : 'MANTENIMIENTO'}</span>
+          ${isInc ? `<span class="badge ${resuelta ? 'badge-success' : 'badge-warning'}">${resuelta ? 'RESUELTA' : 'PENDIENTE'}</span>` : ''}
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <!-- Información del Operario -->
+        <div class="detail-info-card">
+          <div class="info-label">ðŸ‘· Responsable del Reporte</div>
+          <div class="info-value">${sesion.operario}</div>
+        </div>
+
+        <!-- Descripción / Notas -->
+        <div class="detail-info-card full-width">
+          <div class="info-label">${isInc ? "🚩 Descripción del Fallo" : "📝 Tareas Realizadas"}</div>
+          <div class="info-notes">${sesion.observaciones || 'Sin observaciones registradas.'}</div>
+        </div>
+
+        ${sesion.comentario_resolucion ? `
+        <div class="detail-info-card full-width resolution">
+          <div class="info-label">✅ Resolución Técnica</div>
+          <div class="info-notes">${sesion.comentario_resolucion}</div>
+        </div>
+        ` : ''}
+
+        <!-- Fotos / Evidencias -->
+        <div class="detail-info-card full-width">
+          <div class="info-label">🖼️ Evidencias Fotográficas (${sesion.fotos?.length || 0})</div>
+          ${sesion.fotos && sesion.fotos.length > 0 ? `
+            <div class="detail-gallery">
+              ${sesion.fotos.map(f => `
+                <div class="gallery-item" onclick="window.open('${f}')">
+                  <img src="${f}" loading="lazy">
+                  <div class="gallery-overlay"><span class="icon">ðŸ”</span></div>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div class="empty-gallery">No se adjuntaron fotos en este reporte</div>
+          `}
+        </div>
+      </div>
+
+      <!-- Acciones de Gestión -->
+      <div class="detail-actions">
+        <div class="management-buttons">
+          ${isInc && !resuelta ? `
+            <button class="btn btn-primary" onclick="toggleResolucionIncidencia('${sesion.id}', true)">
+              <span>? Marcar como Resuelta</span>
+            </button>
+            <button class="btn btn-outline" onclick="editarDescripcionIncidencia('${sesion.id}')">
+              <span>✏️ Editar Descripción</span>
+            </button>
+          ` : ''}
+        </div>
+        <div class="secondary-buttons">
+          <button class="btn btn-outline btn-sm" onclick="cerrarModal('modalDetalle'); verHistorialMaquina('${sesion.maquina}')">
+            <span>📋 Historial de la Máquina</span>
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarIncidencia('${sesion.id}')" title="Eliminar este registro">
+            <span>??? Eliminar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // --- Manejo de Seguimientos ---
+  const seccionSeg = document.getElementById('seccionSeguimiento');
+  const timeline = document.getElementById('seguimientoTimeline');
+  
+  if (isInc && seccionSeg && timeline) {
+    seccionSeg.style.display = 'block';
+    timeline.innerHTML = '<div style="text-align:center;padding:10px;opacity:0.5">Cargando hilo de seguimiento...</div>';
+    
+    // Guardar ID actual para la nueva nota
+    window.currentIncidenciaId = id;
+
+    // Cargar seguimientos desde la API
+    const segRes = await apiFetch(`/api/incidencia/${id}/seguimientos`);
+    if (segRes.ok && segRes.data) {
+      const notas = segRes.data;
+      if (notas.length === 0) {
+        timeline.innerHTML = '<div style="text-align:center;padding:10px;opacity:0.5;font-size:12px">No hay notas registradas aún.</div>';
+      } else {
+        timeline.classList.add('timeline-compact');
+        timeline.innerHTML = notas.map(n => `
+          <div class="timeline-item">
+            <div class="timeline-meta">
+              <b>${n.usuario_nombre || 'Técnico'}</b>
+              <span>${formatFechaHora(n.timestamp)}</span>
+              <button class="btn-delete-note" onclick="eliminarNota(${n.id})" title="Eliminar nota">?</button>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-text">${n.nota}</div>
+            </div>
+          </div>
+        `).join('');
+        // Hacer scroll al final
+        timeline.scrollTop = timeline.scrollHeight;
+      }
+    } else {
+      timeline.innerHTML = '<div style="color:var(--danger);font-size:12px">Error al cargar el historial de seguimiento.</div>';
+    }
+  } else if (seccionSeg) {
+    seccionSeg.style.display = 'none';
+  }
+}
+
+async function guardarNuevaNota() {
+  const input = document.getElementById('nuevaNotaSeguimiento');
+  const btn = document.getElementById('btnGuardarNota');
+  const nota = input.value.trim();
+  const id = window.currentIncidenciaId;
+
+  if (!nota || !id) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span> Guardando...';
+
+  const res = await apiFetch(`/api/incidencia/${id}/seguimientos`, {
+    method: 'POST',
+    body: { nota }
+  });
+
+  if (res.ok) {
+    input.value = '';
+    // Recargar el detalle para ver la nueva nota
+    verDetalleSesion(id);
+  } else {
+    showFeedback('Error al anotar', 'No se ha podido guardar la nota de seguimiento: ' + res.error, '?');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<span>➕ Añadir Nota</span>';
+}
+
+async function eliminarNota(idNota) {
+  if (!confirm('¿Estás seguro de que deseas eliminar esta nota?')) return;
+
+  const res = await apiFetch(`/api/incidencia/nota/${idNota}`, { method: 'DELETE' });
+  if (res.ok) {
+    showFeedback('Nota eliminada', 'La nota de seguimiento ha sido eliminada.', '?');
+    // Recargar el detalle
+    const currentId = window.currentIncidenciaId;
+    if (currentId) verDetalleSesion(currentId);
+  } else {
+    showFeedback('Error al eliminar', res.error, '?');
+  }
+}
+
+async function editarDescripcionIncidencia(id) {
+  const nuevaDesc = await customPrompt('Editar Reporte', 'Edita el reporte de la incidencia:', '');
+  if (nuevaDesc === null) return;
+  
+  const res = await apiFetch(`/api/incidencia/${id}/editar`, {
+    method: 'PUT',
+    body: { notas: nuevaDesc }
+  });
+
+  if (res.ok) {
+    showFeedback('Reporte actualizado', 'La descripción del reporte se ha modificado correctamente.', '✅');
+    // Recargar datos y refrescar vista
+    await cargarDatosBase();
+    verDetalleSesion(id);
+  } else {
+    showFeedback('Error al editar', res.error, '?');
+  }
+}
+
+async function eliminarIncidencia(id) {
+  const ok = await customConfirm(
+    'Eliminar registro',
+    '¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.',
+    '???'
+  );
+  if (!ok) return;
+  
+  const res = await apiFetch(`/api/sesion/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    cerrarModal('modalDetalle');
+    showFeedback('Registro eliminado', 'La incidencia ha sido eliminada correctamente.', '?');
+    await cargarDatosBase();
+    cargarHistorial();
+    renderIncidencias();
+  } else {
+    showFeedback('Error al eliminar', res.error, '?');
+  }
+}
+
+async function verHistorialMaquina(nombreMaquina) {
+  document.getElementById('historialMaquinaTitulo').textContent = nombreMaquina;
+  const tbody = document.getElementById('tablaHistorialMaquina');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px"><span class="spinner"></span></td></tr>';
+  abrirModal('modalHistorialMaquina');
+
+  const filtrados = datosHistorial.filter(r => r.maquina === nombreMaquina);
+  if (!filtrados.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px">Sin registros</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtrados.map(r => `
+    <tr>
+      <td data-label="Fecha">${formatFechaHora(r.completado_en)}</td>
+      <td data-label="Operario">${r.operario}</td>
+      <td data-label="Tipo"><span class="estado-badge ${r.tipo==='Incidencia'?'vencido':'ok'}">${r.tipo}</span></td>
+      <td data-label="Nota">${truncate(r.observaciones || '', 20)}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="verDetalleSesion('${r.id}')">Detalles</button></td>
+    </tr>
+  `).join('');
+}
+
+function exportarCSV() {
+  const rows = [['ID', 'Máquina', 'Sala', 'Operario', 'Fecha', 'Observaciones']];
+  datosHistorial.forEach(r => rows.push([r.id, r.maquina, r.sala, r.operario, r.completado_en, r.observaciones || '']));
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `historial_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ?? Usuarios / Administradores ????????????????????????????????????????????????
+const ROL_BADGES = {
+  admin:   { label: '??? Administrador', cls: 'azul' },
+  tecnico: { label: '🔧 Técnico', cls: 'verde' },
+  usuario: { label: '?? Usuario', cls: '' },
+};
+
+async function renderUsuarios() {
+  const container = document.getElementById('tablaUsuarios');
+  if (!container) return;
+
+  container.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px"><span class="spinner" style="display:inline-block"></span> Cargando usuarios...</td></tr>';
+
+  try {
+    const client = window.supabaseClient;
+    const { data: perfiles, error } = await client
+      .from('perfiles')
+      .select('*')
+      .order('creado_en', { ascending: false });
+
+    if (error) throw error;
+
+    if (!perfiles || !perfiles.length) {
+      container.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No hay usuarios registrados aún</td></tr>';
+      return;
+    }
+
+    const session = window.sgiAdminSession || {};
+    const esSuperadmin = session.type === 'superadmin';
+
+    container.innerHTML = perfiles.map(u => {
+      const rol = ROL_BADGES[u.rol] || { label: u.rol || 'usuario', cls: '' };
+      const fecha = u.creado_en ? new Date(u.creado_en).toLocaleDateString('es-ES') : '–';
+      return `
+      <tr>
+        <td data-label="Nombre"><b>${u.nombre || '–'}</b><div style="font-size:11px;color:var(--text-muted)">${u.email}</div></td>
+        <td data-label="Rol"><span class="estado-badge ${rol.cls}">${rol.label}</span></td>
+        <td data-label="Estado"><span class="estado-badge ok">? Activo</span></td>
+        <td data-label="Registro" style="font-size:11px">${fecha}</td>
+            <td data-label="Acciones">
+              ${esSuperadmin ? `
+                <div style="display:flex;gap:6px;flex-wrap:wrap;overflow-x:hidden">
+                  ${u.rol !== 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--accent);border-color:var(--accent)" onclick="cambiarRolUsuario('${u.id}','admin')">??? Hacer Admin</button>` : ''}
+                  ${u.rol === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="cambiarRolUsuario('${u.id}','usuario')">?? Quitar Admin</button>` : ''}
+                  ${u.rol !== 'tecnico' ? `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success)" onclick="cambiarRolUsuario('${u.id}','tecnico')">🔧 Hacer Técnico</button>` : ''}
+                </div>
+              ` : '<span style="color:var(--text-muted);font-size:12px">Solo superadmin puede cambiar roles</span>'}
+            </td>
+      </tr>`;
+    }).join('');
+
+  } catch(err) {
+    console.error('Error cargando perfiles:', err);
+    container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--danger)">⚠️ Error al cargar usuarios: ${err.message}<br><br><small>Asegúrate de haber creado la tabla <code>perfiles</code> en Supabase.</small></td></tr>`;
+  }
+}
+
+async function cambiarRolUsuario(userId, nuevoRol) {
+  const session = window.sgiAdminSession || {};
+  if (session.type !== 'superadmin') {
+    showFeedback('Acceso Denegado', 'Solo el administrador principal puede gestionar roles de usuario.', '??');
+    return;
+  }
+  const rolLabel = { admin: 'Administrador', tecnico: 'Técnico', usuario: 'Usuario' }[nuevoRol] || nuevoRol;
+  const ok = await customConfirm(
+    'Cambiar rol de usuario',
+    `¿Confirmas el cambio de rol a "${rolLabel}"? El usuario recibirá los nuevos permisos de inmediato.`,
+    '???'
+  );
+  if (!ok) return;
+
+  try {
+    const client = window.supabaseClient;
+    const { error } = await client.from('perfiles').update({ rol: nuevoRol }).eq('id', userId);
+    if (error) throw error;
+    renderUsuarios();
+  } catch(err) {
+    showFeedback('Error de permisos', 'No se ha podido cambiar el rol: ' + err.message, '?');
+  }
+}
+
+// ?? Utilidades de Red (Supabase Wrapper) ??????????????????????????????????????
+function isAdminLoggedIn() {
+  return localStorage.getItem('sgi_admin_session') !== null;
+}
+
+async function apiFetch(url, options = {}) {
+  const method = options.method || 'GET';
+  const payload = options.body;
+  const client = window.supabaseClient;
+
+  if (!isAdminLoggedIn() && url !== '/api/login-admin') {
+    return { ok: false, error: 'No autorizado' };
+  }
+
+  try {
+    if (url === '/api/login-admin') {
+      return { ok: isAdminLoggedIn() };
+    }
+
+    if (url.includes('/api/all-data')) {
+      const [salas, equipos, registros] = await Promise.all([
+        client.from('salas').select('*').order('nombre'),
+        client.from('equipos').select('*, salas(nombre)').order('nombre'),
+        client.from('registros').select('*').order('timestamp', { ascending: false }).limit(500)
+      ]);
+
+      if (salas.error) throw salas.error;
+      if (equipos.error) throw equipos.error;
+      if (registros.error) throw registros.error;
+
+      const regs = registros.data || [];
+      const formattedMaquinas = (equipos.data || []).map(m => {
+        const frec = m.frecuencia_dias || 7;
+        let estadoMant = 'pendiente';
+        if (m.ultimo_mantenimiento) {
+          const dif = (new Date() - new Date(m.ultimo_mantenimiento)) / (1000 * 60 * 60 * 24);
+          if (dif > frec) estadoMant = 'vencido'; else if (dif > frec * 0.8) estadoMant = 'proximo'; else estadoMant = 'ok';
+        }
+        return { ...m, sala_nombre: m.salas ? m.salas.nombre : 'Sin sala', estado_mantenimiento: estadoMant };
+      });
+
+      const porDiaMap = {}; const porMaquinaMap = {};
+      regs.forEach(r => {
+        if (r.timestamp) {
+          const dia = r.timestamp.split('T')[0];
+          porDiaMap[dia] = (porDiaMap[dia] || 0) + 1;
+        }
+        if (r.maquina_nombre) {
+          porMaquinaMap[r.maquina_nombre] = (porMaquinaMap[r.maquina_nombre] || 0) + 1;
+        }
+      });
+
+      return {
+        ok: true,
+        data: {
+          salas: salas.data, 
+          maquinas: formattedMaquinas,
+          historial: regs.map(r => ({ 
+            id: r.id, 
+            maquina: r.maquina_nombre || 'Desconocida', 
+            sala: r.sala_nombre || 'Sin sala', 
+            operario: r.operario_nombre || 'Anónimo', 
+            iniciado_en: r.timestamp, 
+            completado_en: r.timestamp, 
+            observaciones: r.notas || '', 
+            tipo: r.tipo, 
+            resuelta: r.resuelta || false, 
+            en_seguimiento: r.en_seguimiento || false, 
+            comentario_resolucion: r.comentario_resolucion, 
+            fotos: r.photos || [], 
+            tiene_fotos: (r.photos && r.photos.length > 0) 
+          })),
+          dashboard: { 
+            hoy: regs.filter(r => r.timestamp && r.timestamp.startsWith(new Date().toISOString().split('T')[0])).length, 
+            semana: regs.filter(r => r.timestamp && new Date(r.timestamp) >= new Date(Date.now() - 7*24*60*60*1000)).length, 
+            pendientes: formattedMaquinas.filter(m => m.estado_mantenimiento === 'vencido' || m.estado_mantenimiento === 'pendiente').length, 
+            proximos: formattedMaquinas.filter(m => m.estado_mantenimiento === 'proximo').length, 
+            porDia: Object.entries(porDiaMap).map(([dia, total]) => ({ dia, total })).sort((a,b) => a.dia.localeCompare(b.dia)), 
+            porMaquina: Object.entries(porMaquinaMap).map(([nombre, total_sesiones]) => ({ nombre, total_sesiones })).sort((a,b) => b.total_sesiones - a.total_sesiones) 
+          }
+        }
+      };
+    }
+
+    if (url.includes('/api/maquinas') && method === 'POST') {
+      const { data, error } = await client.from('equipos').insert(payload).select().single();
+      if (error) throw error; return { ok: true, data };
+    }
+
+    if (url.includes('/api/maquina/') && !url.includes('/qr')) {
+      const id = url.split('/')[3];
+      if (method === 'PUT') { await client.from('equipos').update(payload).eq('id', id); return { ok: true }; }
+      if (method === 'DELETE') { await client.from('equipos').delete().eq('id', id); return { ok: true }; }
+    }
+
+    if (url.includes('/api/historial')) {
+      const searchParams = new URL(url, window.location.origin).searchParams;
+      let query = client.from('registros').select('*');
+      if (searchParams.get('sala_id')) query = query.eq('sala_id', searchParams.get('sala_id'));
+      if (searchParams.get('maquina_id')) query = query.eq('maquina_id', searchParams.get('maquina_id'));
+      if (searchParams.get('operario_nombre')) query = query.ilike('operario_nombre', `%${searchParams.get('operario_nombre')}%`);
+      if (searchParams.get('desde')) query = query.gte('timestamp', searchParams.get('desde'));
+      if (searchParams.get('hasta')) query = query.lte('timestamp', searchParams.get('hasta') + 'T23:59:59');
+      const { data, error } = await query.order('timestamp', { ascending: false });
+      if (error) throw error;
+      return { ok: true, data: (data || []).map(r => ({ id: r.id, maquina: r.maquina_nombre, sala: r.sala_nombre, operario: r.operario_nombre, iniciado_en: r.timestamp, completado_en: r.timestamp, observaciones: r.notas || '', tipo: r.tipo, resuelta: r.resuelta || false, fotos: r.photos || [], tiene_fotos: (r.photos && r.photos.length > 0) })) };
+    }
+
+    if (url.includes('/api/sesion/') && method === 'DELETE') {
+      const id = url.split('/')[3];
+      const { error } = await client.from('registros').delete().eq('id', id);
+      if (error) throw error;
+      return { ok: true };
+    }
+
+    if (url.includes('/api/sesion/') && url.includes('/resolver')) {
+      const id = url.split('/')[3];
+      const { error } = await client.from('registros').update({ 
+        resuelta: payload.resuelta,
+        comentario_resolucion: payload.comentario_resolucion
+      }).eq('id', id);
+      if (error) throw error;
+      return { ok: true };
+    }
+
+    if (url.includes('/api/sesion/') && url.includes('/detalle')) {
+      const id = url.split('/')[3];
+      const { data: reg, error } = await client.from('registros').select('*').eq('id', id).single();
+      if (error) throw error;
+      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.maquina_nombre, sala: reg.sala_nombre, operario: reg.operario_nombre, iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
+    }
+
+    if (url.includes('/api/incidencia/') && url.includes('/seguimientos')) {
+      const id = url.split('/')[3];
+      if (method === 'GET') {
+        const { data, error } = await client
+          .from('seguimientos')
+          .select('*')
+          .eq('incidencia_id', id)
+          .order('timestamp', { ascending: true });
+        
+        if (error) {
+          console.warn('Tabla seguimientos no encontrada o error:', error);
+          return { ok: true, data: [] };
+        }
+        return { ok: true, data };
+      }
+      
+      if (method === 'POST') {
+        const { data, error } = await client
+          .from('seguimientos')
+          .insert({
+            incidencia_id: id,
+            nota: payload.nota,
+            usuario_nombre: 'Administrador',
+            timestamp: new Date().toISOString()
+          })
+          .select()
+          .single();
+        
+        // Actualizar automáticamente a "en seguimiento" si no estaba resuelta
+        await client.from('registros').update({ en_seguimiento: true }).eq('id', id);
+        
+        if (error) throw error;
+        return { ok: true, data };
+      }
+    }
+
+    if (url.includes('/api/incidencia/') && url.includes('/editar')) {
+      const id = url.split('/')[3];
+      const { error } = await client.from('registros').update({ notas: payload.notas }).eq('id', id);
+      if (error) throw error;
+      return { ok: true };
+    }
+
+    return { ok: false, error: 'Endpoint not implemented' };
+  } catch (err) { 
+    console.error('?? Error apiFetch:', err); 
+    // Si es un error de columna faltante, dar una pista clara
+    if (err.message && err.message.includes('maquina_nombre')) {
+      showFeedback('Error Crítico', "La base de datos no tiene la columna 'maquina_nombre'. Por favor, ejecuta el script SQL de reparación.", '🚨');
+    }
+    return { ok: false, error: err.message }; 
+  }
+}
+
+async function intentarLogin() {
+  const usernameInput = document.getElementById('adminUsernameInput');
+  const passwordInput = document.getElementById('adminPinInput');
+  const errorEl = document.getElementById('loginError');
+  const card = document.getElementById('loginCard');
+  const btn = document.getElementById('btnLoginAdmin');
+
+  const username = (usernameInput?.value || '').trim();
+  const password = (passwordInput?.value || '').trim();
+
+  if (!username || !password) {
+    errorEl.innerHTML = '⚠️ Introduce usuario y contraseña.';
+    return;
+  }
+
+  errorEl.innerHTML = 'Verificando...';
+  if (btn) btn.disabled = true;
+
+  // 1. Superadmin (Credenciales específicas del usuario)
+  if (username === 'adestacion' && password === 'HEF4hjrb|@#uwehrU2') {
+    const sessionData = {
+      type: 'superadmin',
+      username: 'adestacion',
+      nombre: 'Administrador Principal',
+      loginTime: new Date().getTime()
+    };
+    localStorage.setItem('sgi_admin_session', JSON.stringify(sessionData));
+    location.reload();
+    return;
+  }
+
+  // 2. Supabase Auth + verificar rol admin en tabla perfiles
+  try {
+    const client = window.supabaseClient;
+    if (!client) throw new Error('Sin conexión al servidor');
+
+    const { data, error } = await client.auth.signInWithPassword({
+      email: username,
+      password: password
+    });
+    if (error) throw error;
+
+    let perfil = null;
+    try {
+      const { data: p } = await client.from('perfiles').select('*').eq('id', data.user.id).single();
+      perfil = p;
+    } catch(e) { console.warn('Perfil no encontrado:', e.message); }
+
+    const rol = perfil?.rol || 'usuario';
+    if (rol !== 'admin') {
+      await client.auth.signOut();
+      throw new Error('No tienes permisos de administrador.');
+    }
+
+    localStorage.setItem('sgi_admin_session', JSON.stringify({
+      type: 'admin',
+      userId: data.user.id,
+      email: data.user.email,
+      nombre: perfil?.nombre || data.user.email
+    }));
+    localStorage.removeItem('admin_pin');
+    location.reload();
+
+  } catch(err) {
+    console.error('Login error:', err);
+    const msg = err.message?.includes('permisos') ? `? ${err.message}` : '? Credenciales incorrectas.';
+    errorEl.innerHTML = msg;
+    card?.classList.add('shake');
+    setTimeout(() => card?.classList.remove('shake'), 400);
+    if (btn) btn.disabled = false;
+  }
+}
+
+function cerrarSesionAdmin() {
+  localStorage.removeItem('sgi_admin_session');
+  localStorage.removeItem('admin_pin');
+  if (window.supabaseClient) window.supabaseClient.auth.signOut();
+  location.reload();
+}
+function abrirModal(id) { document.getElementById(id)?.classList.add('open'); }
+function cerrarModal(id) { document.getElementById(id)?.classList.remove('open'); }
+function formatFechaHora(str) { if (!str) return '–'; const d = new Date(str); return d.toLocaleDateString('es-ES') + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }); }
+
+function formatFechaDia(str) { if (!str) return '–'; const [y, m, d] = str.split('-'); return `${d}/${m}`; }
+function truncate(str, len) { return str.length > len ? str.slice(0, len) + '…' : str; }
+function escapar(str) { return String(str).replace(/'/g, "\\'"); }
+async function recargarTodo() { await cargarDatosBase(); }
+
+document.querySelectorAll('.overlay').forEach(ov => ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); }));
+
+function iniciarTour() {
+  const driverInstance = window.driver?.js?.driver || window.driver;
+  if (!driverInstance) return;
+
+  const driverObj = driverInstance({
+    showProgress: true,
+    animate: true,
+    steps: [
+      { 
+        popover: { 
+          title: '? Bienvenido', 
+          description: 'Recorrido rápido por el panel de administración del sistema.' 
+        },
+        onHighlightStarted: () => navigateTo('dashboard')
+      },
+      { 
+        element: '#kpiGrid', 
+        popover: { 
+          title: '?? Resumen General', 
+          description: 'Aquí verás el estado actual del sistema en tiempo real.' 
+        },
+        onHighlightStarted: () => navigateTo('dashboard')
+      },
+      { 
+        element: '#nav-maquinas', 
+        popover: { 
+          title: '🖨️ Máquinas', 
+          description: 'Gestiona todo tu inventario de impresoras y su estado.' 
+        } 
+      },
+      { 
+        element: '#gridQRs', 
+        popover: { 
+          title: '📱 Códigos QR', 
+          description: 'Desde aquí generas los códigos para que los operarios escaneen con su móvil.' 
+        },
+        onHighlightStarted: () => {
+          navigateTo('qrcodes');
+          // Esperamos a que la sección sea visible y se renderice el contenido para re-enfocar
+          setTimeout(() => {
+            if (driverObj.refresh) driverObj.refresh();
+          }, 400);
+        }
+      },
+      { 
+        element: '#nav-historial', 
+        popover: { 
+          title: '?? Historial', 
+          description: 'Accede a todos los registros de mantenimiento e incidencias pasadas.' 
+        },
+        onHighlightStarted: () => navigateTo('historial')
+      }
+    ]
+  });
+  driverObj.drive();
+}
+
+// ── Gestión de Salas ────────────────────────────────────────────────────────
+function abrirModalGestionSalas() {
+  abrirModal('modalGestionSalas');
+  renderListaSalas();
+}
+
+function renderListaSalas() {
+  const tbody = document.getElementById('listaSalasGestion');
+  if (!tbody) return;
+
+  if (datosSalas.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;padding:20px;color:var(--text-muted)">No hay salas creadas.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = datosSalas.map(s => `
+    <tr>
+      <td style="padding:10px">
+        <input type="text" class="form-control" value="${s.nombre}" 
+          style="padding:4px 8px; font-weight:600; background:transparent"
+          onchange="editarSala('${s.id}', this.value)"
+        >
+      </td>
+      <td style="padding:10px;text-align:right">
+        <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:rgba(239,68,68,0.2)" 
+          onclick="borrarSala('${s.id}', '${s.nombre}')">
+          ???
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function editarSala(id, nuevoNombre) {
+  if (!nuevoNombre.trim()) return;
+  try {
+    const { error } = await window.supabaseClient
+      .from('salas')
+      .update({ nombre: nuevoNombre })
+      .eq('id', id);
+
+    if (error) throw error;
+    await recargarTodo();
+    poblarSelectsSalas();
+  } catch (err) {
+    console.error("Error al editar sala:", err);
+  }
+}
+
+async function crearSala() {
+  const input = document.getElementById('nuevaSalaNombre');
+  const nombre = input.value.trim();
+  if (!nombre) return showFeedback('Nombre requerido', "Debes escribir un nombre para la nueva sala.", '??');
+
+  try {
+    const { data, error } = await window.supabaseClient
+      .from('salas')
+      .insert([{ nombre }])
+      .select();
+
+    if (error) throw error;
+
+    input.value = '';
+    await recargarTodo();
+    renderListaSalas();
+    poblarSelectsSalas();
+    showFeedback('Sala creada', 'La nueva sala se ha registrado correctamente en el sistema.', '?');
+  } catch (err) {
+    showFeedback('Error al crear', "No se ha podido registrar la sala en la base de datos.", '?');
+  }
+}
+
+async function borrarSala(id, nombre) {
+  const maquinasEnSala = datosMaquinas.filter(m => m.sala_id === id);
+  if (maquinasEnSala.length > 0) {
+    return showFeedback('Sala con Máquinas', `No puedes borrar la sala "${nombre}" porque tiene ${maquinasEnSala.length} máquinas asociadas.`, '⚠️');
+  }
+
+  try {
+    const { error } = await window.supabaseClient
+      .from('salas')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    await recargarTodo();
+    renderListaSalas();
+    poblarSelectsSalas();
+  } catch (err) {
+    console.error("Error al borrar sala:", err);
+  }
+}
+
+function poblarSelectsSalas() {
+  ['filtroSalaMaquinas', 'filtroSala', 'filtroSalaQR', 'nuevoMaquinaSala'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const currentVal = el.value;
+    if (id !== 'nuevoMaquinaSala') {
+      el.innerHTML = '<option value="">Todas las salas</option>';
+    } else {
+      el.innerHTML = '<option value="">Seleccione una sala...</option>';
+    }
+    datosSalas.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id; opt.textContent = s.nombre;
+      el.appendChild(opt);
+    });
+    el.value = currentVal;
+  });
+}
+
+// ?? Helpers de UI (Nuevos) ???????????????????????????????????????????????????
+function customConfirm(titulo, msg, icon = '??') {
+  return new Promise((resolve) => {
+    document.getElementById('confirmTitle').textContent = titulo;
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmIcon').textContent = icon;
+    abrirModal('modalConfirm');
+
+    window.confirmResolve = () => {
+      cerrarModal('modalConfirm');
+      resolve(true);
+    };
+    window.confirmReject = () => {
+      cerrarModal('modalConfirm');
+      resolve(false);
+    };
+  });
+}
+
+function customPrompt(titulo, label, defaultValue = '') {
+  return new Promise((resolve) => {
+    document.getElementById('promptTitle').textContent = titulo;
+    document.getElementById('promptLabel').textContent = label;
+    const input = document.getElementById('promptInput');
+    input.value = defaultValue;
+    
+    abrirModal('modalPrompt');
+    setTimeout(() => input.focus(), 100);
+
+    window.promptResolve = () => {
+      const val = input.value.trim();
+      cerrarModal('modalPrompt');
+      resolve(val);
+    };
+    
+    window.promptReject = () => {
+      cerrarModal('modalPrompt');
+      resolve(null);
+    };
+  });
+}
+
+function showFeedback(titulo, msg, icon = '?') {
+  document.getElementById('feedbackTitle').textContent = titulo;
+  document.getElementById('feedbackMsg').textContent = msg;
+  document.getElementById('feedbackIcon').textContent = icon;
+  abrirModal('modalFeedback');
+}
