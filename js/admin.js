@@ -1189,8 +1189,15 @@ async function eliminarUsuario(userId) {
 
   try {
     const client = window.supabaseClient;
+    
+    // Primero, intentamos eliminar el usuario del sistema de Auth usando una función RPC
+    const { error: rpcError } = await client.rpc('eliminar_usuario_auth', { user_id: userId });
+    
+    // Luego eliminamos su perfil de la base de datos pública
     const { error } = await client.from('perfiles').delete().eq('id', userId);
-    if (error) throw error;
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    if (rpcError) console.warn("No se pudo eliminar de Auth, pero sí del perfil:", rpcError);
     
     showFeedback('Usuario Eliminado', 'El perfil de usuario ha sido eliminado correctamente.', '✅');
     renderUsuarios();

@@ -358,28 +358,21 @@
           </button>
         </div>
 
-        <!-- Step 2: Verificación OTP -->
+        <!-- Step 2: Verificación Link -->
         <div class="step" id="regStep2">
-          <div class="step-title">Verificar email</div>
-          <div class="step-subtitle" id="regOtpSubtitle">
-            Hemos enviado un código de 6 dígitos a tu email. Introdúcelo a continuación para activar tu cuenta.
+          <span class="success-icon" style="font-size:48px; margin-bottom:16px">✉️</span>
+          <div class="step-title" style="text-align:center">Verifica tu email</div>
+          <div class="step-subtitle" id="regOtpSubtitle" style="text-align:center; margin-bottom:24px">
+            Hemos enviado un enlace de confirmación a tu email.
           </div>
 
           <div id="msgOtp" class="msg"></div>
 
-          <div class="field-group">
-            <label class="field-label" for="regOtp">Código de verificación</label>
-            <input class="field-input otp-input" type="text" id="regOtp"
-              maxlength="6" placeholder="123456" inputmode="numeric"
-              oninput="this.value=this.value.replace(/\D/g,'')"
-              onkeydown="if(event.key==='Enter') verificarOtp()">
-          </div>
-
-          <button class="btn-primary" id="btnVerificar" onclick="verificarOtp()">
-            ✅ Verificar y Activar Cuenta
+          <button class="btn-primary" onclick="cambiarTab('login')">
+            🔑 Ir a Iniciar Sesión
           </button>
-          <button class="btn-secondary" onclick="reenviarCodigo()">
-            🔄 Reenviar código
+          <button class="btn-secondary" onclick="reenviarCodigo()" style="margin-top:12px">
+            🔄 Reenviar enlace
           </button>
         </div>
 
@@ -527,8 +520,9 @@
           localStorage.setItem('sgi_reg_nombre', nombre);
 
           document.getElementById('regOtpSubtitle').innerHTML =
-            `Hemos enviado un código de 6 dígitos a ${email}. Introdúcelo para activar tu cuenta.<br><br>
-             <strong style="color:var(--text-muted);font-size:11px;">¿No te llega el código? Pide al Administrador que desactive la "Confirmación de Email" en los ajustes de Supabase.</strong>`;
+            `Hemos enviado un enlace de confirmación a <strong>${email}</strong>.<br><br>
+             Por favor, revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.<br><br>
+             <strong style="color:var(--text-muted);font-size:11px;">¿No te llega el correo? Pide al Administrador que desactive la "Confirmación de Email" en Supabase.</strong>`;
 
           activarStep('panelRegistro', 'regStep2');
         }
@@ -542,69 +536,10 @@
       }
 
       btn.disabled = false;
-      btn.innerHTML = '📧 Registrarme y recibir código';
+      btn.innerHTML = '📧 Registrarme y recibir enlace';
     }
 
-    // ─── Verificar OTP ───
-    async function verificarOtp() {
-      const token = document.getElementById('regOtp').value.trim();
-      const email = emailRegistro || localStorage.getItem('sgi_reg_email') || '';
-      const nombre = localStorage.getItem('sgi_reg_nombre') || '';
-      const btn = document.getElementById('btnVerificar');
 
-      hideMsg('msgOtp');
-
-      if (!token || token.length < 6) return showMsg('msgOtp', '⚠️ Introduce el código de 6 dígitos.');
-      if (!email) return showMsg('msgOtp', '⚠️ No se encontró el email. Vuelve al paso anterior.');
-
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Verificando...';
-
-      try {
-        const client = window.supabaseClient;
-
-        const { data, error } = await client.auth.verifyOtp({
-          email,
-          token,
-          type: 'signup'
-        });
-
-        if (error) throw error;
-
-        // Crear perfil en tabla perfiles
-        if (data.user) {
-          try {
-            await client.from('perfiles').upsert({
-              id: data.user.id,
-              email: email,
-              nombre: nombre,
-              rol: 'usuario',
-              activo: true
-            });
-          } catch(e) {
-            console.warn('Tabla perfiles no disponible aún:', e.message);
-          }
-        }
-
-        localStorage.removeItem('sgi_reg_email');
-        localStorage.removeItem('sgi_reg_nombre');
-
-        // Cerrar sesión para que el usuario inicie sesión limpio
-        await client.auth.signOut();
-
-        activarStep('panelRegistro', 'regStep3');
-
-      } catch (err) {
-        console.error(err);
-        const msg = err.message?.includes('expired') || err.message?.includes('invalid')
-          ? '❌ Código incorrecto o expirado. Solicita uno nuevo.'
-          : '❌ Error: ' + (err.message || 'Inténtalo de nuevo.');
-        showMsg('msgOtp', msg, 'error');
-      }
-
-      btn.disabled = false;
-      btn.innerHTML = '✅ Verificar y Activar Cuenta';
-    }
 
     // ─── Reenviar código ───
     async function reenviarCodigo() {
