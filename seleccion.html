@@ -87,6 +87,31 @@
       text-decoration: none;
       font-size: 13px;
     }
+    /* Status indicators */
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .status-ok .status-dot { 
+      background: #00d97e; 
+      box-shadow: 0 0 8px rgba(0, 217, 126, 0.5); 
+    }
+    .status-ok .status-text { color: #00d97e; }
+    
+    .status-err .status-dot { 
+      background: #ff3b5c; 
+      box-shadow: 0 0 8px rgba(255, 59, 92, 0.5); 
+    }
+    .status-err .status-text { color: #ff3b5c; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
@@ -121,13 +146,16 @@
       const client = window.supabaseClient;
 
       try {
-        const { data, error } = await client
-          .from('equipos')
-          .select('*, salas(nombre)')
-          .eq('estado', 'activa')
-          .order('nombre', { ascending: true });
+        const [mRes, iRes] = await Promise.all([
+          client.from('equipos').select('*, salas(nombre)').eq('estado', 'activa').order('nombre', { ascending: true }),
+          client.from('registros').select('maquina_id').eq('tipo', 'Incidencia').eq('resuelta', false)
+        ]);
 
-        if (error) throw error;
+        if (mRes.error) throw mRes.error;
+        if (iRes.error) throw iRes.error;
+
+        const data = mRes.data;
+        const unresolvedIncidents = new Set((iRes.data || []).map(i => i.maquina_id));
 
         const gridContainer = document.getElementById('machineGrid');
         document.getElementById('loading').style.display = 'none';
@@ -148,6 +176,10 @@
           const salaGrid = section.querySelector('.sala-grid');
 
           bySala[salaName].forEach(m => {
+            const hasIncidence = unresolvedIncidents.has(m.id);
+            const statusClass = hasIncidence ? 'status-err' : 'status-ok';
+            const statusLabel = hasIncidence ? 'No Operativa' : 'Operativa';
+            
             const card = document.createElement('div');
             card.className = 'machine-card';
             card.onclick = () => window.location.href = `operario.html?maquinaId=${m.id}`;
@@ -157,6 +189,10 @@
               <div class="machine-info">
                 <div class="machine-name">${m.nombre}</div>
                 <div class="machine-code">${m.codigo || 'S/ID'}</div>
+                <div class="status-badge ${statusClass}">
+                  <span class="status-dot"></span>
+                  <span class="status-text">${statusLabel}</span>
+                </div>
               </div>
               <span class="machine-arrow">→</span>
             `;
