@@ -378,7 +378,7 @@ const DASHBOARD_HTML = `
         <div class="modal-title">✏️ Editar Máquina</div>
         <button class="modal-close" onclick="cerrarModal('modalMaquina')">✕</button>
       </div>
-      <div class="modal-body">
+      <input type="hidden" id="editMaquinaId">
       <div class="grid-2">
         <div class="form-group">
           <label class="form-label">Código</label>
@@ -432,8 +432,8 @@ const DASHBOARD_HTML = `
         </div>
       </div>
       <div class="form-group">
+        <label class="form-label">Notas / Especificaciones adicionales</label>
         <textarea class="form-control" id="editNotas" rows="2" placeholder="Nozzle, material, configuración especial..."></textarea>
-      </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="cerrarModal('modalMaquina')">Cancelar</button>
@@ -449,7 +449,6 @@ const DASHBOARD_HTML = `
         <div class="modal-title">➕ Nueva Máquina</div>
         <button class="modal-close" onclick="cerrarModal('modalNuevaMaquina')">✕</button>
       </div>
-      <div class="modal-body">
       <div id="msgNuevaMaquina"></div>
       <div class="grid-2">
         <div class="form-group">
@@ -508,8 +507,8 @@ const DASHBOARD_HTML = `
         </div>
       </div>
       <div class="form-group">
+        <label class="form-label">Notas / Especificaciones adicionales</label>
         <textarea class="form-control" id="nuevoMaquinaNotas" rows="2" placeholder="Nozzle, material, configuración especial..."></textarea>
-      </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="cerrarModal('modalNuevaMaquina')">Cancelar</button>
@@ -526,7 +525,7 @@ const DASHBOARD_HTML = `
         <button class="modal-close" onclick="cerrarModal('modalDetalle')">✕</button>
       </div>
       
-      <div class="modal-body">
+      <div>
       <div id="detalleContenido" style="margin-bottom:24px"></div>
 
       <!-- Sección de Seguimiento (Solo para Incidencias) -->
@@ -567,8 +566,7 @@ const DASHBOARD_HTML = `
         </div>
         <button class="modal-close" onclick="cerrarModal('modalHistorialMaquina')">✕</button>
       </div>
-      <div class="modal-body" style="max-height:60vh">
-        <div class="table-wrap">
+      <div class="table-wrap" style="max-height:60vh; overflow-y:auto">
         <table>
           <thead>
             <tr>
@@ -581,7 +579,6 @@ const DASHBOARD_HTML = `
           </thead>
           <tbody id="tablaHistorialMaquina"></tbody>
         </table>
-      </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary" onclick="cerrarModal('modalHistorialMaquina')">Cerrar</button>
