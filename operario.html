@@ -173,14 +173,13 @@
           <h1 id="portalMaquinaNombre" style="margin:0; font-size:24px;">Cargando...</h1>
           <p id="portalMaquinaSala" style="margin:0; opacity:0.6;">Elige una opción</p>
         </div>
-        <div style="display:flex; gap:8px; flex-shrink: 0;" id="portalNavButtons">
-          <button onclick="window.location.href='index.html'" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:8px 12px; border-radius:10px; font-size:11px; cursor:pointer; white-space: nowrap;" title="Ir al inicio">
-            🏠 Inicio
+        <div style="display:flex; gap:8px; flex-shrink: 0;">
+          <button onclick="window.location.href='index.html'" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:8px 12px; border-radius:10px; font-size:11px; cursor:pointer; white-space: nowrap;">
+            🔄 Cambiar
           </button>
-          <button onclick="cerrarSesionOperario()" style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); color:#ef4444; padding:8px 12px; border-radius:10px; font-size:11px; cursor:pointer; white-space: nowrap;">
-            🚪 Salir
+          <button onclick="window.location.href='dashboard.html'" style="background:rgba(79, 142, 247, 0.1); border:1px solid var(--accent-maint); color:var(--accent-maint); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; white-space: nowrap;">
+            🛡️ Admin
           </button>
-          <!-- El botón Admin se inyectará aquí si es admin/tecnico -->
         </div>
       </div>
       
@@ -208,27 +207,29 @@
   <!-- ════ PANTALLA: CHECKLIST ════ -->
   <div class="screen" id="screen-checklist">
     <header class="app-header">
-       <div class="header-icon">📋</div>
-       <div class="header-info">
-         <div class="header-title" id="checkMaquinaNombre">Mantenimiento</div>
-         <div class="header-sub" id="checkSalaNombre">–</div>
-       </div>
-       <button onclick="window.location.href='index.html'" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:6px 10px; border-radius:8px; font-size:10px; cursor:pointer; white-space: nowrap;">
-         🔄 Cambiar
-       </button>
+      <div class="header-icon">📋</div>
+      <div class="header-info">
+        <div class="header-title" id="checkMaquinaNombre">Mantenimiento</div>
+        <div class="header-sub" id="checkSalaNombre">–</div>
+      </div>
+      <div style="display:flex; gap:8px; flex-shrink: 0;">
+        <button onclick="window.location.href='index.html'" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:6px 10px; border-radius:8px; font-size:10px; cursor:pointer; white-space: nowrap;">
+          🔄 Cambiar
+        </button>
+        <button onclick="window.location.href='dashboard.html'" style="background:rgba(79, 142, 247, 0.1); border:1px solid var(--accent-maint); color:var(--accent-maint); padding:6px 10px; border-radius:8px; font-size:10px; font-weight:700; cursor:pointer; white-space: nowrap;">
+          🛡️ Admin
+        </button>
+      </div>
     </header>
 
     <div class="screen-content">
-      <!-- Datos del Usuario (Autenticado) -->
+      <!-- Campos de Identidad (Auto-alta) -->
       <div class="reporte-section fade-up" style="margin-bottom: 20px; padding-bottom: 0;">
-        <div class="reporte-label">👤 IDENTIDAD CONFIRMADA</div>
-        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid var(--border); text-align: left;">
-          <div id="displayUserName" style="font-weight:700; font-size:15px; color:var(--text-white)">Cargando...</div>
-          <div id="displayUserEmail" style="font-size:12px; color:var(--text-muted)">...</div>
+        <div class="reporte-label">🔑 IDENTIFICACIÓN (AUTO-ALTA)</div>
+        <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
+          <input type="text" id="userNameInput" class="reporte-textarea" style="height: 50px; font-size: 15px;" placeholder="Tu Nombre Completo">
+          <input type="email" id="userEmailInput" class="reporte-textarea" style="height: 50px; font-size: 15px;" placeholder="Email (Clave Única)">
         </div>
-        <!-- Campos ocultos para compatibilidad con JS existente si fuera necesario, aunque ahora usaremos operarioData -->
-        <input type="hidden" id="userNameInput">
-        <input type="hidden" id="userEmailInput">
       </div>
 
       <div class="tipo-selector-op fade-up" style="display:flex; gap:10px; margin-bottom:20px;">

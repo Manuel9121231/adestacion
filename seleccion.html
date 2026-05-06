@@ -77,28 +77,6 @@
     .machine-code { font-size: 11px; color: var(--accent); font-weight: 800; }
     .machine-arrow { opacity: 0.3; font-weight: bold; font-size: 16px; transition: opacity 0.2s; }
     .machine-card:hover .machine-arrow { opacity: 1; color: var(--accent); }
-    .status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-    .status-dot.ok { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.4); }
-    .status-dot.error { 
-      background: #ef4444; 
-      box-shadow: 0 0 8px rgba(239,68,68,0.4);
-      animation: pulse-red 2s infinite;
-    }
-    @keyframes pulse-red {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
-    }
-    .machine-status-text { font-size: 11px; font-weight: 600; text-transform: uppercase; margin-left: 4px; }
-    .status-ok { color: #10b981; }
-    .status-error { color: #ef4444; }
-
     .loader { text-align: center; padding: 60px; opacity: 0.6; }
     .btn-back {
       background: rgba(255,255,255,0.05);
@@ -126,7 +104,7 @@
     </p>
 
     <div id="loading" class="loader">
-      <p>Cargando equipos y estados...</p>
+      <p>Cargando equipos...</p>
     </div>
 
     <div class="machine-grid" id="machineGrid"></div>
@@ -134,6 +112,7 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
+      // Reintento autónomo si el cliente no está listo
       if (!window.supabaseClient) {
         setTimeout(() => location.reload(), 500);
         return;
@@ -142,23 +121,20 @@
       const client = window.supabaseClient;
 
       try {
-        // 1. Cargar equipos y al mismo tiempo buscar incidencias abiertas
-        const [resEquipos, resIncidencias] = await Promise.all([
-          client.from('equipos').select('*, salas(nombre)').eq('estado', 'activa').order('nombre', { ascending: true }),
-          client.from('registros').select('maquina_id').eq('tipo', 'Incidencia').eq('resuelta', false)
-        ]);
+        const { data, error } = await client
+          .from('equipos')
+          .select('*, salas(nombre)')
+          .eq('estado', 'activa')
+          .order('nombre', { ascending: true });
 
-        if (resEquipos.error) throw resEquipos.error;
-        
-        // Crear set de IDs con incidencias para búsqueda rápida
-        const idsConFallo = new Set((resIncidencias.data || []).map(r => r.maquina_id));
+        if (error) throw error;
 
         const gridContainer = document.getElementById('machineGrid');
         document.getElementById('loading').style.display = 'none';
 
         // Agrupar por sala
         const bySala = {};
-        resEquipos.data.forEach(m => {
+        data.forEach(m => {
           const salaName = m.salas?.nombre || 'Sin Sala';
           if (!bySala[salaName]) bySala[salaName] = [];
           bySala[salaName].push(m);
@@ -172,24 +148,15 @@
           const salaGrid = section.querySelector('.sala-grid');
 
           bySala[salaName].forEach(m => {
-            const tieneFallo = idsConFallo.has(m.id);
             const card = document.createElement('div');
             card.className = 'machine-card';
             card.onclick = () => window.location.href = `operario.html?maquinaId=${m.id}`;
             
             card.innerHTML = `
-              <span class="machine-icon">${tieneFallo ? '⚠️' : '🖨️'}</span>
+              <span class="machine-icon">🖨️</span>
               <div class="machine-info">
-                <div class="machine-name">
-                  <span class="status-dot ${tieneFallo ? 'error' : 'ok'}"></span>
-                  ${m.nombre}
-                </div>
-                <div class="machine-code">
-                  ${m.codigo || 'S/ID'} 
-                  <span class="machine-status-text ${tieneFallo ? 'status-error' : 'status-ok'}">
-                    • ${tieneFallo ? 'No Operativa' : 'Operativa'}
-                  </span>
-                </div>
+                <div class="machine-name">${m.nombre}</div>
+                <div class="machine-code">${m.codigo || 'S/ID'}</div>
               </div>
               <span class="machine-arrow">→</span>
             `;
@@ -200,7 +167,7 @@
         });
 
       } catch (err) {
-        document.getElementById('loading').innerHTML = '<p style="color:red">Error al cargar datos</p>';
+        document.getElementById('loading').innerHTML = '<p style="color:red">Error de conexión</p>';
         console.error(err);
       }
     });

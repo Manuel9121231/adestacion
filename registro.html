@@ -601,15 +601,14 @@
         // Mostrar éxito
         document.getElementById('loginWelcomeTitle').textContent = `👋 ¡Hola, ${nombre.split(' ')[0]}!`;
 
-        // Permitir acceso al panel de administración tanto para admin como para tecnico
-        if (rol === 'admin' || rol === 'tecnico') {
+        if (rol === 'admin') {
           document.getElementById('loginWelcomeMsg').innerHTML =
-            `Has iniciado sesión como <strong>${rol === 'admin' ? 'Administrador' : 'Técnico'}</strong>. Puedes acceder al panel de administración.`;
+            'Has iniciado sesión como <strong>Administrador</strong>. Puedes acceder al panel de administración.';
           document.getElementById('btnLoginRedirect').textContent = '🔐 Ir al Panel de Administración';
           document.getElementById('btnLoginRedirect').onclick = () => {
             // Guardar sesión admin también
             localStorage.setItem('sgi_admin_session', JSON.stringify({
-              type: rol, userId: user.id, email: user.email, nombre: nombre
+              type: 'admin', userId: user.id, email: user.email, nombre: nombre
             }));
             window.location.href = 'dashboard.html';
           };
