@@ -1,6 +1,6 @@
 {
-  "name": "Sistema de Gestión de Impresoras",
-  "short_name": "SGI",
+  "name": "Estación",
+  "short_name": "Estación",
   "description": "Gestión técnica, mantenimiento y estado de equipos en tiempo real.",
   "start_url": "/index.html",
   "display": "standalone",
