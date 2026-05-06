@@ -1,20 +1,6 @@
 'use strict';
 
-// ── Debug logger (silenciado en producción) ──
-const DEBUG = false;
-function log(...args) { if (DEBUG) console.log(...args); }
-
-// ── Escape HTML para prevenir XSS ──
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-const API = 'https://script.google.com/macros/s/AKfycbwW2_UWpOS45F-3BbyVbUvtxIJ3b_OP_Pnl_cSgSwO-BXz9nSzqoTb8oxnh185za0M/exec';
+const API = 'https://script.google.com/macros/s/AKfycbwW2_UWpOS45F-3BbyVbUvtxIJ3b_OP_Pnl_cSgSwO-BXz9nSzqoTb8oxnh185za0M/exec'; // <--- URL DE LA WEB APP OPTIMIZADA
 let datosSalas = [];
 let datosMaquinas = [];
 let datosUsuarios = [];
@@ -29,10 +15,10 @@ async function detectarServidor() {
     const json = await res.json();
     if (json.ok && json.data.url) {
       serverHost = json.data.url;
-      log('🔗 QR Host detectado:', serverHost);
+      console.log("🔗 QR Host detectado:", serverHost);
     }
   } catch (e) {
-    log('⚠️ No se pudo obtener IP local del servidor, usando origin actual.');
+    console.warn("⚠️ No se pudo obtener IP local del servidor, usando origin actual.");
   }
 }
 
@@ -48,69 +34,43 @@ function getNombreAdmin() {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-  detectarServidor();
-
-  // ── CRÍTICO: Verificar sesión real con Supabase Auth ──
-  const client = window.supabaseClient;
-  if (!client) return; // Esperar a que supabase-config.js cargue
-
-  let session = null;
-  try {
-    const { data } = await client.auth.getSession();
-    session = data?.session;
-  } catch(e) { /* sin conexión → mostrar login */ }
-
-  if (!session) {
-    // Sin sesión Supabase válida → no cargar dashboard (el overlay de login ya está visible)
-    localStorage.removeItem('sgi_admin_session');
-    return;
-  }
-
-  // Verificar que el usuario tiene rol 'admin' en la tabla usuarios (via auth_id)
-  let perfil = null;
-  try {
-    const { data: p } = await client.from('usuarios').select('rol,nombre').eq('auth_id', session.user.id).single();
-    perfil = p;
-  } catch(e) { /* sin acceso */ }
-
-  if (!perfil || perfil.rol !== 'admin') {
-    await client.auth.signOut();
-    localStorage.removeItem('sgi_admin_session');
-    return;
-  }
-
-  // Sesión válida → sincronizar localStorage y cargar dashboard
-  const sgiSession = {
-    type: 'admin',
-    userId: session.user.id,
-    email: session.user.email,
-    nombre: perfil.nombre || session.user.email,
-    rol: perfil.rol
-  };
-  localStorage.setItem('sgi_admin_session', JSON.stringify(sgiSession));
+  const sessionStr = localStorage.getItem('sgi_admin_session');
+  detectarServidor(); // Cargar IP real para los QRs
+  if (!sessionStr) return; // Esperar al login manual
+  const sgiSession = JSON.parse(sessionStr || '{}');
   window.sgiAdminSession = sgiSession;
 
   try {
     isCargando = true;
-
+    
+    // Inyectar interfaz de forma segura
     const container = document.getElementById('dashboardContent');
-    if (container) container.innerHTML = DASHBOARD_HTML;
+    if (container) {
+      container.innerHTML = DASHBOARD_HTML;
+    }
 
+    // Mostrar nombre del admin en sidebar footer
     const adminName = getNombreAdmin();
     const footerVersion = container?.querySelector('.sidebar-footer div');
-    if (footerVersion) footerVersion.textContent = `👤 ${adminName}`;
+    if (footerVersion) {
+      footerVersion.textContent = `👤 ${adminName}`;
+    }
 
     const grid = document.getElementById('gridMaquinas');
     if (grid) grid.innerHTML = skeletonMaquinas();
     const tbody = document.getElementById('dashboardUltimos');
     if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)"><span class="spinner" style="display:inline-block;margin-right:8px"></span>Conectando con Supabase...</td></tr>';
-
+    
+    // Cargar TODO en una sola llamada
     await cargarDatosBase();
-
+    
     // Auto-sincronización cada 2 minutos
-    setInterval(() => { recargarTodo(); }, 120000);
+    setInterval(() => {
+      console.log('Sincronización automática con Supabase...');
+      recargarTodo();
+    }, 120000);
   } catch (err) {
-    log('Error durante la carga inicial:', err);
+    console.error('Error durante la carga inicial:', err);
   } finally {
     isCargando = false;
   }
@@ -135,8 +95,10 @@ function skeletonTabla(cols = 5) {
 }
 
 async function cargarDatosBase() {
+  console.time('Carga Inicial Bundled');
   // Una sola llamada para traerlo TODO
   const res = await apiFetch('/api/all-data');
+  console.timeEnd('Carga Inicial Bundled');
   
   if (res.ok && res.data) {
     const d = res.data;
@@ -633,7 +595,7 @@ async function crearMaquina() {
     await cargarDatosBase();
     renderMaquinas();
   } else {
-    msg.innerHTML = `<div class="alert alert-danger">❌ ${escapeHtml(res.error)}</div>`;
+    msg.innerHTML = `<div class="alert alert-danger">❌ ${res.error}</div>`;
   }
 }
 
@@ -929,7 +891,7 @@ async function verDetalleSesion(id) {
 
   const res = await apiFetch(`/api/sesion/${id}/detalle`);
   if (!res.ok) {
-    container.innerHTML = `<div class="alert alert-danger">Error: ${escapeHtml(res.error)}</div>`;
+    container.innerHTML = `<div class="alert alert-danger">Error: ${res.error}</div>`;
     return;
   }
 
@@ -1169,22 +1131,22 @@ async function renderUsuarios() {
 
   try {
     const client = window.supabaseClient;
-    const { data: usuariosData, error } = await client
-      .from('usuarios')
+    const { data: perfiles, error } = await client
+      .from('perfiles')
       .select('*')
-      .order('id', { ascending: false });
+      .order('creado_en', { ascending: false });
 
     if (error) throw error;
 
-    if (!usuariosData || !usuariosData.length) {
+    if (!perfiles || !perfiles.length) {
       container.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No hay usuarios registrados aún</td></tr>';
       return;
     }
 
-    const currentSession = window.sgiAdminSession || {};
-    const esAdmin = currentSession.rol === 'admin';
+    const session = window.sgiAdminSession || {};
+    const esSuperadmin = session.type === 'superadmin';
 
-    container.innerHTML = usuariosData.map(u => {
+    container.innerHTML = perfiles.map(u => {
       const rol = ROL_BADGES[u.rol] || { label: u.rol || 'usuario', cls: '' };
       const fecha = u.creado_en ? new Date(u.creado_en).toLocaleDateString('es-ES') : '–';
       return `
@@ -1194,21 +1156,21 @@ async function renderUsuarios() {
         <td data-label="Estado"><span class="estado-badge ok">✅ Activo</span></td>
         <td data-label="Registro" style="font-size:11px">${fecha}</td>
         <td data-label="Acciones">
-          ${esAdmin ? `
+          ${esSuperadmin ? `
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               ${u.rol !== 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--accent);border-color:var(--accent)" onclick="cambiarRolUsuario('${u.id}','admin')">🛡️ Hacer Admin</button>` : ''}
               ${u.rol === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="cambiarRolUsuario('${u.id}','usuario')">👤 Quitar Admin</button>` : ''}
               ${u.rol !== 'tecnico' ? `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success)" onclick="cambiarRolUsuario('${u.id}','tecnico')">🔧 Hacer Técnico</button>` : ''}
               <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="eliminarUsuario('${u.id}')" title="Eliminar usuario permanentemente">🗑️ Eliminar</button>
             </div>
-          ` : '<span style="color:var(--text-muted);font-size:12px">Solo admins pueden cambiar roles</span>'}
+          ` : '<span style="color:var(--text-muted);font-size:12px">Solo superadmin puede cambiar roles</span>'}
         </td>
       </tr>`;
     }).join('');
 
   } catch(err) {
     console.error('Error cargando perfiles:', err);
-    container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--danger)">⚠️ Error al cargar usuarios: ${escapeHtml(err.message)}<br><br><small>Asegúrate de haber creado la tabla <code>perfiles</code> en Supabase.</small></td></tr>`;
+    container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--danger)">⚠️ Error al cargar usuarios: ${err.message}<br><br><small>Asegúrate de haber creado la tabla <code>perfiles</code> en Supabase.</small></td></tr>`;
   }
 }
 
@@ -1228,23 +1190,26 @@ async function eliminarUsuario(userId) {
   try {
     const client = window.supabaseClient;
     
-    // Eliminar de la tabla usuarios (el auth_id permite la cascada)
-    const { error } = await client.from('usuarios').delete().eq('id', userId);
+    // Primero, intentamos eliminar el usuario del sistema de Auth usando una función RPC
+    const { error: rpcError } = await client.rpc('eliminar_usuario_auth', { user_id: userId });
+    
+    // Luego eliminamos su perfil de la base de datos pública
+    const { error } = await client.from('perfiles').delete().eq('id', userId);
     
     if (error && error.code !== 'PGRST116') throw error;
-    if (rpcError) log('No se pudo eliminar de Auth, pero sí de usuarios:', rpcError);
+    if (rpcError) console.warn("No se pudo eliminar de Auth, pero sí del perfil:", rpcError);
     
-    showFeedback('Usuario Eliminado', 'El usuario ha sido eliminado correctamente.', '✅');
+    showFeedback('Usuario Eliminado', 'El perfil de usuario ha sido eliminado correctamente.', '✅');
     renderUsuarios();
   } catch (err) {
-    showFeedback('Error', 'No se pudo eliminar el usuario: ' + escapeHtml(err.message), '❌');
+    showFeedback('Error', 'No se pudo eliminar el usuario: ' + err.message, '❌');
   }
 }
 
 async function cambiarRolUsuario(userId, nuevoRol) {
   const session = window.sgiAdminSession || {};
-  if (session.rol !== 'admin') {
-    showFeedback('Acceso Denegado', 'No tienes permisos para gestionar roles de usuario.', '🔒');
+  if (session.type !== 'superadmin') {
+    showFeedback('Acceso Denegado', 'Solo el administrador principal puede gestionar roles de usuario.', '🔒');
     return;
   }
   const rolLabel = { admin: 'Administrador', tecnico: 'Técnico', usuario: 'Usuario' }[nuevoRol] || nuevoRol;
@@ -1257,7 +1222,7 @@ async function cambiarRolUsuario(userId, nuevoRol) {
 
   try {
     const client = window.supabaseClient;
-    const { error } = await client.from('usuarios').update({ rol: nuevoRol }).eq('id', userId);
+    const { error } = await client.from('perfiles').update({ rol: nuevoRol }).eq('id', userId);
     if (error) throw error;
     renderUsuarios();
   } catch(err) {
@@ -1267,7 +1232,6 @@ async function cambiarRolUsuario(userId, nuevoRol) {
 
 // ── Utilidades de Red (Supabase Wrapper) ──────────────────────────────────────
 function isAdminLoggedIn() {
-  // Comprobación mínima local — la verificación real ocurre al cargar la página con getSession()
   return localStorage.getItem('sgi_admin_session') !== null;
 }
 
@@ -1383,13 +1347,10 @@ async function apiFetch(url, options = {}) {
 
     if (url.includes('/api/sesion/') && url.includes('/resolver')) {
       const id = url.split('/')[3];
-      const updatePayload = {
+      const { error } = await client.from('registros').update({ 
         resuelta: payload.resuelta,
         comentario_resolucion: payload.comentario_resolucion
-      };
-      // Al resolver, limpiar en_seguimiento para evitar estado inconsistente
-      if (payload.resuelta === true) updatePayload.en_seguimiento = false;
-      const { error } = await client.from('registros').update(updatePayload).eq('id', id);
+      }).eq('id', id);
       if (error) throw error;
       return { ok: true };
     }
@@ -1473,7 +1434,20 @@ async function intentarLogin() {
   errorEl.innerHTML = 'Verificando...';
   if (btn) btn.disabled = true;
 
-  // Supabase Auth + verificar rol admin en tabla perfiles
+  // 1. Superadmin (Credenciales específicas del usuario)
+  if (username === 'adestacion' && password === 'HEF4hjrb|@#uwehrU2') {
+    const sessionData = {
+      type: 'superadmin',
+      username: 'adestacion',
+      nombre: 'Administrador Principal',
+      loginTime: new Date().getTime()
+    };
+    localStorage.setItem('sgi_admin_session', JSON.stringify(sessionData));
+    location.reload();
+    return;
+  }
+
+  // 2. Supabase Auth + verificar rol admin en tabla perfiles
   try {
     const client = window.supabaseClient;
     if (!client) throw new Error('Sin conexión al servidor');
@@ -1486,9 +1460,9 @@ async function intentarLogin() {
 
     let perfil = null;
     try {
-      const { data: p } = await client.from('usuarios').select('rol,nombre').eq('auth_id', data.user.id).single();
+      const { data: p } = await client.from('perfiles').select('*').eq('id', data.user.id).single();
       perfil = p;
-    } catch(e) { log('Usuario no encontrado en tabla usuarios:', e.message); }
+    } catch(e) { console.warn('Perfil no encontrado:', e.message); }
 
     const rol = perfil?.rol || 'usuario';
     if (rol !== 'admin') {
@@ -1500,15 +1474,14 @@ async function intentarLogin() {
       type: 'admin',
       userId: data.user.id,
       email: data.user.email,
-      nombre: perfil?.nombre || data.user.email,
-      rol: rol
+      nombre: perfil?.nombre || data.user.email
     }));
     localStorage.removeItem('admin_pin');
     location.reload();
 
   } catch(err) {
-    log('Login error:', err);
-    const msg = err.message?.includes('permisos') ? `❌ ${escapeHtml(err.message)}` : '❌ Credenciales incorrectas.';
+    console.error('Login error:', err);
+    const msg = err.message?.includes('permisos') ? `❌ ${err.message}` : '❌ Credenciales incorrectas.';
     errorEl.innerHTML = msg;
     card?.classList.add('shake');
     setTimeout(() => card?.classList.remove('shake'), 400);

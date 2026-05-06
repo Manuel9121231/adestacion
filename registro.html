@@ -503,14 +503,13 @@
         // Si el usuario ya viene con sesión (Confirmación de email desactivada en Supabase)
         if (data.session) {
           try {
-            // Vincular auth_id en la tabla usuarios (usando email como clave)
-            await client.from('usuarios').upsert({
+            await client.from('perfiles').upsert({
+              id: data.user.id,
               email: email,
               nombre: nombre,
               rol: 'usuario',
-              activo: true,
-              auth_id: data.user.id
-            }, { onConflict: 'email' });
+              activo: true
+            });
           } catch(e) {}
           await client.auth.signOut();
           activarStep('panelRegistro', 'regStep3');
@@ -582,11 +581,10 @@
         // Obtener perfil
         let perfil = null;
         try {
-          // Buscar en tabla usuarios usando auth_id
-          const { data: p } = await client.from('usuarios').select('*').eq('auth_id', user.id).single();
+          const { data: p } = await client.from('perfiles').select('*').eq('id', user.id).single();
           perfil = p;
         } catch(e) {
-          // Si no existe fila en usuarios con auth_id, puede ser un admin recién creado
+          console.warn('No se pudo leer perfil:', e.message);
         }
 
         const rol = perfil?.rol || 'usuario';
