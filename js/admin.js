@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     isCargando = true;
-    
+
     // Inyectar interfaz de forma segura
     const container = document.getElementById('dashboardContent');
     if (container) {
@@ -60,10 +60,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (grid) grid.innerHTML = skeletonMaquinas();
     const tbody = document.getElementById('dashboardUltimos');
     if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)"><span class="spinner" style="display:inline-block;margin-right:8px"></span>Conectando con Supabase...</td></tr>';
-    
+
     // Cargar TODO en una sola llamada
     await cargarDatosBase();
-    
+
     // Auto-sincronización cada 2 minutos
     setInterval(() => {
       console.log('Sincronización automática con Supabase...');
@@ -99,14 +99,14 @@ async function cargarDatosBase() {
   // Una sola llamada para traerlo TODO
   const res = await apiFetch('/api/all-data');
   console.timeEnd('Carga Inicial Bundled');
-  
+
   if (res.ok && res.data) {
     const d = res.data;
     datosSalas = d.salas || [];
     datosMaquinas = d.maquinas || [];
     datosUsuarios = d.usuarios || [];
     datosHistorial = d.historial || [];
-    
+
     // Poblar dashboard con los datos ya recibidos
     actualizarVistaDashboard(d.dashboard, d.historial);
   }
@@ -130,7 +130,7 @@ async function cargarDatosBase() {
     });
   });
 
-// El filtro de operario ahora es un input de texto, no necesita población inicial
+  // El filtro de operario ahora es un input de texto, no necesita población inicial
 
   // Actualizar badge alertas
   const alertas = datosMaquinas.filter(m =>
@@ -169,7 +169,7 @@ function renderIncidencias(filtro = 'todas') {
   });
 
   let lista = datosHistorial.filter(r => r.tipo === 'Incidencia');
-  
+
   // Cálculo de KPIs locales para el panel
   const totalPendientes = lista.filter(r => !r.resuelta && !r.en_seguimiento).length;
   const totalResueltas = lista.filter(r => r.resuelta).length;
@@ -191,7 +191,7 @@ function renderIncidencias(filtro = 'todas') {
   empty.style.display = 'none';
   grid.innerHTML = lista.map(r => {
     const resuelta = r.resuelta || false;
-    const esSeguimiento = !resuelta && r.en_seguimiento; 
+    const esSeguimiento = !resuelta && r.en_seguimiento;
     const statusClass = resuelta ? 'resuelto' : (esSeguimiento ? 'seguimiento' : 'urgente');
     const statusText = resuelta ? '✅ Finalizado' : (esSeguimiento ? '📝 En Seguimiento' : '🚨 Pendiente');
 
@@ -238,7 +238,7 @@ function navigateTo(section) {
   // Verificación de roles (solo admin puede ver gestión de máquinas, QR y usuarios)
   const rutasRestringidas = ['usuarios', 'qrcodes'];
   let idToShow = section;
-  
+
   if (rolActual !== 'admin' && rutasRestringidas.includes(section)) {
     idToShow = 'restringido';
   }
@@ -249,7 +249,7 @@ function navigateTo(section) {
   document.getElementById('section-' + idToShow).classList.add('active');
   if (idToShow !== 'restringido') {
     const navItem = document.getElementById('nav-' + section);
-    if(navItem) navItem.classList.add('active');
+    if (navItem) navItem.classList.add('active');
   } else {
     document.getElementById('topbarTitle').textContent = 'Acceso Denegado';
     document.getElementById('topbarSubtitle').textContent = 'Sección restringida por permisos';
@@ -291,8 +291,8 @@ async function cargarDashboard() {
   // Ahora es solo un wrapper por si se llama manualmente
   const res = await apiFetch('/api/dashboard');
   if (res.ok) {
-     const histRes = await apiFetch('/api/historial?');
-     actualizarVistaDashboard(res.data, histRes.ok ? histRes.data : []);
+    const histRes = await apiFetch('/api/historial?');
+    actualizarVistaDashboard(res.data, histRes.ok ? histRes.data : []);
   }
 }
 
@@ -379,7 +379,7 @@ function renderUltimosMantenimientos(registros) {
 function renderMaquinas() {
   const salaFiltro = document.getElementById('filtroSalaMaquinas') ? document.getElementById('filtroSalaMaquinas').value : '';
   const grid = document.getElementById('gridMaquinas');
-  
+
   if (isCargando && !datosMaquinas.length) {
     grid.innerHTML = skeletonMaquinas();
     return;
@@ -400,11 +400,11 @@ function renderMaquinas() {
       : 'Sin mantenimiento registrado';
 
     return `
-      <div class="maquina-card fade-in" 
-           draggable="true" 
-           ondragstart="handleDragStart(event, '${m.id}')"
-           onclick="verHistorialMaquina('${m.id}')" 
-           style="cursor:grab" title="Arrastra para mover de sala">
+        <div class="maquina-card fade-in" 
+             draggable="true" 
+             ondragstart="handleDragStart(event, '${m.id}')"
+             onclick="verDetalleMaquina('${m.id}')" 
+             style="cursor:grab" title="Haz clic para ver detalles">
         <div class="maquina-header">
           <div>
             <div class="maquina-nombre">${m.nombre}</div>
@@ -414,11 +414,10 @@ function renderMaquinas() {
         <div class="maquina-info">
           <span style="font-size:11px; color:var(--accent)">📍 ${m.sala_nombre || 'Sin sala'}</span>
           <span>⚙️ ${m.modelo || 'Sin modelo'}</span>
-          <span>🕐 ${ultimo}</span>
         </div>
         <div class="maquina-actions">
-           <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editarMaquina('${m.id}')">✏️</button>
-           <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation(); eliminarMaquina('${m.id}')">🗑️</button>
+           <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); verDetalleMaquina('${m.id}')">Ver</button>
+           <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation(); eliminarMaquina('${m.id}')">Eliminar</button>
         </div>
       </div>
     `;
@@ -446,13 +445,12 @@ function renderMaquinas() {
   }
 
   let htmlResult = '';
-  const bgColors = ['rgba(79,142,247,0.05)', 'rgba(16,185,129,0.05)', 'rgba(245,158,11,0.05)', 'rgba(139,92,246,0.05)'];
-  const iconos = ['🏭', '🤖', '⚙️', '🏗️'];
-
+  const commonBg = 'rgba(16,185,129,0.05)';
+  const iconos = [''];
   datosSalas.forEach((sala, index) => {
     if (salaFiltro && String(sala.id) !== String(salaFiltro)) return;
     const maquinasSala = lista.filter(m => m.sala_id === sala.id);
-    const color = bgColors[index % bgColors.length];
+    const color = commonBg;
     const icono = iconos[index % iconos.length];
     htmlResult += seccionEspacio(sala.id, sala.nombre, icono, color, maquinasSala);
   });
@@ -508,20 +506,49 @@ async function handleDrop(e, idSalaDestino) {
 
 function filtrarMaquinas() { renderMaquinas(); }
 
-async function editarMaquina(id) {
+async function verDetalleMaquina(id) {
   const maq = datosMaquinas.find(m => m.id === id);
   if (!maq) return;
   document.getElementById('editMaquinaId').value = id;
-  document.getElementById('editCodigo').value = maq.codigo || '';
   document.getElementById('editNombre').value = maq.nombre;
   document.getElementById('editTipo').value = maq.tipo;
   document.getElementById('editModelo').value = maq.modelo || '';
   document.getElementById('editEstado').value = maq.estado || 'activa';
-  document.getElementById('editAncho').value = maq.ancho_mm || '';
-  document.getElementById('editAlto').value = maq.alto_mm || '';
-  document.getElementById('editProfundidad').value = maq.profundidad_mm || '';
   document.getElementById('editNotas').value = maq.notas || '';
+  
+  // Por defecto, abrir en modo lectura
+  setModoEdicionMaquina(false);
+  
   abrirModal('modalMaquina');
+}
+
+function setModoEdicionMaquina(editando) {
+  const inputs = ['editNombre', 'editTipo', 'editModelo', 'editEstado', 'editNotas'];
+  inputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.readOnly = !editando;
+    if (el && el.tagName === 'SELECT') el.disabled = !editando;
+  });
+  
+  const btnToggle = document.getElementById('btnToggleEditarMaquina');
+  if (btnToggle) {
+    btnToggle.textContent = editando ? 'Cancelar' : 'Editar';
+    btnToggle.classList.toggle('btn-primary', editando);
+    btnToggle.classList.toggle('btn-outline', !editando);
+  }
+  
+  const btnGuardar = document.getElementById('btnGuardarMaquina');
+  if (btnGuardar) btnGuardar.style.display = editando ? 'block' : 'none';
+}
+
+function toggleModoEdicionMaquina() {
+  const isReadOnly = document.getElementById('editNombre').readOnly;
+  setModoEdicionMaquina(isReadOnly);
+}
+
+async function editarMaquina(id) {
+  await verDetalleMaquina(id);
+  setModoEdicionMaquina(true);
 }
 
 async function guardarMaquina() {
@@ -581,13 +608,13 @@ async function crearMaquina() {
     return;
   }
 
-  const res = await apiFetch('/api/maquinas', { 
-    method: 'POST', 
-    body: { 
+  const res = await apiFetch('/api/maquinas', {
+    method: 'POST',
+    body: {
       codigo: document.getElementById('nuevoMaquinaCodigo').value.trim(),
       nombre, sala_id, tipo, modelo, estado,
       ancho_mm, alto_mm, profundidad_mm, notas
-    } 
+    }
   });
 
   if (res.ok) {
@@ -625,10 +652,10 @@ function renderQRs() {
 
   const grid = document.getElementById('gridQRs');
   if (isCargando && !datosMaquinas.length) {
-     grid.innerHTML = skeletonMaquinas();
-     return;
+    grid.innerHTML = skeletonMaquinas();
+    return;
   }
-  
+
   grid.innerHTML = lista.map(m => `
     <div class="maquina-card fade-in" style="cursor:pointer" onclick="verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">
       <div class="maquina-header">
@@ -653,10 +680,10 @@ async function verQR(id, nombre, sala) {
   const qrContainer = document.getElementById('qrImgContainer');
   qrContainer.innerHTML = '';
   qrContainer.style.cursor = 'pointer';
-  
+
   const targetUrl = `${serverHost}/operario.html?maquinaId=${id}`;
   qrContainer.onclick = () => window.open(targetUrl, '_blank');
-  
+
   document.getElementById('qrUrl').textContent = 'Generando...';
   abrirModal('modalQR');
 
@@ -664,7 +691,7 @@ async function verQR(id, nombre, sala) {
   qrUrlEl.textContent = targetUrl;
   qrUrlEl.href = targetUrl;
   qrUrlEl.style.textDecoration = 'underline'; // Asegurar que parezca clickeable
-  
+
   new QRCode(qrContainer, {
     text: targetUrl,
     width: 256,
@@ -685,7 +712,7 @@ function imprimirTodosLosQRs() {
 
   const printWindow = window.open('', '_blank');
   let baseOrigin = serverHost;
-  
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -738,7 +765,7 @@ function imprimirQR() {
   const imgElement = container.querySelector('img');
   const img = imgElement ? imgElement.src : '';
   const url = document.getElementById('qrUrl').textContent;
-  
+
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><title>QR - ${nombre}</title>
     <style>body{font-family:sans-serif;text-align:center;padding:40px}
@@ -757,7 +784,7 @@ function imprimirQR() {
 // ── Historial ─────────────────────────────────────────────────────────────────
 async function poblarFiltroMaquinasHistorial() {
   const sel = document.getElementById('filtroMaquina');
-  if(!sel) return;
+  if (!sel) return;
   sel.innerHTML = '<option value="">Todas las máquinas</option>';
   datosMaquinas.forEach(m => {
     const opt = document.createElement('option');
@@ -784,7 +811,7 @@ async function cargarHistorial() {
   const tbody = document.getElementById('tablaHistorial');
   const empty = document.getElementById('historialEmpty');
   const hasFilters = sala || maquina || operario || desde || hasta;
-  
+
   if (!hasFilters && datosHistorial.length > 0) {
     const mantenimientos = datosHistorial.filter(r => r.tipo === 'Mantenimiento');
     renderizarContenidoHistorial(mantenimientos, tbody, empty);
@@ -795,13 +822,13 @@ async function cargarHistorial() {
   const res = await apiFetch('/api/historial?' + params.toString());
 
   if (!res.ok || !res.data.length) {
-    if(tbody) tbody.innerHTML = '';
+    if (tbody) tbody.innerHTML = '';
     if (empty) empty.style.display = 'block';
     return;
   }
   const mantenimientosRes = res.data.filter(r => r.tipo === 'Mantenimiento');
   if (mantenimientosRes.length === 0) {
-    if(tbody) tbody.innerHTML = '';
+    if (tbody) tbody.innerHTML = '';
     if (empty) empty.style.display = 'block';
     return;
   }
@@ -814,11 +841,11 @@ function renderizarContenidoHistorial(data, tbody, empty) {
   tbody.innerHTML = data.map(r => {
     const isInc = r.tipo === 'Incidencia';
     const resuelta = r.resuelta || false;
-    
+
     // Badge de resolución para incidencias
     let resBadge = '';
     if (isInc) {
-      resBadge = resuelta 
+      resBadge = resuelta
         ? `<span class="estado-badge ok" style="margin-left:8px;font-size:10px">✅ Resuelta</span>`
         : `<span class="estado-badge vencido" style="margin-left:8px;font-size:10px">🚨 Pendiente</span>`;
     }
@@ -861,14 +888,14 @@ async function toggleResolucionIncidencia(id, nuevoEstado) {
     if (comentario === null) return; // Cancelado
   }
 
-  const res = await apiFetch(`/api/sesion/${id}/resolver`, { 
-    method: 'PUT', 
-    body: { 
+  const res = await apiFetch(`/api/sesion/${id}/resolver`, {
+    method: 'PUT',
+    body: {
       resuelta: nuevoEstado,
-      comentario_resolucion: comentario 
-    } 
+      comentario_resolucion: comentario
+    }
   });
-  
+
   if (res.ok) {
     await cargarDatosBase();
     if (document.getElementById('section-historial').classList.contains('active')) await cargarHistorial();
@@ -885,7 +912,7 @@ async function verDetalleSesion(id) {
   cerrarModal('modalHistorialMaquina');
   const container = document.getElementById('detalleContenido');
   const titleEl = document.querySelector('#modalDetalle .modal-title');
-  if(!container) return;
+  if (!container) return;
   container.innerHTML = '<div style="padding:40px;text-align:center"><span class="spinner"></span> Cargando...</div>';
   abrirModal('modalDetalle');
 
@@ -913,8 +940,8 @@ async function verDetalleSesion(id) {
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <div class="estado-badge ${isInc?'vencido':'ok'}">${isInc?'Incidencia':'Mantenimiento'}</div>
-          ${isInc ? `<div class="estado-badge ${resuelta?'ok':'vencido'}">${resuelta?'✅ Resuelta':'🚨 Pendiente'}</div>` : ''}
+          <div class="estado-badge ${isInc ? 'vencido' : 'ok'}">${isInc ? 'Incidencia' : 'Mantenimiento'}</div>
+          ${isInc ? `<div class="estado-badge ${resuelta ? 'ok' : 'vencido'}">${resuelta ? '✅ Resuelta' : '🚨 Pendiente'}</div>` : ''}
           <button class="btn btn-icon" style="background:transparent;border:none;color:var(--danger);padding:4px;font-size:16px;cursor:pointer;" onclick="eliminarIncidencia('${sesion.id}')" title="Eliminar registro">❌</button>
         </div>
       </div>
@@ -974,11 +1001,11 @@ async function verDetalleSesion(id) {
   // --- Manejo de Seguimientos ---
   const seccionSeg = document.getElementById('seccionSeguimiento');
   const timeline = document.getElementById('seguimientoTimeline');
-  
+
   if (isInc && seccionSeg && timeline) {
     seccionSeg.style.display = 'block';
     timeline.innerHTML = '<div style="text-align:center;padding:10px;opacity:0.5">Cargando hilo de seguimiento...</div>';
-    
+
     // Guardar ID actual para la nueva nota
     window.currentIncidenciaId = id;
 
@@ -1047,7 +1074,7 @@ async function editarDescripcionIncidencia(id) {
   }
   const nuevaDesc = await customPrompt('Editar Reporte', 'Edita el reporte de la incidencia:', currentDesc);
   if (nuevaDesc === null) return;
-  
+
   const res = await apiFetch(`/api/incidencia/${id}/editar`, {
     method: 'PUT',
     body: { notas: nuevaDesc }
@@ -1070,7 +1097,7 @@ async function eliminarIncidencia(id) {
     '🗑️'
   );
   if (!ok) return;
-  
+
   const res = await apiFetch(`/api/sesion/${id}`, { method: 'DELETE' });
   if (res.ok) {
     cerrarModal('modalDetalle');
@@ -1098,7 +1125,7 @@ async function verHistorialMaquina(nombreMaquina) {
     <tr>
       <td data-label="Fecha">${formatFechaHora(r.completado_en)}</td>
       <td data-label="Operario">${r.operario}</td>
-      <td data-label="Tipo"><span class="estado-badge ${r.tipo==='Incidencia'?'vencido':'ok'}">${r.tipo}</span></td>
+      <td data-label="Tipo"><span class="estado-badge ${r.tipo === 'Incidencia' ? 'vencido' : 'ok'}">${r.tipo}</span></td>
       <td data-label="Nota">${truncate(r.observaciones || '', 20)}</td>
       <td><button class="btn btn-outline btn-sm" onclick="verDetalleSesion('${r.id}')">Detalles</button></td>
     </tr>
@@ -1112,13 +1139,13 @@ function exportarCSV() {
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `historial_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `historial_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
 }
 
 // ── Usuarios / Administradores ────────────────────────────────────────────────
 const ROL_BADGES = {
-  admin:   { label: '🛡️ Administrador', cls: 'azul' },
+  admin: { label: '🛡️ Administrador', cls: 'azul' },
   tecnico: { label: '🔧 Técnico', cls: 'verde' },
   usuario: { label: '👤 Usuario', cls: '' },
 };
@@ -1168,7 +1195,7 @@ async function renderUsuarios() {
       </tr>`;
     }).join('');
 
-  } catch(err) {
+  } catch (err) {
     console.error('Error cargando perfiles:', err);
     container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--danger)">⚠️ Error al cargar usuarios: ${err.message}<br><br><small>Asegúrate de haber creado la tabla <code>perfiles</code> en Supabase.</small></td></tr>`;
   }
@@ -1189,16 +1216,16 @@ async function eliminarUsuario(userId) {
 
   try {
     const client = window.supabaseClient;
-    
+
     // Primero, intentamos eliminar el usuario del sistema de Auth usando una función RPC
     const { error: rpcError } = await client.rpc('eliminar_usuario_auth', { user_id: userId });
-    
+
     // Luego eliminamos su perfil de la base de datos pública
     const { error } = await client.from('perfiles').delete().eq('id', userId);
-    
+
     if (error && error.code !== 'PGRST116') throw error;
     if (rpcError) console.warn("No se pudo eliminar de Auth, pero sí del perfil:", rpcError);
-    
+
     showFeedback('Usuario Eliminado', 'El perfil de usuario ha sido eliminado correctamente.', '✅');
     renderUsuarios();
   } catch (err) {
@@ -1225,7 +1252,7 @@ async function cambiarRolUsuario(userId, nuevoRol) {
     const { error } = await client.from('perfiles').update({ rol: nuevoRol }).eq('id', userId);
     if (error) throw error;
     renderUsuarios();
-  } catch(err) {
+  } catch (err) {
     showFeedback('Error de permisos', 'No se ha podido cambiar el rol: ' + err.message, '❌');
   }
 }
@@ -1285,30 +1312,30 @@ async function apiFetch(url, options = {}) {
       return {
         ok: true,
         data: {
-          salas: salas.data, 
+          salas: salas.data,
           maquinas: formattedMaquinas,
-          historial: regs.map(r => ({ 
-            id: r.id, 
-            maquina: r.maquina_nombre || 'Desconocida', 
-            sala: r.sala_nombre || 'Sin sala', 
-            operario: r.operario_nombre || 'Anónimo', 
-            iniciado_en: r.timestamp, 
-            completado_en: r.timestamp, 
-            observaciones: r.notas || '', 
-            tipo: r.tipo, 
-            resuelta: r.resuelta || false, 
-            en_seguimiento: r.en_seguimiento || false, 
-            comentario_resolucion: r.comentario_resolucion, 
-            fotos: r.photos || [], 
-            tiene_fotos: (r.photos && r.photos.length > 0) 
+          historial: regs.map(r => ({
+            id: r.id,
+            maquina: r.maquina_nombre || 'Desconocida',
+            sala: r.sala_nombre || 'Sin sala',
+            operario: r.operario_nombre || 'Anónimo',
+            iniciado_en: r.timestamp,
+            completado_en: r.timestamp,
+            observaciones: r.notas || '',
+            tipo: r.tipo,
+            resuelta: r.resuelta || false,
+            en_seguimiento: r.en_seguimiento || false,
+            comentario_resolucion: r.comentario_resolucion,
+            fotos: r.photos || [],
+            tiene_fotos: (r.photos && r.photos.length > 0)
           })),
-          dashboard: { 
-            hoy: regs.filter(r => r.timestamp && r.timestamp.startsWith(new Date().toISOString().split('T')[0])).length, 
-            semana: regs.filter(r => r.timestamp && new Date(r.timestamp) >= new Date(Date.now() - 7*24*60*60*1000)).length, 
-            pendientes: formattedMaquinas.filter(m => m.estado_mantenimiento === 'vencido' || m.estado_mantenimiento === 'pendiente').length, 
-            proximos: formattedMaquinas.filter(m => m.estado_mantenimiento === 'proximo').length, 
-            porDia: Object.entries(porDiaMap).map(([dia, total]) => ({ dia, total })).sort((a,b) => a.dia.localeCompare(b.dia)), 
-            porMaquina: Object.entries(porMaquinaMap).map(([nombre, total_sesiones]) => ({ nombre, total_sesiones })).sort((a,b) => b.total_sesiones - a.total_sesiones) 
+          dashboard: {
+            hoy: regs.filter(r => r.timestamp && r.timestamp.startsWith(new Date().toISOString().split('T')[0])).length,
+            semana: regs.filter(r => r.timestamp && new Date(r.timestamp) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length,
+            pendientes: formattedMaquinas.filter(m => m.estado_mantenimiento === 'vencido' || m.estado_mantenimiento === 'pendiente').length,
+            proximos: formattedMaquinas.filter(m => m.estado_mantenimiento === 'proximo').length,
+            porDia: Object.entries(porDiaMap).map(([dia, total]) => ({ dia, total })).sort((a, b) => a.dia.localeCompare(b.dia)),
+            porMaquina: Object.entries(porMaquinaMap).map(([nombre, total_sesiones]) => ({ nombre, total_sesiones })).sort((a, b) => b.total_sesiones - a.total_sesiones)
           }
         }
       };
@@ -1347,7 +1374,7 @@ async function apiFetch(url, options = {}) {
 
     if (url.includes('/api/sesion/') && url.includes('/resolver')) {
       const id = url.split('/')[3];
-      const { error } = await client.from('registros').update({ 
+      const { error } = await client.from('registros').update({
         resuelta: payload.resuelta,
         comentario_resolucion: payload.comentario_resolucion
       }).eq('id', id);
@@ -1370,14 +1397,14 @@ async function apiFetch(url, options = {}) {
           .select('*')
           .eq('incidencia_id', id)
           .order('timestamp', { ascending: true });
-        
+
         if (error) {
           console.warn('Tabla seguimientos no encontrada o error:', error);
           return { ok: true, data: [] };
         }
         return { ok: true, data };
       }
-      
+
       if (method === 'POST') {
         const { data, error } = await client
           .from('seguimientos')
@@ -1389,10 +1416,10 @@ async function apiFetch(url, options = {}) {
           })
           .select()
           .single();
-        
+
         // Actualizar automáticamente a "en seguimiento" si no estaba resuelta
         await client.from('registros').update({ en_seguimiento: true }).eq('id', id);
-        
+
         if (error) throw error;
         return { ok: true, data };
       }
@@ -1406,13 +1433,13 @@ async function apiFetch(url, options = {}) {
     }
 
     return { ok: false, error: 'Endpoint not implemented' };
-  } catch (err) { 
-    console.error('🔴 Error apiFetch:', err); 
+  } catch (err) {
+    console.error('🔴 Error apiFetch:', err);
     // Si es un error de columna faltante, dar una pista clara
     if (err.message && err.message.includes('maquina_nombre')) {
       showFeedback('Error Crítico', "La base de datos no tiene la columna 'maquina_nombre'. Por favor, ejecuta el script SQL de reparación.", '🚨');
     }
-    return { ok: false, error: err.message }; 
+    return { ok: false, error: err.message };
   }
 }
 
@@ -1435,7 +1462,7 @@ async function intentarLogin() {
   if (btn) btn.disabled = true;
 
   // 1. Superadmin (Credenciales específicas del usuario)
-  if (username === 'adestacion' && password === 'HEF4hjrb|@#uwehrU2') {
+  if (username === 'adestacion' && password === '') {
     const sessionData = {
       type: 'superadmin',
       username: 'adestacion',
@@ -1462,7 +1489,7 @@ async function intentarLogin() {
     try {
       const { data: p } = await client.from('perfiles').select('*').eq('id', data.user.id).single();
       perfil = p;
-    } catch(e) { console.warn('Perfil no encontrado:', e.message); }
+    } catch (e) { console.warn('Perfil no encontrado:', e.message); }
 
     const rol = perfil?.rol || 'usuario';
     if (rol !== 'admin') {
@@ -1479,7 +1506,7 @@ async function intentarLogin() {
     localStorage.removeItem('admin_pin');
     location.reload();
 
-  } catch(err) {
+  } catch (err) {
     console.error('Login error:', err);
     const msg = err.message?.includes('permisos') ? `❌ ${err.message}` : '❌ Credenciales incorrectas.';
     errorEl.innerHTML = msg;
@@ -1514,33 +1541,33 @@ function iniciarTour() {
     showProgress: true,
     animate: true,
     steps: [
-      { 
-        popover: { 
-          title: '✨ Bienvenido', 
-          description: 'Recorrido rápido por el panel de administración del sistema.' 
+      {
+        popover: {
+          title: '✨ Bienvenido',
+          description: 'Recorrido rápido por el panel de administración del sistema.'
         },
         onHighlightStarted: () => navigateTo('dashboard')
       },
-      { 
-        element: '#kpiGrid', 
-        popover: { 
-          title: '📊 Resumen General', 
-          description: 'Aquí verás el estado actual del sistema en tiempo real.' 
+      {
+        element: '#kpiGrid',
+        popover: {
+          title: '📊 Resumen General',
+          description: 'Aquí verás el estado actual del sistema en tiempo real.'
         },
         onHighlightStarted: () => navigateTo('dashboard')
       },
-      { 
-        element: '#nav-maquinas', 
-        popover: { 
-          title: '🖨️ Máquinas', 
-          description: 'Gestiona todo tu inventario de impresoras y su estado.' 
-        } 
+      {
+        element: '#nav-maquinas',
+        popover: {
+          title: '🖨️ Máquinas',
+          description: 'Gestiona todo tu inventario de impresoras y su estado.'
+        }
       },
-      { 
-        element: '#gridQRs', 
-        popover: { 
-          title: '📱 Códigos QR', 
-          description: 'Desde aquí generas los códigos para que los operarios escaneen con su móvil.' 
+      {
+        element: '#gridQRs',
+        popover: {
+          title: '📱 Códigos QR',
+          description: 'Desde aquí generas los códigos para que los operarios escaneen con su móvil.'
         },
         onHighlightStarted: () => {
           navigateTo('qrcodes');
@@ -1550,11 +1577,11 @@ function iniciarTour() {
           }, 400);
         }
       },
-      { 
-        element: '#nav-historial', 
-        popover: { 
-          title: '📋 Historial', 
-          description: 'Accede a todos los registros de mantenimiento e incidencias pasadas.' 
+      {
+        element: '#nav-historial',
+        popover: {
+          title: '📋 Historial',
+          description: 'Accede a todos los registros de mantenimiento e incidencias pasadas.'
         },
         onHighlightStarted: () => navigateTo('historial')
       }
@@ -1701,7 +1728,7 @@ function customPrompt(titulo, label, defaultValue = '') {
     document.getElementById('promptLabel').textContent = label;
     const input = document.getElementById('promptInput');
     input.value = defaultValue;
-    
+
     abrirModal('modalPrompt');
     setTimeout(() => input.focus(), 100);
 
@@ -1710,7 +1737,7 @@ function customPrompt(titulo, label, defaultValue = '') {
       cerrarModal('modalPrompt');
       resolve(val);
     };
-    
+
     window.promptReject = () => {
       cerrarModal('modalPrompt');
       resolve(null);

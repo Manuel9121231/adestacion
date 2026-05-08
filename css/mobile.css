@@ -1,23 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --bg:           #0f0f1a;
-  --bg2:          #1a1a2e;
-  --card:         #16213e;
+  --bg:           #f5f6f8;
+  --bg2:          #f9fafb;
+  --card:         #ffffff;
   --accent:       #4f8ef7;
   --accent-dark:  #2563eb;
   --success:      #10b981;
   --warning:      #f59e0b;
   --danger:       #ef4444;
-  --text:         #f0f4ff;
-  --text-sub:     #94a3b8;
-  --text-muted:   #64748b;
-  --border:       rgba(255,255,255,0.08);
+  --text:         #2b3440;
+  --text-sub:     #7a8897;
+  --text-muted:   #7a8897;
+  --border:       rgba(30,41,59,0.06);
   --critico:      #ef4444;
   --critico-bg:   rgba(239,68,68,0.1);
   --critico-brd:  rgba(239,68,68,0.35);
   --radius:       14px;
-  --shadow:       0 8px 32px rgba(0,0,0,0.5);
+  --shadow:       0 8px 16px rgba(30,41,59,0.06);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

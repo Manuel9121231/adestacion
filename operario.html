@@ -9,11 +9,18 @@
   <meta name="theme-color" content="#0f0f1a">
   <style>
     :root {
-      --bg-portal: #0f0f1a;
-      --card-bg: #1a1a2e;
+      --bg-portal: #eef0f2;
+      --card-bg: #ffffff;
       --accent-inc: #ff4757;
       --accent-maint: #4f8ef7;
+      --text-white: #2b3440;
+      --border: rgba(0,0,0,0.06);
+    }
+    body.dark-mode {
+      --bg-portal: #0f0f1a;
+      --card-bg: #1a1a2e;
       --text-white: #ffffff;
+      --border: rgba(255,255,255,0.05);
     }
     .portal-container {
       display: flex;
@@ -44,7 +51,7 @@
       background: var(--card-bg);
       border-radius: 20px;
       padding: 30px 20px;
-      border: 1px solid rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
@@ -140,6 +147,7 @@
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
+  <script src="js/theme.js"></script>
 </head>
 <body>
 
@@ -174,7 +182,7 @@
           <p id="portalMaquinaSala" style="margin:0; opacity:0.6;">Elige una opción</p>
         </div>
         <div style="display:flex; gap:8px; flex-shrink: 0;">
-          <button onclick="window.location.href='index.html'" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:8px 12px; border-radius:10px; font-size:11px; cursor:pointer; white-space: nowrap;">
+          <button onclick="window.location.href='index.html'" style="background:var(--card-bg); border:1px solid var(--border); color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; cursor:pointer; white-space: nowrap;">
             🔄 Cambiar
           </button>
           <button onclick="window.location.href='dashboard.html'" style="background:rgba(79, 142, 247, 0.1); border:1px solid var(--accent-maint); color:var(--accent-maint); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; white-space: nowrap;">
@@ -213,7 +221,7 @@
         <div class="header-sub" id="checkSalaNombre">–</div>
       </div>
       <div style="display:flex; gap:8px; flex-shrink: 0;">
-        <button onclick="window.location.href='index.html'" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:6px 10px; border-radius:8px; font-size:10px; cursor:pointer; white-space: nowrap;">
+        <button onclick="window.location.href='index.html'" style="background:var(--card-bg); border:1px solid var(--border); color:var(--text-white); padding:6px 10px; border-radius:8px; font-size:10px; cursor:pointer; white-space: nowrap;">
           🔄 Cambiar
         </button>
         <button onclick="window.location.href='dashboard.html'" style="background:rgba(79, 142, 247, 0.1); border:1px solid var(--accent-maint); color:var(--accent-maint); padding:6px 10px; border-radius:8px; font-size:10px; font-weight:700; cursor:pointer; white-space: nowrap;">

@@ -10,9 +10,9 @@ const DASHBOARD_HTML = `
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <div class="logo">
-          <div class="logo-icon">🖨️</div>
+          <div class="logo-icon">🛠</div>
           <div>
-            <h1>Gestión Impresoras</h1>
+            <h1>Gestor de máquinas</h1>
             <p>Panel de Administración</p>
           </div>
         </div>
@@ -24,31 +24,23 @@ const DASHBOARD_HTML = `
             <span class="nav-icon">📊</span>
             <span>Panel General</span>
           </div>
-          <div class="nav-item" id="nav-maquinas" onclick="navigateTo('maquinas')">
-            <span class="nav-icon">🖨️</span>
-            <span>Máquinas</span>
-            <span class="nav-badge" id="badge-alertas" style="display:none">!</span>
-          </div>
-          <div class="nav-item" id="nav-historial" onclick="navigateTo('historial')">
-            <span class="nav-icon">📋</span>
-            <span>Mantenimientos</span>
-          </div>
-        </div>
-
-        <div class="nav-section">
           <div class="nav-item" id="nav-incidencias" onclick="navigateTo('incidencias')">
             <span class="nav-icon">🚨</span>
             <span>Panel de Incidencias</span>
             <span class="nav-badge vencido" id="badge-incidencias" style="display:none">0</span>
           </div>
-        </div>
-        <div class="nav-section">
+          <div class="nav-item" id="nav-maquinas" onclick="navigateTo('maquinas')">
+            <span class="nav-icon">🖨️</span>
+            <span>Máquinas</span>
+          </div>
+          <div class="nav-item" id="nav-historial" onclick="navigateTo('historial')">
+            <span class="nav-icon">📋</span>
+            <span>Mantenimientos</span>
+          </div>
           <div class="nav-item" id="nav-qrcodes" onclick="navigateTo('qrcodes')">
             <span class="nav-icon">📱</span>
             <span>Códigos QR</span>
           </div>
-        </div>
-        <div class="nav-section">
           <div class="nav-item" id="nav-usuarios" onclick="navigateTo('usuarios')">
             <span class="nav-icon">👥</span>
             <span>Usuarios</span>
@@ -76,6 +68,9 @@ const DASHBOARD_HTML = `
           </div>
         </div>
         <div class="topbar-actions">
+           <button class="btn btn-outline btn-sm" onclick="toggleTheme()" id="btnThemeToggle" style="border-radius:20px; padding: 6px 16px;">
+             🌙 Modo Oscuro
+           </button>
            <button class="btn btn-outline btn-sm" onclick="iniciarTour()" style="border-radius:20px; padding: 6px 16px;">
              ✨ Guía Rápida
            </button>
@@ -109,14 +104,10 @@ const DASHBOARD_HTML = `
             </div>
             <div class="kpi-card rojo">
               <div class="kpi-icon">🚨</div>
-              <div class="kpi-value" id="kpi-pendientes">–</div>
-              <div class="kpi-label">Máquinas vencidas</div>
+              <div class="kpi-value" id="kpi-sin-resolver">–</div>
+              <div class="kpi-label">Sin resolver</div>
             </div>
-            <div class="kpi-card amarillo">
-              <div class="kpi-icon">⚠️</div>
-              <div class="kpi-value" id="kpi-proximos">–</div>
-              <div class="kpi-label">Próximas a vencer</div>
-            </div>
+
           </div>
 
           <div class="chart-grid">
@@ -189,7 +180,7 @@ const DASHBOARD_HTML = `
             <div class="kpi-card rojo" id="kpi-inc-pendientes-card">
               <div class="kpi-icon">🚨</div>
               <div class="kpi-value" id="kpi-inc-pendientes">0</div>
-              <div class="kpi-label">Urgentes (Sin atender)</div>
+              <div class="kpi-label">Sin resolver</div>
             </div>
             <div class="kpi-card amarillo" id="kpi-inc-seguimiento-card">
               <div class="kpi-icon">📝</div>
@@ -375,22 +366,19 @@ const DASHBOARD_HTML = `
   <div class="overlay" id="modalMaquina">
     <div class="modal" style="max-width:560px">
       <div class="modal-header">
-        <div class="modal-title">✏️ Editar Máquina</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn btn-outline btn-sm" id="btnToggleEditarMaquina" onclick="toggleModoEdicionMaquina()" style="padding: 6px 12px; font-size:12px; min-width:72px">Editar</button>
+          <div class="modal-title">Detalles de Máquina</div>
+        </div>
         <button class="modal-close" onclick="cerrarModal('modalMaquina')">✕</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="editMaquinaId">
         <div class="grid-2">
           <div class="form-group">
-            <label class="form-label">Código</label>
-            <input class="form-control" id="editCodigo" type="text" placeholder="Ej: IMP-01">
-          </div>
-          <div class="form-group">
             <label class="form-label">Nombre *</label>
             <input class="form-control" id="editNombre" type="text">
           </div>
-        </div>
-        <div class="grid-2">
           <div class="form-group">
             <label class="form-label">Tipo</label>
             <select class="form-control" id="editTipo">
@@ -408,28 +396,11 @@ const DASHBOARD_HTML = `
           <div class="form-group">
             <label class="form-label">Estado operativo</label>
             <select class="form-control" id="editEstado">
-              <option value="activa">✅ Activa / Operativa</option>
-              <option value="en_revision">🔧 En revisión</option>
-              <option value="averiada">🚨 Averiada</option>
-              <option value="inactiva">⛔ Inactiva</option>
+              <option value="activa">Activa / Operativa</option>
+              <option value="en_revision">En revisión</option>
+              <option value="averiada">Averiada</option>
+              <option value="inactiva">Inactiva</option>
             </select>
-          </div>
-        </div>
-        <div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:12px;padding:16px;margin-bottom:16px">
-          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">📐 Dimensiones (mm)</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Ancho</label>
-              <input class="form-control" id="editAncho" type="number" min="0" placeholder="220">
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Alto</label>
-              <input class="form-control" id="editAlto" type="number" min="0" placeholder="250">
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Profundidad</label>
-              <input class="form-control" id="editProfundidad" type="number" min="0" placeholder="220">
-            </div>
           </div>
         </div>
         <div class="form-group">
@@ -438,8 +409,10 @@ const DASHBOARD_HTML = `
         </div>
       </div>
       <div class="modal-footer">
+        <button class="btn btn-text btn-sm" onclick="eliminarMaquina(document.getElementById('editMaquinaId').value)">Borrar</button>
+        <div style="flex:1"></div>
         <button class="btn btn-outline" onclick="cerrarModal('modalMaquina')">Cancelar</button>
-        <button class="btn btn-primary" onclick="guardarMaquina()">💾 Guardar cambios</button>
+        <button class="btn btn-primary" id="btnGuardarMaquina" onclick="guardarMaquina()">Guardar cambios</button>
       </div>
     </div>
   </div>
@@ -485,28 +458,9 @@ const DASHBOARD_HTML = `
           <div class="form-group">
             <label class="form-label">Estado operativo</label>
             <select class="form-control" id="nuevoMaquinaEstado">
-              <option value="activa">✅ Activa / Operativa</option>
-              <option value="en_revision">🔧 En revisión</option>
-              <option value="averiada">🚨 Averiada</option>
-              <option value="inactiva">⛔ Inactiva</option>
+              <option value="activa">Activa</option>
+              <option value="inactiva">Inactiva</option>
             </select>
-          </div>
-        </div>
-        <div style="background:rgba(79,142,247,0.06);border:1px solid rgba(79,142,247,0.15);border-radius:12px;padding:16px;margin-bottom:16px">
-          <div style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">📐 Dimensiones (mm)</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Ancho</label>
-              <input class="form-control" id="nuevoMaquinaAncho" type="number" min="0" placeholder="220">
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Alto</label>
-              <input class="form-control" id="nuevoMaquinaAlto" type="number" min="0" placeholder="250">
-            </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Profundidad</label>
-              <input class="form-control" id="nuevoMaquinaProfundidad" type="number" min="0" placeholder="220">
-            </div>
           </div>
         </div>
         <div class="form-group">

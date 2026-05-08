@@ -6,16 +6,25 @@
   <title>Estación — Inicio</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0f0f1a">
+  <meta name="theme-color" content="#f5f6f8">
   <style>
     :root {
-      --bg: #0f0f1a;
-      --card-bg: #1a1a2e;
-      --text: #ffffff;
-      --text-muted: #94a3b8;
+      --bg: #e5e8eb;
+      --card-bg: #ffffff;
+      --text: #2b3440;
+      --text-muted: #7a8897;
       --accent: #4f8ef7;
-      --accent-glow: rgba(79, 142, 247, 0.3);
-      --border: rgba(255, 255, 255, 0.08);
+      --accent-glow: rgba(79, 142, 247, 0.18);
+      --border: rgba(30,41,59,0.06);
+    }
+
+    body.dark-mode {
+      --bg: #0b1220;
+      --card-bg: #19213b;
+      --text: #e9eef8;
+      --text-muted: #7b8aac;
+      --border: rgba(255,255,255,0.08);
+      --accent-glow: rgba(90,165,255,0.18);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
@@ -41,9 +50,7 @@
       font-weight: 900;
       letter-spacing: -0.04em;
       margin-bottom: 10px;
-      background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text);
     }
 
     .hero p {
@@ -200,7 +207,7 @@
 <body>
 
   <div class="hero">
-    <h1>Gestión de Impresoras</h1>
+    <h1>Gestión de Máquinas</h1>
     <p>Selecciona tu portal de acceso</p>
   </div>
 
@@ -249,6 +256,7 @@
     &copy; 2026 Sistema de Gestión de Impresoras · PWA Ready
   </div>
 
+  <script src="js/theme.js"></script>
   <script>
     // Registro del Service Worker para PWA
     if ('serviceWorker' in navigator) {

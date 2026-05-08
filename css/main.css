@@ -2,28 +2,47 @@
 
 /* ── Variables ───────────────────────────────────────────────────────────── */
 :root {
-  --bg-primary:    #0f0f1a;
-  --bg-secondary:  #1a1a2e;
-  --bg-card:       #16213e;
-  --bg-card-hover: #1f2f4a;
-  --accent:        #4f8ef7;
+  --bg-primary:    #e5e8eb;
+  --bg-secondary:  #f8fafc;
+  --bg-card:       #ffffff;
+  --bg-card-hover: #f2f4f7;
+  --accent:        #3b82f6;
   --accent-dark:   #2563eb;
-  --accent-glow:   rgba(79, 142, 247, 0.25);
-  --success:       #10b981;
+  --accent-glow:   rgba(59,130,246,0.14);
+  --success:       #16a34a;
   --warning:       #f59e0b;
-  --danger:        #ef4444;
-  --text-primary:  #f0f4ff;
-  --text-secondary:#94a3b8;
-  --text-muted:    #64748b;
-  --border:        rgba(255,255,255,0.08);
-  --border-accent: rgba(79,142,247,0.4);
+  --danger:        #dc2626;
+  --text-primary:  #2b3440;
+  --text-secondary:#5a6c7d;
+  --text-muted:    #7a8897;
+  --border:        rgba(30,41,59,0.06);
+  --border-accent: rgba(59,130,246,0.2);
   --radius:        12px;
   --radius-sm:     8px;
-  --shadow:        0 4px 24px rgba(0,0,0,0.4);
-  --shadow-glow:   0 0 30px rgba(79,142,247,0.15);
-  --shadow-lg:     0 10px 40px rgba(0,0,0,0.5);
+  --shadow:        0 8px 24px rgba(30,41,59,0.04);
+  --shadow-glow:   0 0 24px rgba(59,130,246,0.06);
+  --shadow-lg:     0 12px 48px rgba(30,41,59,0.08);
   --transition:    0.2s ease;
 }
+
+body.dark-mode {
+  --bg-primary:    #0b1220;
+  --bg-secondary:  #141c2f;
+  --bg-card:       #19213b;
+  --bg-card-hover: #22304d;
+  --accent:        #5aa5ff;
+  --accent-dark:   #3f7ddb;
+  --accent-glow:   rgba(90,165,255,0.18);
+  --success:       #34d399;
+  --warning:       #f5b142;
+  --danger:        #f56f70;
+  --text-primary:  #e9eef8;
+  --text-secondary:#9ab3d0;
+  --text-muted:    #7b8aac;
+  --border:        rgba(255,255,255,0.08);
+  --border-accent: rgba(90,165,255,0.3);
+}
+
 
 /* ── Reset ───────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,6 +53,7 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 a { color: var(--accent); text-decoration: none; }
 
@@ -111,9 +131,18 @@ a { color: var(--accent); text-decoration: none; }
 .nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; }
 .nav-badge {
   margin-left: auto;
-  background: var(--danger);
-  color: white; font-size: 10px; font-weight: 700;
-  padding: 2px 6px; border-radius: 20px;
+  background: #dc2626;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0 5px;
+  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.4);
 }
 
 .sidebar-footer {
@@ -181,6 +210,8 @@ a { color: var(--accent); text-decoration: none; }
   padding: 20px;
   transition: all var(--transition);
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
 }
 .maquina-card:hover { border-color: var(--border-accent); transform: translateY(-2px); box-shadow: var(--shadow-glow); }
 .maquina-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
@@ -197,7 +228,7 @@ a { color: var(--accent); text-decoration: none; }
 .estado-badge.verde { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
 .maquina-info { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
 .maquina-info span { display: block; margin-bottom: 2px; }
-.maquina-actions { display: flex; gap: 8px; }
+.maquina-actions { display: flex; gap: 8px; margin-top: auto; justify-content: space-between; align-items: flex-end; }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
 .btn {
@@ -291,7 +322,21 @@ tr:hover td { background: var(--bg-card-hover); }
 .modal-title { font-size: 20px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; }
 .modal-close { background: none; border: none; color: var(--text-muted); font-size: 22px; cursor: pointer; padding: 4px; line-height: 1; }
 .modal-close:hover { color: var(--text-primary); }
-.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.modal-footer { display: flex; gap: 10px; justify-content: space-between; align-items: center; margin-top: 20px; }
+
+.btn-text {
+  background: transparent;
+  border: none;
+  color: var(--danger);
+  font-size: 12px;
+  padding: 0;
+  min-width: auto;
+  cursor: pointer;
+}
+
+.btn-text:hover {
+  color: #ff8b8f;
+}
 
 /* ── QR Modal ────────────────────────────────────────────────────────────── */
 .qr-container { text-align: center; padding: 10px 0; }

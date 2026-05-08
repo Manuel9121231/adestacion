@@ -8,21 +8,31 @@
   <meta name="description" content="Registro e inicio de sesión de usuarios del sistema de gestión de impresoras">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
+  <script src="js/theme.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
     :root {
+      --bg: #eef0f2;
+      --bg-card: #ffffff;
+      --bg-input: rgba(0,0,0,0.03);
+      --text: #2b3440;
+      --text-muted: #7a8897;
+      --accent: #4f8ef7;
+      --accent-2: #7c3aed;
+      --success: #10b981;
+      --danger: #ef4444;
+      --border: rgba(0,0,0,0.06);
+      --border-focus: rgba(79,142,247,0.5);
+    }
+
+    body.dark-mode {
       --bg: #0f0f1a;
       --bg-card: #1a1a2e;
       --bg-input: rgba(255,255,255,0.05);
       --text: #ffffff;
       --text-muted: #94a3b8;
-      --accent: #4f8ef7;
-      --accent-2: #7c3aed;
-      --success: #10b981;
-      --danger: #ef4444;
       --border: rgba(255,255,255,0.08);
-      --border-focus: rgba(79,142,247,0.5);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
