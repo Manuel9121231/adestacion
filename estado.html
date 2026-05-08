@@ -87,6 +87,19 @@
     .pause-btn:hover { color: var(--text); transform: scale(1.1); }
     .pause-btn.paused { color: var(--accent); }
     .pause-btn svg { width: 22px; height: 22px; }
+    
+    /* Botón Volver */
+    .back-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; border-radius: 12px;
+      color: var(--muted); background: transparent;
+      text-decoration: none; transition: all .2s;
+      margin-left: -10px;
+    }
+    .back-btn:hover {
+      color: var(--accent); background: rgba(30,41,59,0.05); transform: translateX(-3px);
+    }
+    .back-btn svg { width: 28px; height: 28px; }
 
     .h-right { display: flex; align-items: center; gap: 16px; }
     .chip {
@@ -120,8 +133,8 @@
     .panel:last-child { border-right: none; }
 
     .panel-hdr {
-      display: flex; align-items: center; gap: 12px;
-      padding: 0 28px; height: 48px; flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 20px; height: 48px; flex-shrink: 0;
       font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
       border-bottom: 1px solid var(--border);
     }
@@ -135,8 +148,8 @@
 
     /* ══ FILA DE MÁQUINA ══════════════════════════════════ */
     .mrow {
-      display: flex; align-items: center; gap: 20px;
-      padding: 0 28px; flex-shrink: 0;
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 20px; flex-shrink: 0;
       border-bottom: 1px solid var(--border);
       height: var(--row-h);
     }
@@ -240,6 +253,8 @@
       .h-sala   { font-size: 20px; }
       .h-title  { font-size: 10px; }
       .h-accent { height: 32px; }
+      .back-btn { width: 32px; height: 32px; margin-left: -5px; }
+      .back-btn svg { width: 22px; height: 22px; }
 
       /* Chips más pequeños */
       .chip { padding: 5px 12px; border-radius: 10px; }
@@ -303,6 +318,12 @@
 
 <header>
   <div class="h-left">
+    <a href="index.html" class="back-btn" title="Volver a Inicio">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+    </a>
     <div class="h-accent"></div>
     <div class="h-titles">
       <span class="h-title">Disponibilidad de Equipos</span>
@@ -459,9 +480,19 @@
       panels.style.removeProperty('--row-code-fs');
       nameFs = 14; codeFs = 11; typeFs = 11;
     } else {
-      // Desktop: columnas dinámicas según proporción ok/err
+      // Desktop: columnas dinámicas según proporción ok/err, con un mínimo más generoso para evitar recortes
       const total2 = ok.length + err.length || 1;
-      const errPct = err.length === 0 ? 30 : Math.max(30, Math.round(err.length / total2 * 100));
+      let errPct = Math.round(err.length / total2 * 100);
+      
+      // Aseguramos un rango entre 40% y 60% para que ninguna columna sea demasiado estrecha si ambas tienen contenido
+      if (ok.length > 0 && err.length > 0) {
+        errPct = Math.max(40, Math.min(60, errPct));
+      } else if (err.length > 0) {
+        errPct = 100; // Si todo está roto, ocupar todo (aunque el layout espera 2 paneles)
+      } else {
+        errPct = 30; // Si no hay errores, el panel vacío puede ser pequeño
+      }
+      
       const okPct  = 100 - errPct;
       panels.style.gridTemplateColumns = `${okPct}fr ${errPct}fr`;
 
