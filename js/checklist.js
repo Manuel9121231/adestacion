@@ -23,14 +23,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const client = window.supabaseClient;
     console.log("Buscando máquina en Supabase con criterio:", maquinaId);
-    
+
     // Búsqueda ESTRICTA solo por ID (UUID)
     let { data: maquina, error: mError } = await client
       .from('equipos')
       .select('*, salas(nombre)')
       .eq('id', maquinaId)
       .maybeSingle();
-    
+
     if (mError && !maquina) {
       console.error("Error inicial de Supabase:", mError);
     }
@@ -42,11 +42,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     console.log("Máquina cargada con éxito:", maquina);
-    
+
     // Asignar datos de la máquina al estado global
     maquinaData = {
       ...maquina,
-      id: maquina.id, 
+      id: maquina.id,
       sala_nombre: maquina.salas ? maquina.salas.nombre : 'Sin sala'
     };
     maquinaId = maquinaData.id;
@@ -105,7 +105,7 @@ function showError(msg) {
 
 function seleccionarModo(modo) {
   modoActual = modo === 'incidencia' ? 'Incidencia' : 'Mantenimiento';
-  
+
   // En ambos casos, ahora vamos directo al formulario de reporte
   iniciarSesion();
 }
@@ -114,7 +114,7 @@ function setOpTipo(tipo) {
   modoActual = tipo;
   const mCard = document.getElementById('op-tipo-maint');
   const iCard = document.getElementById('op-tipo-inc');
-  
+
   if (tipo === 'Mantenimiento') {
     mCard.classList.add('active');
     iCard.classList.remove('active-inc');
@@ -134,11 +134,11 @@ async function iniciarSesion() {
 
   if (res.ok) {
     sesionId = res.data.sesion_id;
-    
+
     // Actualizar nombres en la UI de checklist
     document.getElementById('checkMaquinaNombre').textContent = maquinaData.nombre;
     document.getElementById('checkSalaNombre').textContent = maquinaData.sala_nombre;
-    
+
     // Si veníamos de modo incidencia desde el portal, lo marcamos en el selector del formulario
     setOpTipo(modoActual);
 
@@ -162,7 +162,7 @@ function onReporteChange() {
 function actualizarBoton(texto) {
   const btn = document.getElementById('btnEnviar');
   const isValid = texto.trim().length > 0;
-  
+
   if (isValid) {
     btn.className = 'btn-enviar activo';
     btn.textContent = '✅ Enviar informe';
@@ -193,7 +193,7 @@ function renderPhotoPreviews() {
   const grid = document.getElementById('photoPreviewsGrid');
   if (!grid) return;
   grid.innerHTML = '';
-  
+
   selectedPhotos.forEach((src, index) => {
     const container = document.createElement('div');
     container.style = "position:relative; width:80px; height:80px; flex-shrink:0";
@@ -203,7 +203,7 @@ function renderPhotoPreviews() {
     `;
     grid.appendChild(container);
   });
-  
+
   const text = document.getElementById('photoText');
   const icon = document.getElementById('photoIcon');
   if (selectedPhotos.length > 0) {
@@ -235,7 +235,7 @@ async function enviarChecklist() {
     alert("Por favor, introduce tu nombre y email para identificarte (Clave Única).");
     return;
   }
-  
+
   if (!emailUser.includes('@')) {
     alert("Introduce un email válido.");
     return;
@@ -276,12 +276,12 @@ async function enviarChecklist() {
 
   const res = await apiFetch(`/api/sesion/${sesionId}/completar`, {
     method: 'POST',
-    body: { 
+    body: {
       observaciones: reporte,
       usuario_id: userId,
-      nombre_usuario: nombreUser, 
+      nombre_usuario: nombreUser,
       email_usuario: emailUser, // Trazabilidad por email
-      fotos: selectedPhotos 
+      fotos: selectedPhotos
     },
   });
 
@@ -302,13 +302,13 @@ function reiniciar() {
   sesionId = null;
   selectedPhotos = [];
   modoActual = 'Mantenimiento';
-  
+
   // Limpiar campos del formulario
   const userInp = document.getElementById('userNameInput');
   const reportTxt = document.getElementById('reporteTextarea');
   if (userInp) userInp.value = '';
   if (reportTxt) reportTxt.value = '';
-  
+
   // Resetear botón de envío
   const btn = document.getElementById('btnEnviar');
   if (btn) {
@@ -320,7 +320,7 @@ function reiniciar() {
   // Ocultar errores
   const errDiv = document.getElementById('reporteError');
   if (errDiv) errDiv.style.display = 'none';
-  
+
   cancelPhoto(); // Limpiar UI de foto
   showScreen('portal');
 }
@@ -329,22 +329,22 @@ async function handlePhotoUploads(base64Photos) {
   const client = window.supabaseClient;
   const urls = [];
   console.log(`Iniciando subida de ${base64Photos.length} fotos a Storage...`);
-  
+
   for (let i = 0; i < base64Photos.length; i++) {
     try {
       const b64 = base64Photos[i];
       const blob = await (await fetch(b64)).blob();
       const fileName = `${Date.now()}_${i}.jpg`;
-      
+
       const { data, error } = await client.storage
         .from('photos')
         .upload(fileName, blob, { contentType: 'image/jpeg' });
-      
+
       if (error) {
         console.error('Error al subir foto a Supabase:', error);
         continue;
       }
-      
+
       const { data: { publicUrl } } = client.storage.from('photos').getPublicUrl(data.path);
       urls.push(publicUrl);
     } catch (e) {
@@ -368,7 +368,7 @@ async function apiFetch(url, options = {}) {
         .select('*, salas(nombre)')
         .eq('id', id)
         .single();
-      
+
       if (error) throw error;
       const formatted = {
         ...data,
@@ -384,7 +384,7 @@ async function apiFetch(url, options = {}) {
         .eq('pin', payload.pin)
         .eq('activo', true)
         .single();
-      
+
       if (error || !data) return { ok: false, error: 'PIN incorrecto' };
       return { ok: true, data };
     }
@@ -408,11 +408,11 @@ async function apiFetch(url, options = {}) {
         usuario_id: payload.usuario_id,
         maquina_nombre: maquinaData?.nombre || 'Desconocida',
         sala_nombre: maquinaData?.sala_nombre || 'Sin sala',
-        operario_nombre: payload.nombre_usuario || 'Anonimo', 
+        operario_nombre: payload.nombre_usuario || 'Anonimo',
         operario_email: payload.email_usuario || 'desconocido@email.com', // Trazabilidad
         tipo: modoActual,
         notas: payload.observaciones,
-        photos: photoUrls, 
+        photos: photoUrls,
         timestamp: new Date().toISOString()
       };
 
