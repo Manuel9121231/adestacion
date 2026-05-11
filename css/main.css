@@ -1076,7 +1076,7 @@ tr:hover td { background: var(--bg-card-hover); }
 
 /* Prompt modal ajustes */
 #promptInput {
-  background: rgba(0,0,0,0.3);
+  background: var(--bg-card);
   font-family: inherit;
   line-height: 1.6;
   border-color: var(--border-accent);

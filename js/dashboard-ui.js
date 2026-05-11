@@ -561,7 +561,7 @@ const DASHBOARD_HTML = `
         </div>
       </div>
 
-      <div class="table-wrap" style="max-height:300px; overflow-y:auto; background:rgba(0,0,0,0.2)">
+      <div class="table-wrap" style="max-height:300px; overflow-y:auto; background:var(--bg-secondary);">
         <table style="width:100%">
           <thead>
             <tr>

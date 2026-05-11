@@ -29,20 +29,24 @@ async function cargarRolUsuario() {
   try {
     // Primero verificar si hay sesión de administrador
     const adminSessionStr = localStorage.getItem('sgi_admin_session');
+    console.log('DEBUG - admin_session:', adminSessionStr);
     if (adminSessionStr) {
       const adminSession = JSON.parse(adminSessionStr);
       // Si es sesión de admin, asignar rol 'admin'
       if (adminSession.username || adminSession.nombre) {
         rolActual = 'admin';
+        console.log('DEBUG - Rol asignado: admin');
         return;
       }
     }
 
     // Si no hay sesión admin, verificar sesión de usuario normal
     const sessionStr = localStorage.getItem('sgi_user_session');
+    console.log('DEBUG - user_session:', sessionStr);
     if (sessionStr) {
       const session = JSON.parse(sessionStr);
       rolActual = session.rol || 'usuario';
+      console.log('DEBUG - Rol asignado desde user_session:', rolActual);
     }
   } catch (err) {
     console.error('Error al cargar rol:', err);
@@ -804,6 +808,8 @@ async function crearMaquina() {
   const notas = document.getElementById('nuevoMaquinaNotas').value.trim() || null;
   const msg = document.getElementById('msgNuevaMaquina');
 
+  console.log('DEBUG crearMaquina - rolActual:', rolActual, 'tipo:', tipo, 'nuevoTipoPersonalizado:', nuevoTipoPersonalizado);
+
   if (!nombre || !sala_id) {
     msg.innerHTML = '<div class="alert alert-warning">⚠️ Nombre y Sala son obligatorios</div>';
     return;
@@ -822,6 +828,8 @@ async function crearMaquina() {
       return;
     }
   }
+
+  console.log('DEBUG - Tipo final:', tipo);
 
   const res = await apiFetch('/api/maquinas', {
     method: 'POST',
