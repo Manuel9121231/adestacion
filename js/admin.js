@@ -27,6 +27,18 @@ let rolActual = 'admin'; // Se actualiza al cargar la sesión
 // ── Cargar rol del usuario desde sesión ──
 async function cargarRolUsuario() {
   try {
+    // Primero verificar si hay sesión de administrador
+    const adminSessionStr = localStorage.getItem('sgi_admin_session');
+    if (adminSessionStr) {
+      const adminSession = JSON.parse(adminSessionStr);
+      // Si es sesión de admin, asignar rol 'admin'
+      if (adminSession.username || adminSession.nombre) {
+        rolActual = 'admin';
+        return;
+      }
+    }
+
+    // Si no hay sesión admin, verificar sesión de usuario normal
     const sessionStr = localStorage.getItem('sgi_user_session');
     if (sessionStr) {
       const session = JSON.parse(sessionStr);
@@ -100,10 +112,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function skeletonMaquinas() {
   const card = `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;animation:pulse 1.5s ease-in-out infinite">
-    <div style="height:14px;background:var(--border);border-radius:6px;width:60%;margin-bottom:12px"></div>
-    <div style="height:10px;background:var(--border);border-radius:6px;width:40%;margin-bottom:20px"></div>
-    <div style="height:10px;background:var(--border);border-radius:6px;width:80%;margin-bottom:8px"></div>
-    <div style="height:10px;background:var(--border);border-radius:6px;width:70%"></div>
+    <div style="height:14px;background:var(--bg-secondary);border-radius:6px;width:60%;margin-bottom:12px"></div>
+    <div style="height:10px;background:var(--bg-secondary);border-radius:6px;width:40%;margin-bottom:20px"></div>
+    <div style="height:10px;background:var(--bg-secondary);border-radius:6px;width:80%;margin-bottom:8px"></div>
+    <div style="height:10px;background:var(--bg-secondary);border-radius:6px;width:70%"></div>
   </div>`;
   const inner = Array(6).fill(card).join('');
   return `<div class="grid-maquinas-inner" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;display:grid">${inner}</div>`;
@@ -111,7 +123,7 @@ function skeletonMaquinas() {
 
 function skeletonTabla(cols = 5) {
   const row = `<tr>
-    ${Array(cols).fill(`<td><div style="height:12px;background:var(--border);border-radius:6px;width:80%;animation:pulse 1.5s ease-in-out infinite"></div></td>`).join('')}
+    ${Array(cols).fill(`<td><div style="height:12px;background:var(--bg-secondary);border-radius:6px;width:80%;animation:pulse 1.5s ease-in-out infinite"></div></td>`).join('')}
   </tr>`;
   return Array(5).fill(row).join('');
 }
@@ -581,15 +593,62 @@ async function verDetalleMaquina(id) {
   if (!maq) return;
   document.getElementById('editMaquinaId').value = id;
   document.getElementById('editNombre').value = maq.nombre;
-  document.getElementById('editTipo').value = maq.tipo;
   document.getElementById('editModelo').value = maq.modelo || '';
   document.getElementById('editEstado').value = maq.estado || 'activa';
   document.getElementById('editNotas').value = maq.notas || '';
+
+  // Configurar opciones del select de tipo según el rol
+  const tipoSelect = document.getElementById('editTipo');
+  const crearNuevoOption = tipoSelect.querySelector('option[value="__CREAR_NUEVO__"]');
+
+  // Solo el administrador puede ver la opción "Crear nuevo tipo"
+  if (crearNuevoOption) {
+    crearNuevoOption.style.display = (rolActual === 'admin') ? '' : 'none';
+    // Restaurar texto original
+    crearNuevoOption.textContent = '+ Crear nuevo tipo';
+  }
+
+  // Resetear variable de tipo personalizado
+  nuevoTipoPersonalizado = null;
+
+  // Establecer valor del tipo (si no existe en las opciones, se mantendrá el valor actual)
+  tipoSelect.value = maq.tipo;
+
+  // Añadir event listener para manejar cambio de tipo
+  tipoSelect.onchange = handleTipoChangeEdit;
 
   // Por defecto, abrir en modo lectura
   setModoEdicionMaquina(false);
 
   abrirModal('modalMaquina');
+}
+
+// Manejar cambio en el select de tipo en edición
+async function handleTipoChangeEdit() {
+  const tipoSelect = document.getElementById('editTipo');
+
+  if (tipoSelect.value === '__CREAR_NUEVO__') {
+    // Solo permitir a administradores crear nuevos tipos
+    if (rolActual !== 'admin') {
+      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '❌');
+      tipoSelect.value = 'Impresora FDM';
+      return;
+    }
+
+    const nuevoTipo = await customPrompt('Crear nuevo tipo', 'Ingrese el nombre del nuevo tipo de máquina:');
+    if (nuevoTipo && nuevoTipo.trim()) {
+      nuevoTipoPersonalizado = nuevoTipo.trim();
+      // Cambiar el texto de la opción seleccionada temporalmente
+      const option = tipoSelect.options[tipoSelect.selectedIndex];
+      option.textContent = `+ Crear: ${nuevoTipoPersonalizado}`;
+    } else {
+      // Si cancela, volver al valor por defecto
+      tipoSelect.value = 'Impresora FDM';
+      nuevoTipoPersonalizado = null;
+    }
+  } else {
+    nuevoTipoPersonalizado = null;
+  }
 }
 
 function setModoEdicionMaquina(editando) {
@@ -602,9 +661,15 @@ function setModoEdicionMaquina(editando) {
   
   const btnToggle = document.getElementById('btnToggleEditarMaquina');
   if (btnToggle) {
-    btnToggle.textContent = editando ? 'Cancelar' : 'Editar';
-    btnToggle.classList.toggle('btn-primary', editando);
-    btnToggle.classList.toggle('btn-outline', !editando);
+    if (editando) {
+      btnToggle.innerHTML = '❌ Cancelar';
+      btnToggle.className = 'btn btn-outline btn-sm';
+      btnToggle.style.cssText = 'padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; transition:all 0.2s ease; border-color:var(--danger); color:var(--danger);';
+    } else {
+      btnToggle.innerHTML = '✏️ Editar';
+      btnToggle.className = 'btn btn-primary btn-sm';
+      btnToggle.style.cssText = 'padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:all 0.2s ease;';
+    }
   }
   
   const btnGuardar = document.getElementById('btnGuardarMaquina');
@@ -623,9 +688,25 @@ async function editarMaquina(id) {
 
 async function guardarMaquina() {
   const id = document.getElementById('editMaquinaId').value;
+  let tipo = document.getElementById('editTipo').value;
+
+  // Manejar tipo personalizado
+  if (tipo === '__CREAR_NUEVO__') {
+    if (rolActual !== 'admin') {
+      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '❌');
+      return;
+    }
+    if (nuevoTipoPersonalizado) {
+      tipo = nuevoTipoPersonalizado;
+    } else {
+      showFeedback('Error', 'Debe especificar un nombre para el nuevo tipo.', '❌');
+      return;
+    }
+  }
+
   const datos = {
     nombre: document.getElementById('editNombre').value.trim(),
-    tipo: document.getElementById('editTipo').value,
+    tipo: tipo,
     modelo: document.getElementById('editModelo').value.trim(),
     estado: document.getElementById('editEstado').value,
     notas: document.getElementById('editNotas').value.trim() || null,
@@ -649,7 +730,6 @@ function abrirModalNuevaMaquina() {
   document.getElementById('nuevoMaquinaCodigo').value = '';
   document.getElementById('nuevoMaquinaNombre').value = '';
   document.getElementById('nuevoMaquinaModelo').value = '';
-  document.getElementById('nuevoMaquinaTipo').value = 'Impresora FDM';
   document.getElementById('nuevoMaquinaAncho').value = '';
   document.getElementById('nuevoMaquinaAlto').value = '';
   document.getElementById('nuevoMaquinaProfundidad').value = '';
@@ -657,13 +737,65 @@ function abrirModalNuevaMaquina() {
   const estadoEl = document.getElementById('nuevoMaquinaEstado');
   if (estadoEl) estadoEl.value = 'activa';
   document.getElementById('msgNuevaMaquina').innerHTML = '';
+
+  // Configurar opciones del select de tipo según el rol
+  const tipoSelect = document.getElementById('nuevoMaquinaTipo');
+  const crearNuevoOption = tipoSelect.querySelector('option[value="__CREAR_NUEVO__"]');
+
+  // Solo el administrador puede ver la opción "Crear nuevo tipo"
+  if (crearNuevoOption) {
+    crearNuevoOption.style.display = (rolActual === 'admin') ? '' : 'none';
+    // Restaurar texto original
+    crearNuevoOption.textContent = '+ Crear nuevo tipo';
+  }
+
+  // Resetear variable de tipo personalizado
+  nuevoTipoPersonalizado = null;
+
+  // Resetear a valor por defecto
+  tipoSelect.value = 'Impresora FDM';
+
+  // Añadir event listener para manejar cambio de tipo (eliminar anterior si existe)
+  tipoSelect.onchange = handleTipoChange;
+
   abrirModal('modalNuevaMaquina');
+}
+
+// Variable para almacenar el tipo personalizado creado
+let nuevoTipoPersonalizado = null;
+
+// Manejar cambio en el select de tipo
+async function handleTipoChange() {
+  const tipoSelect = document.getElementById('nuevoMaquinaTipo');
+
+  if (tipoSelect.value === '__CREAR_NUEVO__') {
+    // Solo permitir a administradores crear nuevos tipos
+    if (rolActual !== 'admin') {
+      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '❌');
+      tipoSelect.value = 'Impresora FDM';
+      return;
+    }
+
+    const nuevoTipo = await customPrompt('Crear nuevo tipo', 'Ingrese el nombre del nuevo tipo de máquina:');
+    if (nuevoTipo && nuevoTipo.trim()) {
+      nuevoTipoPersonalizado = nuevoTipo.trim();
+      // Cambiar el texto de la opción seleccionada temporalmente
+      const option = tipoSelect.options[tipoSelect.selectedIndex];
+      option.textContent = `+ Crear: ${nuevoTipoPersonalizado}`;
+    } else {
+      // Si cancela, volver al valor por defecto
+      tipoSelect.value = 'Impresora FDM';
+      nuevoTipoPersonalizado = null;
+    }
+  } else {
+    nuevoTipoPersonalizado = null;
+  }
 }
 
 async function crearMaquina() {
   const nombre = document.getElementById('nuevoMaquinaNombre').value.trim();
   const sala_id = document.getElementById('nuevoMaquinaSala').value;
-  const tipo = document.getElementById('nuevoMaquinaTipo').value;
+  let tipo = document.getElementById('nuevoMaquinaTipo').value;
   const modelo = document.getElementById('nuevoMaquinaModelo').value.trim();
   const estado = document.getElementById('nuevoMaquinaEstado')?.value || 'activa';
   const ancho_mm = parseInt(document.getElementById('nuevoMaquinaAncho').value) || null;
@@ -675,6 +807,20 @@ async function crearMaquina() {
   if (!nombre || !sala_id) {
     msg.innerHTML = '<div class="alert alert-warning">⚠️ Nombre y Sala son obligatorios</div>';
     return;
+  }
+
+  // Manejar tipo personalizado
+  if (tipo === '__CREAR_NUEVO__') {
+    if (rolActual !== 'admin') {
+      msg.innerHTML = '<div class="alert alert-danger">❌ Solo los administradores pueden crear nuevos tipos de máquina</div>';
+      return;
+    }
+    if (nuevoTipoPersonalizado) {
+      tipo = nuevoTipoPersonalizado;
+    } else {
+      msg.innerHTML = '<div class="alert alert-warning">⚠️ Debe especificar un nombre para el nuevo tipo</div>';
+      return;
+    }
   }
 
   const res = await apiFetch('/api/maquinas', {

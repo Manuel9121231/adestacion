@@ -367,7 +367,7 @@ const DASHBOARD_HTML = `
     <div class="modal" style="max-width:560px">
       <div class="modal-header">
         <div style="display:flex;align-items:center;gap:10px">
-          <button class="btn btn-outline btn-sm" id="btnToggleEditarMaquina" onclick="toggleModoEdicionMaquina()" style="padding: 6px 12px; font-size:12px; min-width:72px">Editar</button>
+          <button class="btn btn-primary btn-sm" id="btnToggleEditarMaquina" onclick="toggleModoEdicionMaquina()" style="padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:all 0.2s ease;">✏️ Editar</button>
           <div class="modal-title">Detalles de Máquina</div>
         </div>
         <button class="modal-close" onclick="cerrarModal('modalMaquina')">✕</button>
@@ -386,7 +386,7 @@ const DASHBOARD_HTML = `
               <option>Impresora Resina</option>
               <option>CNC / Fresadora</option>
               <option>Cortadora Láser</option>
-              <option>Otro</option>
+              <option value="__CREAR_NUEVO__">+ Crear nuevo tipo</option>
             </select>
           </div>
           <div class="form-group">
@@ -446,7 +446,7 @@ const DASHBOARD_HTML = `
               <option>Impresora Resina</option>
               <option>CNC / Fresadora</option>
               <option>Cortadora Láser</option>
-              <option>Otro</option>
+              <option value="__CREAR_NUEVO__">+ Crear nuevo tipo</option>
             </select>
           </div>
           <div class="form-group">
