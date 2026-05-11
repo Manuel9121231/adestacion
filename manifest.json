@@ -2,7 +2,7 @@
   "name": "Estación",
   "short_name": "Estación",
   "description": "Gestión técnica, mantenimiento y estado de equipos en tiempo real.",
-  "start_url": "/index.html",
+  "start_url": "/html/index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f0f1a",

@@ -1,13 +1,13 @@
 const CACHE_NAME = 'sgi-cache-v1';
 const ASSETS = [
   '/',
-  '/index.html',
-  '/estado.html',
-  '/operario.html',
-  '/dashboard.html',
+  '/html/index.html',
+  '/html/estado.html',
+  '/html/operario.html',
+  '/html/dashboard.html',
   '/css/main.css',
   '/js/supabase-config.js',
-  '/favicon.png'
+  '/images/favicon.png'
 ];
 
 // Instalación: Cachear activos estáticos

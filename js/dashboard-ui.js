@@ -11,7 +11,7 @@ const DASHBOARD_HTML = `
       <div class="sidebar-brand">
         <div class="logo">
           <div class="logo-icon">
-            <img src="logo-brain.png" alt="Logo" style="width: 32px; height: 32px;">
+            <img src="../images/logo-brain.png" alt="Logo" style="width: 32px; height: 32px;">
           </div>
           <div>
             <h1>Gestor de máquinas</h1>
