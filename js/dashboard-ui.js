@@ -168,10 +168,11 @@ const DASHBOARD_HTML = `
               <div class="section-title">🚨 Centro de Incidencias</div>
               <div class="section-subtitle">Gestión de fallos técnicos y reparaciones</div>
             </div>
-            <div style="display:flex;gap:8px">
+            <div style="display:flex;gap:8px;align-items:center">
               <button class="btn btn-outline btn-sm active" id="btn-inc-todas" onclick="renderIncidencias('todas')">Todas</button>
-              <button class="btn btn-outline btn-sm" id="btn-inc-pendientes" onclick="renderIncidencias('pendientes')" style="border-color:var(--danger);color:var(--danger)">Pendientes</button>
+              <button class="btn btn-outline btn-sm" id="btn-inc-pendientes" onclick="renderIncidencias('pendientes')" style="border-color:var(--danger);color:var(--danger)">Sin resolver</button>
               <button class="btn btn-outline btn-sm" id="btn-inc-resueltas" onclick="renderIncidencias('resueltas')" style="border-color:var(--success);color:var(--success)">Resueltas</button>
+              <button class="btn btn-outline btn-sm" id="btn-inc-seguimiento" onclick="toggleSeguimiento()" style="border-color:var(--warning);color:var(--warning)">En seguimiento</button>
             </div>
           </div>
 
@@ -348,13 +349,13 @@ const DASHBOARD_HTML = `
 
   <!-- ── Modal: Ver QR ── -->
   <div class="overlay" id="modalQR">
-    <div class="modal card" style="max-width:340px; text-align:center">
+    <div class="modal card" style="max-width:400px; text-align:center">
       <div class="modal-header">
         <div class="modal-title" id="qrNombre">Máquina</div>
         <button class="modal-close" onclick="cerrarModal('modalQR')">✕</button>
       </div>
       <div style="margin-bottom:8px; color:var(--text-muted); font-size:14px" id="qrSala">Sala</div>
-      <div id="qrImgContainer" style="display:flex; justify-content:center; margin:20px 0; min-height:256px"></div>
+      <div id="qrImgContainer" style="display:flex; justify-content:center; margin:20px 0; min-height:320px"></div>
       <a id="qrUrl" class="text-accent" style="word-break:break-all; font-size:11px; margin-bottom:20px; display:block" target="_blank">URL</a>
       <button class="btn btn-primary btn-full" onclick="imprimirQR()">🖨️ Imprimir Etiqueta</button>
       <button class="btn btn-outline" onclick="cerrarModal('modalQR')">Cerrar</button>

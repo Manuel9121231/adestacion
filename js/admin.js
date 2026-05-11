@@ -181,12 +181,23 @@ async function cargarDatosBase() {
 }
 
 // ── Incidencias ─────────────────────────────────────────────────────────────
+let filtroSeguimientoActivo = false;
+
+function toggleSeguimiento() {
+  filtroSeguimientoActivo = !filtroSeguimientoActivo;
+  const btn = document.getElementById('btn-inc-seguimiento');
+  if (btn) btn.classList.toggle('active', filtroSeguimientoActivo);
+  
+  const filtroActual = document.querySelector('.btn-outline.btn-sm.active[id^="btn-inc-"]:not(#btn-inc-seguimiento)')?.id.replace('btn-inc-', '') || 'todas';
+  renderIncidencias(filtroActual);
+}
+
 function renderIncidencias(filtro = 'todas') {
   const grid = document.getElementById('gridTicketsIncidencias');
   const empty = document.getElementById('incidenciasEmpty');
   if (!grid) return;
 
-  // Actualizar estados de botones de filtro
+  // Actualizar estados de botones de filtro (excluyendo el de seguimiento que se maneja aparte)
   ['todas', 'pendientes', 'resueltas'].forEach(f => {
     const btn = document.getElementById(`btn-inc-${f}`);
     if (btn) btn.classList.toggle('active', f === filtro);
@@ -205,6 +216,11 @@ function renderIncidencias(filtro = 'todas') {
 
   if (filtro === 'pendientes') lista = lista.filter(r => !r.resuelta);
   if (filtro === 'resueltas') lista = lista.filter(r => r.resuelta);
+  
+  // Filtro por botón "En seguimiento"
+  if (filtroSeguimientoActivo) {
+    lista = lista.filter(r => !r.resuelta && r.en_seguimiento);
+  }
 
   if (!lista.length) {
     grid.innerHTML = '';
@@ -217,7 +233,7 @@ function renderIncidencias(filtro = 'todas') {
     const resuelta = r.resuelta || false;
     const esSeguimiento = !resuelta && r.en_seguimiento;
     const statusClass = resuelta ? 'resuelto' : (esSeguimiento ? 'seguimiento' : 'urgente');
-    const statusText = resuelta ? '✅ Finalizado' : (esSeguimiento ? '📝 En Seguimiento' : '🚨 Pendiente');
+    const statusText = resuelta ? '✅ Finalizado' : (esSeguimiento ? '📝 En Seguimiento' : '🚨 Sin resolver');
 
     // Buscar estado actual de la máquina
     const maq = datosMaquinas.find(m => m.id === r.maquina_id);
@@ -410,7 +426,7 @@ function renderUltimosMantenimientos(registros) {
         <td data-label="Estado">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
             <span class="estado-badge ${isIncidencia ? (resuelta ? 'ok' : 'vencido') : 'ok'}" style="font-size:10px">
-              ${isIncidencia ? (resuelta ? 'Resuelta' : 'Pendiente') : 'Completado'}
+              ${isIncidencia ? (resuelta ? 'Resuelta' : 'Sin resolver') : 'Completado'}
             </span>
             ${r.tiene_fotos ? `
               <div style="position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -747,11 +763,12 @@ async function verQR(id, nombre, sala) {
 
   new QRCode(qrContainer, {
     text: targetUrl,
-    width: 256,
-    height: 256,
+    width: 320,
+    height: 320,
     colorDark: "#1a1a2e",
     colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
+    correctLevel: QRCode.CorrectLevel.L,
+    quietZone: 20
   });
 }
 
@@ -777,8 +794,7 @@ function imprimirTodosLosQRs() {
         .qr-label { border: 1px solid #eee; padding: 15px; border-radius: 8px; text-align: center; width: 220px; page-break-inside: avoid; }
         .qr-name { font-weight: bold; font-size: 16px; margin-bottom: 4px; }
         .qr-sala { font-size: 12px; color: #666; margin-bottom: 10px; }
-        .qr-canvas { display: flex; justify-content: center; margin-bottom: 10px; }
-        .qr-url { font-size: 9px; color: #aaa; word-break: break-all; }
+        .qr-canvas { display: flex; justify-content: center; }
         @media print { body { padding: 10px; } }
       </style>
     </head>
@@ -788,7 +804,6 @@ function imprimirTodosLosQRs() {
           <div class="qr-name">${m.nombre}</div>
           <div class="qr-sala">${m.sala_nombre}</div>
           <div class="qr-canvas" id="canvas-${m.id}"></div>
-          <a class="qr-url" href="${baseOrigin}/operario.html?maquinaId=${m.id}" target="_blank">${baseOrigin}/operario.html?maquinaId=${m.id}</a>
         </div>
       `).join('')}
       <script>
@@ -797,8 +812,10 @@ function imprimirTodosLosQRs() {
           maquinas.forEach(m => {
             new QRCode(document.getElementById('canvas-' + m.id), {
               text: "${baseOrigin}/operario.html?maquinaId=" + m.id,
-              width: 160,
-              height: 160
+              width: 220,
+              height: 220,
+              correctLevel: QRCode.CorrectLevel.L,
+              quietZone: 12
             });
           });
           setTimeout(() => { window.print(); window.close(); }, 1200);
@@ -817,18 +834,15 @@ function imprimirQR() {
   const container = document.getElementById('qrImgContainer');
   const imgElement = container.querySelector('img');
   const img = imgElement ? imgElement.src : '';
-  const url = document.getElementById('qrUrl').textContent;
 
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><title>QR - ${nombre}</title>
     <style>body{font-family:sans-serif;text-align:center;padding:40px}
     h2{margin-bottom:4px}p{color:#666;font-size:14px;margin-bottom:20px}
-    img{border:3px solid #000;border-radius:8px;width:240px}
-    .url{font-size:11px;color:#999;margin-top:16px;word-break:break-all}
+    img{border:3px solid #000;border-radius:8px;width:280px}
     </style></head><body>
     <h2>${nombre}</h2><p>${sala}</p>
     <img src="${img}">
-    <a class="url" href="${url}" target="_blank">${url}</a>
     <script>window.onload=()=>{setTimeout(()=>window.print(),500)}</script>
     </body></html>`);
   w.document.close();
@@ -900,7 +914,7 @@ function renderizarContenidoHistorial(data, tbody, empty) {
     if (isInc) {
       resBadge = resuelta
         ? `<span class="estado-badge ok" style="margin-left:8px;font-size:10px">✅ Resuelta</span>`
-        : `<span class="estado-badge vencido" style="margin-left:8px;font-size:10px">🚨 Pendiente</span>`;
+        : `<span class="estado-badge vencido" style="margin-left:8px;font-size:10px">🚨 Sin resolver</span>`;
     }
 
     return `
@@ -994,7 +1008,7 @@ async function verDetalleSesion(id) {
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <div class="estado-badge ${isInc ? 'vencido' : 'ok'}">${isInc ? 'Incidencia' : 'Mantenimiento'}</div>
-          ${isInc ? `<div class="estado-badge ${resuelta ? 'ok' : 'vencido'}">${resuelta ? '✅ Resuelta' : '🚨 Pendiente'}</div>` : ''}
+          ${isInc ? `<div class="estado-badge ${resuelta ? 'ok' : 'vencido'}">${resuelta ? '✅ Resuelta' : '🚨 Sin resolver'}</div>` : ''}
           <button class="btn btn-icon" style="background:transparent;border:none;color:var(--danger);padding:4px;font-size:16px;cursor:pointer;" onclick="eliminarIncidencia('${sesion.id}')" title="Eliminar registro">❌</button>
         </div>
       </div>
