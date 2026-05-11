@@ -41,6 +41,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'html', 'index.html'));
 });
 
+// Servir archivos estáticos desde carpetas organizadas
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
 // ── Arranque ─────────────────────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', () => {
   const ip = getLocalIP();

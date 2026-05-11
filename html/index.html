@@ -324,13 +324,13 @@
     Sistema de Gestión de Máquinas 2026 © Estación de la Ciencia y la Tecnología.
   </div>
 
-  <script src="../js/theme.js"></script>
-  <script src="../js/supabase-config.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/supabase-config.js"></script>
   <script>
     // Registro del Service Worker para PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('../sw.js')
+        navigator.serviceWorker.register('/sw.js')
           .then(reg => console.log('✅ Service Worker registrado', reg))
           .catch(err => console.error('❌ Error al registrar SW', err));
       });
