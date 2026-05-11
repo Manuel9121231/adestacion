@@ -349,6 +349,7 @@
     async function checkUserRole() {
       try {
         const sessionStr = localStorage.getItem('sgi_user_session');
+        const adminSessionStr = localStorage.getItem('sgi_admin_session');
         const userNameEl = document.getElementById('userName');
         const userRoleEl = document.getElementById('userRole');
         const btnChangeAccount = document.getElementById('btnChangeAccount');
@@ -356,6 +357,20 @@
         const navOperario = document.getElementById('navOperario');
         const navAdmin = document.getElementById('navAdmin');
         const navUsuarios = document.getElementById('navUsuarios');
+
+        // Verificar si hay sesión de administrador
+        if (adminSessionStr && !sessionStr) {
+          const adminSession = JSON.parse(adminSessionStr);
+          const nombre = adminSession.username || 'Administrador';
+          userNameEl.textContent = nombre;
+          userRoleEl.textContent = 'Administrador';
+          btnChangeAccount.style.display = 'none';
+          btnLogout.style.display = 'block';
+          if (navUsuarios) navUsuarios.style.display = 'none';
+          if (navOperario) navOperario.style.display = 'flex';
+          if (navAdmin) navAdmin.style.display = 'flex';
+          return;
+        }
 
         if (!sessionStr) {
           // Usuario sin cuenta - solo ver Estado Público y Acceso Usuarios

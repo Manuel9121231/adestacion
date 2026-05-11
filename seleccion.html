@@ -204,10 +204,22 @@
     function updateUserPanel() {
       try {
         const sessionStr = localStorage.getItem('sgi_user_session');
+        const adminSessionStr = localStorage.getItem('sgi_admin_session');
         const userNameEl = document.getElementById('userName');
         const userRoleEl = document.getElementById('userRole');
         const btnChangeAccount = document.getElementById('btnChangeAccount');
         const btnLogout = document.getElementById('btnLogout');
+
+        // Verificar si hay sesión de administrador
+        if (adminSessionStr && !sessionStr) {
+          const adminSession = JSON.parse(adminSessionStr);
+          const nombre = adminSession.username || 'Administrador';
+          userNameEl.textContent = nombre;
+          userRoleEl.textContent = 'Administrador';
+          btnChangeAccount.style.display = 'none';
+          btnLogout.style.display = 'block';
+          return;
+        }
 
         if (!sessionStr) {
           userNameEl.textContent = 'Cuenta sin iniciar';
