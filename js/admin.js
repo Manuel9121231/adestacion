@@ -66,6 +66,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const sessionStr = localStorage.getItem('sgi_admin_session');
   detectarServidor(); // Cargar IP real para los QRs
   await cargarRolUsuario(); // Cargar rol del usuario
+
+  // Si es usuario normal (no admin ni técnico), redirigir al portal
+  if (rolActual === 'usuario') {
+    window.location.href = 'seleccion.html';
+    return;
+  }
+
   if (!sessionStr) return; // Esperar al login manual
   const sgiSession = JSON.parse(sessionStr || '{}');
   window.sgiAdminSession = sgiSession;

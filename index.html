@@ -407,8 +407,12 @@
           // Usuario - solo ver Portal Operario y Estado Público
           if (navOperario) navOperario.style.display = 'flex';
           if (navAdmin) navAdmin.style.display = 'none';
-        } else if (rol === 'tecnico' || rol === 'admin') {
-          // Técnico/Admin - ver todos los paneles
+        } else if (rol === 'tecnico') {
+          // Técnico - ver Portal Operario, Estado Público (NO Admin)
+          if (navOperario) navOperario.style.display = 'flex';
+          if (navAdmin) navAdmin.style.display = 'none';
+        } else if (rol === 'admin') {
+          // Admin - ver todos los paneles
           if (navOperario) navOperario.style.display = 'flex';
           if (navAdmin) navAdmin.style.display = 'flex';
         }
