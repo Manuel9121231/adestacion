@@ -370,7 +370,7 @@ tr:hover td { background: var(--bg-card-hover); }
 .admin-login-overlay {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(15, 15, 26, 0.8), rgba(9, 9, 15, 1));
+  background: #ffffff;
   backdrop-filter: blur(20px);
   z-index: 10000;
   display: flex;
