@@ -255,7 +255,6 @@ a { color: var(--accent); text-decoration: none; }
   background: var(--bg-secondary); border: 1px solid var(--border);
   border-radius: var(--radius-sm); color: var(--text-primary);
   font-size: 14px; font-family: inherit;
-  transition: border-color var(--transition);
 }
 .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 .form-control select { cursor: pointer; }
@@ -1003,7 +1002,6 @@ tr:hover td { background: var(--bg-card-hover); }
   border-radius: 16px;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
 }
