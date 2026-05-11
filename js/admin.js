@@ -154,6 +154,13 @@ async function cargarDatosBase() {
     incBadge.textContent = pendientesCount;
     incBadge.style.display = pendientesCount > 0 ? 'inline' : 'none';
   }
+
+  // Badge en Panel General (mismo conteo de incidencias pendientes)
+  const dashBadge = document.getElementById('badge-dashboard');
+  if (dashBadge) {
+    dashBadge.textContent = pendientesCount;
+    dashBadge.style.display = pendientesCount > 0 ? 'inline' : 'none';
+  }
 }
 
 // ── Incidencias ─────────────────────────────────────────────────────────────
@@ -195,10 +202,17 @@ function renderIncidencias(filtro = 'todas') {
     const statusClass = resuelta ? 'resuelto' : (esSeguimiento ? 'seguimiento' : 'urgente');
     const statusText = resuelta ? '✅ Finalizado' : (esSeguimiento ? '📝 En Seguimiento' : '🚨 Pendiente');
 
+    // Buscar estado actual de la máquina
+    const maq = datosMaquinas.find(m => m.id === r.maquina_id);
+    const maquinaEstado = maq ? maq.estado : 'activa';
+
     return `
       <div class="ticket-card ${statusClass} fade-in" onclick="verDetalleSesion('${r.id}')">
         <div class="ticket-header">
-          <div class="ticket-machine-name">${r.maquina}</div>
+          <div style="display:flex; flex-direction:column; gap:2px">
+            <div class="ticket-machine-name">${r.maquina}</div>
+            <div style="font-size:10px; color:var(--text-muted)">Máquina: <span class="estado-badge ${maquinaEstado === 'activa' ? 'ok' : (maquinaEstado === 'inactiva' ? 'gris' : 'naranja')}" style="font-size:8px; padding:0 4px">${maquinaEstado || 'activa'}</span></div>
+          </div>
           <span class="estado-badge ${statusClass}">${statusText}</span>
         </div>
         <div class="ticket-body">
@@ -352,9 +366,19 @@ function renderUltimosMantenimientos(registros) {
     const rowStyle = (isIncidencia && !resuelta) ? 'color: var(--danger); font-weight: 600;' : '';
     const icon = isIncidencia ? (resuelta ? '✅' : '🚨') : '🛠️';
 
+    // Buscar estado actual de la máquina para mostrarlo también en la tabla
+    const maq = datosMaquinas.find(m => m.id === r.maquina_id);
+    const maquinaEstado = maq ? maq.estado : 'activa';
+    const maqStatusClass = maquinaEstado === 'activa' ? 'ok' : (maquinaEstado === 'inactiva' ? 'gris' : 'naranja');
+
     return `
       <tr onclick="verDetalleSesion('${r.id}')" style="cursor:pointer">
-        <td data-label="Máquina"><span style="${rowStyle}">${icon} ${r.maquina}</span></td>
+        <td data-label="Máquina">
+          <div style="display:flex; flex-direction:column; gap:2px">
+            <span style="${rowStyle}">${icon} ${r.maquina}</span>
+            <span class="estado-badge ${maqStatusClass}" style="font-size:8px; padding:0 4px; width:fit-content">${maquinaEstado || 'activa'}</span>
+          </div>
+        </td>
         <td data-label="Sala"><span class="text-muted">${r.sala}</span></td>
         <td data-label="Operario">${r.operario}</td>
         <td data-label="Fecha y hora">${formatFechaHora(r.completado_en)}</td>
@@ -408,7 +432,12 @@ function renderMaquinas() {
         <div class="maquina-header">
           <div>
             <div class="maquina-nombre">${m.nombre}</div>
-            <div class="maquina-tipo">${m.codigo || 'S/ID'} · ${m.tipo}</div>
+            <div class="maquina-tipo" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+              <span>${m.codigo || 'S/ID'} · ${m.tipo}</span>
+              <span class="estado-badge ${m.estado === 'activa' ? 'ok' : (m.estado === 'inactiva' ? 'gris' : 'naranja')}" style="font-size:9px; padding:1px 6px">
+                ${m.estado || 'activa'}
+              </span>
+            </div>
           </div>
         </div>
         <div class="maquina-info">

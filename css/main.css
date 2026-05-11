@@ -226,6 +226,8 @@ a { color: var(--accent); text-decoration: none; }
 .estado-badge.vencido, .estado-badge.pendiente { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
 .estado-badge.azul { background: rgba(79,142,247,0.15); color: var(--accent); border: 1px solid rgba(79,142,247,0.3); }
 .estado-badge.verde { background: rgba(16,185,129,0.15); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+.estado-badge.gris, .estado-badge.inactiva { background: rgba(107, 114, 128, 0.15); color: var(--text-muted); border: 1px solid rgba(107, 114, 128, 0.3); }
+.estado-badge.naranja, .estado-badge.revision { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
 .maquina-info { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; }
 .maquina-info span { display: block; margin-bottom: 2px; }
 .maquina-actions { display: flex; gap: 8px; margin-top: auto; justify-content: space-between; align-items: flex-end; }

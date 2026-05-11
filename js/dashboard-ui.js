@@ -23,6 +23,7 @@ const DASHBOARD_HTML = `
           <div class="nav-item active" id="nav-dashboard" onclick="navigateTo('dashboard')">
             <span class="nav-icon">📊</span>
             <span>Panel General</span>
+            <span class="nav-badge vencido" id="badge-dashboard" style="display:none">0</span>
           </div>
           <div class="nav-item" id="nav-incidencias" onclick="navigateTo('incidencias')">
             <span class="nav-icon">🚨</span>
