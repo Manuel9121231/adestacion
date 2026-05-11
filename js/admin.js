@@ -137,8 +137,10 @@ async function cargarDatosBase() {
     m.estado_mantenimiento === 'vencido' || m.estado_mantenimiento === 'pendiente'
   ).length;
   const badge = document.getElementById('badge-alertas');
-  if (alertas > 0) { badge.textContent = alertas; badge.style.display = 'inline'; }
-  else badge.style.display = 'none';
+  if (badge) {
+    if (alertas > 0) { badge.textContent = alertas; badge.style.display = 'inline'; }
+    else badge.style.display = 'none';
+  }
 
   // Badge máquinas total
   const maqBadge = document.getElementById('badge-maquinas');
@@ -147,19 +149,12 @@ async function cargarDatosBase() {
     maqBadge.style.display = datosMaquinas.length > 0 ? 'inline' : 'none';
   }
 
-  // Badge incidencias pendientes
-  const pendientesCount = datosHistorial.filter(r => r.tipo === 'Incidencia' && !r.resuelta).length;
+  // Badge incidencias pendientes (solo las sin resolver - rojas, no en seguimiento)
+  const pendientesCount = datosHistorial.filter(r => r.tipo === 'Incidencia' && !r.resuelta && !r.en_seguimiento).length;
   const incBadge = document.getElementById('badge-incidencias');
   if (incBadge) {
     incBadge.textContent = pendientesCount;
-    incBadge.style.display = pendientesCount > 0 ? 'inline' : 'none';
-  }
-
-  // Badge en Panel General (mismo conteo de incidencias pendientes)
-  const dashBadge = document.getElementById('badge-dashboard');
-  if (dashBadge) {
-    dashBadge.textContent = pendientesCount;
-    dashBadge.style.display = pendientesCount > 0 ? 'inline' : 'none';
+    incBadge.style.display = pendientesCount > 0 ? 'inline-flex' : 'none';
   }
 }
 
