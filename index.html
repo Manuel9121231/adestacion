@@ -288,7 +288,7 @@
       </div>
     </a>
 
-    <a href="registro.html" class="nav-card">
+    <a href="registro.html" class="nav-card" id="navUsuarios">
       <span class="icon">👤</span>
       <div class="card-text">
         <h2>Acceso Usuarios</h2>
@@ -297,7 +297,7 @@
     </a>
 
     <a href="seleccion.html" class="nav-card" id="navOperario" style="display:none">
-      <span class="icon">�</span>
+      <span class="icon">⚙️</span>
       <div class="card-text">
         <h2>Portal Operario</h2>
         <p>Reportar mantenimientos o incidencias mediante código QR o selección manual.</p>
@@ -355,6 +355,7 @@
         const btnLogout = document.getElementById('btnLogout');
         const navOperario = document.getElementById('navOperario');
         const navAdmin = document.getElementById('navAdmin');
+        const navUsuarios = document.getElementById('navUsuarios');
 
         if (!sessionStr) {
           // Usuario sin cuenta - solo ver Estado Público y Acceso Usuarios
@@ -364,6 +365,7 @@
           btnLogout.style.display = 'none';
           if (navOperario) navOperario.style.display = 'none';
           if (navAdmin) navAdmin.style.display = 'none';
+          if (navUsuarios) navUsuarios.style.display = 'flex';
           return;
         }
 
@@ -381,6 +383,9 @@
         userRoleEl.textContent = roleLabels[rol] || rol;
         btnChangeAccount.style.display = 'block';
         btnLogout.style.display = 'block';
+
+        // Ocultar "Acceso Usuarios" cuando hay sesión activa
+        if (navUsuarios) navUsuarios.style.display = 'none';
 
         // Role-based visibility
         if (rol === 'usuario') {
