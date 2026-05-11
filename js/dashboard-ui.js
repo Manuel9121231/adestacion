@@ -68,9 +68,6 @@ const DASHBOARD_HTML = `
           </div>
         </div>
         <div class="topbar-actions">
-           <button class="btn btn-outline btn-sm" onclick="toggleTheme()" id="btnThemeToggle" style="border-radius:20px; padding: 6px 16px;">
-             🌙 Modo Oscuro
-           </button>
            <button class="btn btn-outline btn-sm" onclick="iniciarTour()" style="border-radius:20px; padding: 6px 16px;">
              ✨ Guía Rápida
            </button>
@@ -84,7 +81,7 @@ const DASHBOARD_HTML = `
           <div class="restricted-screen">
             <div class="icon">🔒</div>
             <h2>Acceso Restringido</h2>
-            <p>No tienes los permisos suficientes para ver esta sección. Acceso limitado solo a Administradores.</p>
+            <p>No tienes los permisos suficientes para ver esta sección. Esta función está limitada a Administradores.</p>
             <button class="btn btn-primary" onclick="navigateTo('dashboard')">← Volver al Panel</button>
           </div>
         </div>
@@ -396,9 +393,7 @@ const DASHBOARD_HTML = `
           <div class="form-group">
             <label class="form-label">Estado operativo</label>
             <select class="form-control" id="editEstado">
-              <option value="activa">Activa / Operativa</option>
-              <option value="en_revision">En revisión</option>
-              <option value="averiada">Averiada</option>
+              <option value="activa">Activa</option>
               <option value="inactiva">Inactiva</option>
             </select>
           </div>

@@ -96,9 +96,7 @@
       font-size: 28px;
       font-weight: 900;
       letter-spacing: -0.03em;
-      background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text);
       margin-bottom: 8px;
     }
     .page-header p { color: var(--text-muted); font-size: 14px; }
@@ -325,18 +323,52 @@
     <!-- Auth Card -->
     <div class="auth-card">
 
-      <!-- Tabs -->
-      <div class="tab-bar">
-        <button class="tab-btn active" id="tabRegistro" onclick="cambiarTab('registro')">
-          ✨ Registrarse
-        </button>
-        <button class="tab-btn" id="tabLogin" onclick="cambiarTab('login')">
-          🔑 Iniciar Sesión
-        </button>
+      <!-- ── Panel Login ── -->
+      <div class="tab-panel active" id="panelLogin">
+
+        <!-- Step 1: Login form -->
+        <div class="step active" id="loginStep1">
+          <div class="step-title">Bienvenido</div>
+          <div class="step-subtitle">Inicia sesión con tu email y contraseña.</div>
+
+          <div id="msgLogin" class="msg"></div>
+
+          <div class="field-group">
+            <label class="field-label" for="loginEmail">Email</label>
+            <input class="field-input" type="email" id="loginEmail" placeholder="usuario@empresa.com" autocomplete="email">
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="loginPassword">Contraseña</label>
+            <input class="field-input" type="password" id="loginPassword" placeholder="••••••••"
+              autocomplete="current-password"
+              onkeydown="if(event.key==='Enter') iniciarSesion()">
+          </div>
+
+          <button class="btn-primary" id="btnLogin" onclick="iniciarSesion()">
+            🔑 Iniciar Sesión
+          </button>
+
+          <div style="text-align:center; margin-top:16px; font-size:13px; color:var(--text-muted)">
+            ¿No tienes una cuenta? <a href="#" onclick="mostrarRegistro(); return false;" style="color:var(--accent); text-decoration:none; font-weight:600">Regístrate aquí</a>
+          </div>
+        </div>
+
+        <!-- Step 2: Login success -->
+        <div class="step" id="loginStep2">
+          <span class="success-icon">👋</span>
+          <div class="step-title" style="text-align:center" id="loginWelcomeTitle">¡Bienvenido!</div>
+          <div class="step-subtitle" style="text-align:center" id="loginWelcomeMsg">
+            Has iniciado sesión correctamente.
+          </div>
+          <button class="btn-primary" id="btnLoginRedirect" onclick="window.location.href='index.html'">
+            🏠 Ir al inicio
+          </button>
+        </div>
+
       </div>
 
-      <!-- ── Panel Registro ── -->
-      <div class="tab-panel active" id="panelRegistro">
+      <!-- ── Panel Registro (oculto por defecto) ── -->
+      <div class="tab-panel" id="panelRegistro" style="display:none">
 
         <!-- Step 1: Datos -->
         <div class="step active" id="regStep1">
@@ -366,6 +398,10 @@
           <button class="btn-primary" id="btnRegistrar" onclick="registrar()">
             📧 Registrarme y recibir código
           </button>
+
+          <div style="text-align:center; margin-top:16px; font-size:13px; color:var(--text-muted)">
+            ¿Ya tienes cuenta? <a href="#" onclick="ocultarRegistro(); return false;" style="color:var(--accent); text-decoration:none; font-weight:600">Inicia sesión</a>
+          </div>
         </div>
 
         <!-- Step 2: Verificación Link -->
@@ -378,7 +414,7 @@
 
           <div id="msgOtp" class="msg"></div>
 
-          <button class="btn-primary" onclick="cambiarTab('login')">
+          <button class="btn-primary" onclick="ocultarRegistro()">
             🔑 Ir a Iniciar Sesión
           </button>
           <button class="btn-secondary" onclick="reenviarCodigo()" style="margin-top:12px">
@@ -395,48 +431,8 @@
             <br><br>
             <strong>Recuerda:</strong> Un administrador puede asignarte privilegios adicionales.
           </div>
-          <button class="btn-primary" onclick="cambiarTab('login')">
+          <button class="btn-primary" onclick="ocultarRegistro()">
             🔑 Iniciar Sesión ahora
-          </button>
-        </div>
-
-      </div>
-
-      <!-- ── Panel Login ── -->
-      <div class="tab-panel" id="panelLogin">
-
-        <!-- Step 1: Login form -->
-        <div class="step active" id="loginStep1">
-          <div class="step-title">Bienvenido</div>
-          <div class="step-subtitle">Inicia sesión con tu email y contraseña.</div>
-
-          <div id="msgLogin" class="msg"></div>
-
-          <div class="field-group">
-            <label class="field-label" for="loginEmail">Email</label>
-            <input class="field-input" type="email" id="loginEmail" placeholder="usuario@empresa.com" autocomplete="email">
-          </div>
-          <div class="field-group">
-            <label class="field-label" for="loginPassword">Contraseña</label>
-            <input class="field-input" type="password" id="loginPassword" placeholder="••••••••"
-              autocomplete="current-password"
-              onkeydown="if(event.key==='Enter') iniciarSesion()">
-          </div>
-
-          <button class="btn-primary" id="btnLogin" onclick="iniciarSesion()">
-            🔑 Iniciar Sesión
-          </button>
-        </div>
-
-        <!-- Step 2: Login success -->
-        <div class="step" id="loginStep2">
-          <span class="success-icon">👋</span>
-          <div class="step-title" style="text-align:center" id="loginWelcomeTitle">¡Bienvenido!</div>
-          <div class="step-subtitle" style="text-align:center" id="loginWelcomeMsg">
-            Has iniciado sesión correctamente.
-          </div>
-          <button class="btn-primary" id="btnLoginRedirect" onclick="window.location.href='index.html'">
-            🏠 Ir al inicio
           </button>
         </div>
 
@@ -451,6 +447,18 @@
   <script>
     // ─── Estado de la app ───
     let emailRegistro = '';
+
+    // ─── Mostrar registro (para el enlace) ───
+    function mostrarRegistro() {
+      document.getElementById('panelLogin').style.display = 'none';
+      document.getElementById('panelRegistro').style.display = 'block';
+    }
+
+    // ─── Ocultar registro (volver a login) ───
+    function ocultarRegistro() {
+      document.getElementById('panelRegistro').style.display = 'none';
+      document.getElementById('panelLogin').style.display = 'block';
+    }
 
     // ─── Tabs ───
     function cambiarTab(tab) {

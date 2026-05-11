@@ -22,12 +22,79 @@
       --text-white: #ffffff;
       --border: rgba(255,255,255,0.05);
     }
+
+    /* User Info Panel */
+    .user-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-portal);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .user-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--text-white);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .user-btn:hover {
+      border-color: var(--accent-maint);
+      color: var(--accent-maint);
+    }
+
+    .user-btn.logout {
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .user-btn.logout:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
     .portal-container {
       display: flex;
       flex-direction: column;
       justify-content: center;
       min-height: 100vh;
       padding: 30px 20px;
+      padding-top: 80px;
       background: var(--bg-portal);
       color: var(--text-white);
       text-align: center;
@@ -150,6 +217,18 @@
   <script src="js/theme.js"></script>
 </head>
 <body>
+
+  <!-- User Info Panel -->
+  <div class="user-panel" id="userPanel">
+    <div class="user-info">
+      <div class="user-name" id="userName">Cuenta sin iniciar</div>
+      <div class="user-role" id="userRole">Sin sesión</div>
+    </div>
+    <div class="user-actions">
+      <button class="user-btn" id="btnChangeAccount" onclick="window.location.href='registro.html'" style="display:none">Cambiar cuenta</button>
+      <button class="user-btn logout" id="btnLogout" onclick="cerrarSesion()" style="display:none">Cerrar sesión</button>
+    </div>
+  </div>
 
   <!-- ════ PANTALLA: CARGANDO ════ -->
   <div class="screen active fade-up" id="screen-loading">
@@ -310,6 +389,51 @@
     </div>
   </div>
 
+<script>
+  // Update user panel
+  function updateUserPanel() {
+    try {
+      const sessionStr = localStorage.getItem('sgi_user_session');
+      const userNameEl = document.getElementById('userName');
+      const userRoleEl = document.getElementById('userRole');
+      const btnChangeAccount = document.getElementById('btnChangeAccount');
+      const btnLogout = document.getElementById('btnLogout');
+
+      if (!sessionStr) {
+        userNameEl.textContent = 'Cuenta sin iniciar';
+        userRoleEl.textContent = 'Sin sesión';
+        btnChangeAccount.style.display = 'none';
+        btnLogout.style.display = 'none';
+        return;
+      }
+
+      const session = JSON.parse(sessionStr);
+      const rol = session.rol || 'usuario';
+      const nombre = session.nombre || session.email || 'Usuario';
+
+      userNameEl.textContent = nombre;
+      const roleLabels = {
+        'usuario': 'Usuario',
+        'tecnico': 'Técnico',
+        'admin': 'Administrador'
+      };
+      userRoleEl.textContent = roleLabels[rol] || rol;
+      btnChangeAccount.style.display = 'block';
+      btnLogout.style.display = 'block';
+    } catch (err) {
+      console.error('Error updating user panel:', err);
+    }
+  }
+
+  // Cerrar sesión
+  function cerrarSesion() {
+    localStorage.removeItem('sgi_user_session');
+    localStorage.removeItem('sgi_admin_session');
+    window.location.href = 'index.html';
+  }
+
+  document.addEventListener('DOMContentLoaded', updateUserPanel);
+</script>
 <script src="js/checklist.js"></script>
 </body>
 </html>

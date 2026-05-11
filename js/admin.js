@@ -24,6 +24,19 @@ async function detectarServidor() {
 
 let rolActual = 'admin'; // Se actualiza al cargar la sesión
 
+// ── Cargar rol del usuario desde sesión ──
+async function cargarRolUsuario() {
+  try {
+    const sessionStr = localStorage.getItem('sgi_user_session');
+    if (sessionStr) {
+      const session = JSON.parse(sessionStr);
+      rolActual = session.rol || 'usuario';
+    }
+  } catch (err) {
+    console.error('Error al cargar rol:', err);
+  }
+}
+
 // ── Obtener nombre del admin actual ──
 function getNombreAdmin() {
   try {
@@ -36,6 +49,7 @@ function getNombreAdmin() {
 document.addEventListener('DOMContentLoaded', async () => {
   const sessionStr = localStorage.getItem('sgi_admin_session');
   detectarServidor(); // Cargar IP real para los QRs
+  await cargarRolUsuario(); // Cargar rol del usuario
   if (!sessionStr) return; // Esperar al login manual
   const sgiSession = JSON.parse(sessionStr || '{}');
   window.sgiAdminSession = sgiSession;
@@ -54,6 +68,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const footerVersion = container?.querySelector('.sidebar-footer div');
     if (footerVersion) {
       footerVersion.textContent = `👤 ${adminName}`;
+    }
+
+    // Ocultar navegación para técnicos (QR codes y usuarios)
+    if (rolActual === 'tecnico') {
+      const navQr = document.getElementById('nav-qrcodes');
+      const navUsuarios = document.getElementById('nav-usuarios');
+      if (navQr) navQr.style.display = 'none';
+      if (navUsuarios) navUsuarios.style.display = 'none';
     }
 
     const grid = document.getElementById('gridMaquinas');
@@ -244,11 +266,14 @@ const sectionTitles = {
 };
 
 function navigateTo(section) {
-  // Verificación de roles (solo admin puede ver gestión de máquinas, QR y usuarios)
-  const rutasRestringidas = ['usuarios', 'qrcodes'];
+  // Verificación de roles (solo admin puede ver gestión de usuarios y QR codes)
+  // Técnicos pueden ver todo excepto usuarios y qrcodes
+  const rutasRestringidasParaTecnico = ['usuarios', 'qrcodes'];
   let idToShow = section;
 
-  if (rolActual !== 'admin' && rutasRestringidas.includes(section)) {
+  if (rolActual === 'tecnico' && rutasRestringidasParaTecnico.includes(section)) {
+    idToShow = 'restringido';
+  } else if (rolActual !== 'admin' && rolActual !== 'tecnico' && (section === 'usuarios' || section === 'qrcodes')) {
     idToShow = 'restringido';
   }
 
@@ -469,7 +494,7 @@ function renderMaquinas() {
   }
 
   let htmlResult = '';
-  const commonBg = 'rgba(16,185,129,0.05)';
+  const commonBg = '#ffffff';
   const iconos = [''];
   datosSalas.forEach((sala, index) => {
     if (salaFiltro && String(sala.id) !== String(salaFiltro)) return;
