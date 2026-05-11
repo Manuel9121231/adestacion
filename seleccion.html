@@ -83,6 +83,20 @@
       transition: all 0.2s;
     }
     .btn-back:hover { background: var(--border); }
+
+    .status-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 800;
+      text-transform: uppercase;
+      display: inline-block;
+      margin-top: 4px;
+    }
+    .status-activa { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-inactiva { background: rgba(107, 114, 128, 0.15); color: #6b7280; border: 1px solid rgba(107, 114, 128, 0.3); }
+    .status-revision { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-averiada { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
@@ -120,7 +134,6 @@
         const { data, error } = await client
           .from('equipos')
           .select('*, salas(nombre)')
-          .eq('estado', 'activa')
           .order('nombre', { ascending: true });
 
         if (error) throw error;
@@ -145,14 +158,20 @@
 
           bySala[salaName].forEach(m => {
             const card = document.createElement('div');
-            card.className = 'machine-card';
+            const statusClass = `status-${m.estado || 'activa'}`;
+            const statusLabel = (m.estado || 'activa').replace('_', ' ');
+            
+            card.className = `machine-card`;
             card.onclick = () => window.location.href = `operario.html?maquinaId=${m.id}`;
             
             card.innerHTML = `
               <span class="machine-icon">🖨️</span>
               <div class="machine-info">
                 <div class="machine-name">${m.nombre}</div>
-                <div class="machine-code">${m.codigo || 'S/ID'}</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div class="machine-code">${m.codigo || 'S/ID'}</div>
+                  <div class="status-badge ${statusClass}">${statusLabel}</div>
+                </div>
               </div>
               <span class="machine-arrow">→</span>
             `;
