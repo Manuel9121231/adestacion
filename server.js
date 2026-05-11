@@ -34,11 +34,11 @@ app.get('/api/info', (req, res) => {
 
 // ── Rutas amigables ─────────────────────────────────────────────────────────
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'html', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'html', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Servir archivos estáticos desde carpetas organizadas
