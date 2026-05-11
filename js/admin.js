@@ -539,10 +539,10 @@ async function verDetalleMaquina(id) {
   document.getElementById('editModelo').value = maq.modelo || '';
   document.getElementById('editEstado').value = maq.estado || 'activa';
   document.getElementById('editNotas').value = maq.notas || '';
-  
+
   // Por defecto, abrir en modo lectura
   setModoEdicionMaquina(false);
-  
+
   abrirModal('modalMaquina');
 }
 
@@ -578,17 +578,16 @@ async function editarMaquina(id) {
 async function guardarMaquina() {
   const id = document.getElementById('editMaquinaId').value;
   const datos = {
-    codigo: document.getElementById('editCodigo').value.trim(),
     nombre: document.getElementById('editNombre').value.trim(),
     tipo: document.getElementById('editTipo').value,
     modelo: document.getElementById('editModelo').value.trim(),
     estado: document.getElementById('editEstado').value,
-    ancho_mm: parseInt(document.getElementById('editAncho').value) || null,
-    alto_mm: parseInt(document.getElementById('editAlto').value) || null,
-    profundidad_mm: parseInt(document.getElementById('editProfundidad').value) || null,
     notas: document.getElementById('editNotas').value.trim() || null,
   };
-  if (!datos.nombre) return;
+  if (!datos.nombre) {
+    showFeedback('Error', 'El nombre de la máquina es obligatorio.', '❌');
+    return;
+  }
   const res = await apiFetch(`/api/maquina/${id}`, { method: 'PUT', body: datos });
   if (res.ok) {
     cerrarModal('modalMaquina');
