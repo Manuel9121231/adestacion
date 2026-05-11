@@ -343,6 +343,11 @@ function actualizarVistaDashboard(stats, historial) {
   const kpiProx = document.getElementById('kpi-proximos');
   if (kpiProx) kpiProx.textContent = d.proximos;
 
+  // KPI Sin resolver - contar incidencias no resueltas y no en seguimiento
+  const sinResolver = (historial || []).filter(r => r.tipo === 'Incidencia' && !r.resuelta && !r.en_seguimiento).length;
+  const kpiSinResolver = document.getElementById('kpi-sin-resolver');
+  if (kpiSinResolver) kpiSinResolver.textContent = sinResolver;
+
   // Gráfica de días
   renderBarChart('chartDias', (d.porDia || []).slice(-14).map(r => ({
     label: formatFechaDia(r.dia), value: r.total

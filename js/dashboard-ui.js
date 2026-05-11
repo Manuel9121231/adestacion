@@ -10,7 +10,9 @@ const DASHBOARD_HTML = `
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <div class="logo">
-          <div class="logo-icon">🛠</div>
+          <div class="logo-icon">
+            <img src="logo-brain.png" alt="Logo" style="width: 32px; height: 32px;">
+          </div>
           <div>
             <h1>Gestor de máquinas</h1>
             <p>Panel de Administración</p>

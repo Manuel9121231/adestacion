@@ -76,11 +76,8 @@ a { color: var(--accent); text-decoration: none; }
 }
 .sidebar-brand .logo-icon {
   width: 40px; height: 40px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  border-radius: 10px;
   display: grid; place-items: center;
   font-size: 20px;
-  box-shadow: var(--shadow-glow);
 }
 .sidebar-brand h1 { font-size: 15px; font-weight: 700; line-height: 1.2; }
 .sidebar-brand p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
