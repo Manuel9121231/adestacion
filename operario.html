@@ -15,6 +15,7 @@
       --accent-maint: #4f8ef7;
       --text-white: #2b3440;
       --border: rgba(0,0,0,0.06);
+      --user-panel-h: 64px; /* altura reservada para el panel superior fijo */
     }
     body.dark-mode {
       --bg-portal: #0f0f1a;
@@ -32,6 +33,7 @@
       background: var(--bg-card);
       border-bottom: 1px solid var(--border);
       padding: 12px 20px;
+      height: var(--user-panel-h);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -107,14 +109,15 @@
     .portal-container {
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       min-height: 100vh;
-      padding: 30px 20px;
-      padding-top: 80px;
+      padding: 0 20px 30px 20px; /* top padding handled by .screen */
       background: var(--bg-portal);
       color: var(--text-white);
       text-align: center;
     }
+
+     /* El desplazamiento ahora se gestiona por padding en el `body` global. */
     .portal-header h1 {
       font-size: 26px;
       font-weight: 800;
@@ -127,8 +130,23 @@
     }
     .portal-grid {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       gap: 20px;
+      justify-content: center;
+      align-items: stretch;
+    }
+    .portal-card {
+      flex: 1 1 220px;
+      min-width: 220px;
+      max-width: 320px;
+    }
+    @media (max-width: 700px) {
+      .portal-grid {
+        flex-direction: column;
+      }
+      .portal-card {
+        max-width: 100%;
+      }
     }
     .portal-card {
       background: var(--card-bg);
@@ -226,7 +244,7 @@
     .status-operative { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
     .status-repair { background: rgba(255, 71, 87, 0.15); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.3); }
   </style>
-  <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/mobile.css?v=3">
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
@@ -271,7 +289,7 @@
 
   <!-- ════ PANTALLA: PORTAL ════ -->
   <div class="screen" id="screen-portal">
-    <div class="portal-container fade-up" style="padding-top: 60px;">
+    <div class="portal-container fade-up" style="padding-top: 0;">
       <div class="portal-header" style="display:flex; justify-content:space-between; align-items:center; text-align:left; gap:20px; margin-bottom: 40px;">
         <div style="flex: 1;">
           <h1 id="portalMaquinaNombre" style="margin:0; font-size:24px;">Cargando...</h1>
@@ -292,7 +310,7 @@
         <span id="statusIcon">🟢</span> <span id="statusText">Máquina Operativa</span>
       </div>
 
-      <div class="portal-grid" style="max-width: 400px; margin: 0 auto; width: 100%;">
+      <div class="portal-grid" style="max-width: 920px; margin: 0 auto; width: 100%;">
         <div class="portal-card incident" onclick="seleccionarModo('incidencia')" style="background: rgba(255, 71, 87, 0.1); border: 1px solid var(--accent-inc);">
           <div class="portal-card-icon">⚡</div>
           <div class="portal-card-title">Crear una incidencia</div>
@@ -326,37 +344,64 @@
       </div>
     </header>
 
-    <div class="screen-content">
-      <!-- Campos de Identidad (Auto-alta) -->
-      <div class="reporte-section fade-up" style="margin-bottom: 20px; padding-bottom: 0;">
+    <div class="screen-content" style="display: flex; flex-direction: column; gap: 16px;">
+      
+      <!-- Panel 1: Identificación -->
+      <div class="form-panel" style="
+        background: var(--card-bg); 
+        border: 1px solid var(--border); 
+        border-radius: 16px; 
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+      ">
         <div class="reporte-label">🔑 IDENTIFICACIÓN (AUTO-ALTA)</div>
-        <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
-          <input type="text" id="userNameInput" class="reporte-textarea" style="height: 50px; font-size: 15px;" placeholder="Tu Nombre Completo">
-          <input type="email" id="userEmailInput" class="reporte-textarea" style="height: 50px; font-size: 15px;" placeholder="Email (Clave Única)">
+        <div style="display:grid; grid-template-columns: 1fr; gap:12px; margin-top: 12px;">
+          <input type="text" id="userNameInput" class="reporte-textarea" style="height: 48px; font-size: 15px;" placeholder="Tu Nombre Completo">
+          <input type="email" id="userEmailInput" class="reporte-textarea" style="height: 48px; font-size: 15px;" placeholder="Email (Clave Única)">
         </div>
       </div>
 
-      <div class="tipo-selector-op fade-up" style="display:flex; gap:10px; margin-bottom:20px;">
-        <div id="op-tipo-inc" class="tipo-op-card" onclick="setOpTipo('Incidencia')">
-          <span style="font-size:18px">⚡</span>
-          <span style="font-size:11px; font-weight:700">Incidencia</span>
-        </div>
-        <div id="op-tipo-maint" class="tipo-op-card active" onclick="setOpTipo('Mantenimiento')">
-          <span style="font-size:18px">🔧</span>
-          <span style="font-size:11px; font-weight:700">Mantenimiento</span>
+      <!-- Panel 2: Tipo de Reporte -->
+      <div class="form-panel" style="
+        background: var(--card-bg); 
+        border: 1px solid var(--border); 
+        border-radius: 16px; 
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+      ">
+        <div class="reporte-label" style="margin-bottom: 12px;">⚡ TIPO DE REPORTE</div>
+        <div style="display:flex; gap:12px;">
+          <div id="op-tipo-inc" class="tipo-op-card" onclick="setOpTipo('Incidencia')">
+            <span style="font-size:18px">⚡</span>
+            <span style="font-size:11px; font-weight:700">Incidencia</span>
+          </div>
+          <div id="op-tipo-maint" class="tipo-op-card active" onclick="setOpTipo('Mantenimiento')">
+            <span style="font-size:18px">🔧</span>
+            <span style="font-size:11px; font-weight:700">Mantenimiento</span>
+          </div>
         </div>
       </div>
 
-      <!-- Campo único de reporte -->
-      <div class="reporte-section fade-up">
+      <!-- Panel 3: Reporte Detallado -->
+      <div class="form-panel" style="
+        background: var(--card-bg); 
+        border: 1px solid var(--border); 
+        border-radius: 16px; 
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+      ">
         <div class="reporte-label">📝 REPORTE DEL PROBLEMA ENCONTRADO EN LA IMPRESORA</div>
-        <div class="reporte-subtitle">Describe el estado de la máquina, incidencias observadas o trabajos realizados.</div>
+        <div class="reporte-subtitle" style="margin: 8px 0 16px 0;">Describe el estado de la máquina, incidencias observadas o trabajos realizados.</div>
         <textarea
           class="reporte-textarea"
           id="reporteTextarea"
           placeholder="Ej: Se ha encontrado el cabezal obstruido. Se ha limpiado y calibrado..."
           rows="7"
           oninput="onReporteChange()"
+          style="margin-bottom: 16px;"
         ></textarea>
         
         <div class="photo-upload-section" style="margin-top:20px">
@@ -463,6 +508,6 @@
 
   document.addEventListener('DOMContentLoaded', updateUserPanel);
 </script>
-<script src="js/checklist.js"></script>
+<script src="js/checklist.js?v=3"></script>
 </body>
 </html>

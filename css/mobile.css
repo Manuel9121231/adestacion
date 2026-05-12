@@ -50,6 +50,8 @@ body {
   display: flex; flex-direction: column;
   -webkit-tap-highlight-color: transparent;
 }
+/* Reservar espacio para el panel superior fijo y evitar solapamientos al scrollear */
+body { padding-top: var(--user-panel-h, 64px); }
 
 /* ── App Screens ─────────────────────────────────────────────────────────── */
 .screen { display: none; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
@@ -61,7 +63,7 @@ body {
   border-bottom: 1px solid var(--border);
   padding: 16px 20px;
   display: flex; align-items: center; gap: 14px;
-  position: sticky; top: 0; z-index: 10;
+  position: sticky; top: var(--user-panel-h, 0); z-index: 10;
 }
 .header-icon {
   width: 44px; height: 44px;
@@ -288,7 +290,11 @@ body {
 
 /* ── Animations ──────────────────────────────────────────────────────────── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.fade-up { animation: fadeUp 0.3s ease both; }
+.fade-up { 
+  animation: fadeUp 0.2s ease both; 
+  position: relative;
+  z-index: 1;
+}
