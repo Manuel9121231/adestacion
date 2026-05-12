@@ -144,8 +144,15 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 20px;
-      width: 100%;
+      margin: 0 auto;
       max-width: 820px;
+    }
+
+    /* Centrar la última tarjeta cuando hay 3 elementos visibles */
+    .home-grid:has(.nav-card:nth-child(3):not([style*="display: none"])) .nav-card:nth-child(3):not([style*="display: none"]) {
+      grid-column: 1 / -1;
+      justify-self: center;
+      max-width: 400px;
     }
 
     .nav-card {
@@ -397,6 +404,7 @@
           if (navUsuarios) navUsuarios.style.display = 'none';
           if (navOperario) navOperario.style.display = 'flex';
           if (navAdmin) navAdmin.style.display = 'flex';
+          centerThirdCard();
           return;
         }
 
@@ -409,6 +417,7 @@
           if (navOperario) navOperario.style.display = 'none';
           if (navAdmin) navAdmin.style.display = 'none';
           if (navUsuarios) navUsuarios.style.display = 'flex';
+          centerThirdCard();
           return;
         }
 
@@ -451,6 +460,8 @@
       } catch (err) {
         console.error('Error checking user role:', err);
       }
+      // Aplicar centrado después de actualizar visibilidad
+      centerThirdCard();
     }
 
     // Cerrar sesión
@@ -461,7 +472,32 @@
     }
 
     // Check role on page load
-    document.addEventListener('DOMContentLoaded', checkUserRole);
+    document.addEventListener('DOMContentLoaded', () => {
+      checkUserRole();
+      centerThirdCard();
+    });
+
+    // Centrar la tercera tarjeta cuando hay exactamente 3 visibles
+    function centerThirdCard() {
+      const grid = document.querySelector('.home-grid');
+      const cards = grid.querySelectorAll('.nav-card');
+      const visibleCards = Array.from(cards).filter(c => c.style.display !== 'none');
+
+      // Reset all cards
+      cards.forEach(c => {
+        c.style.gridColumn = '';
+        c.style.justifySelf = '';
+        c.style.maxWidth = '';
+      });
+
+      // If exactly 3 cards visible, center the last one
+      if (visibleCards.length === 3) {
+        const lastCard = visibleCards[2];
+        lastCard.style.gridColumn = '1 / -1';
+        lastCard.style.justifySelf = 'center';
+        lastCard.style.maxWidth = '400px';
+      }
+    }
   </script>
 </body>
 </html>
