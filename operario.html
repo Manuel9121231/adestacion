@@ -123,6 +123,14 @@
       font-weight: 800;
       margin-bottom: 8px;
     }
+    /* Mantener el encabezado del portal visible bajo el panel fijo al scrollear */
+    .portal-header {
+      position: sticky;
+      top: var(--user-panel-h);
+      z-index: 60; /* menos que .user-panel (1000) pero por encima del contenido */
+      background: transparent;
+      padding-top: 8px;
+    }
     .portal-header p {
       opacity: 0.6;
       font-size: 14px;
