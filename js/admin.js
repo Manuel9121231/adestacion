@@ -1880,9 +1880,9 @@ function renderListaSalas() {
         >
       </td>
       <td style="padding:10px;text-align:right">
-        <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:rgba(239,68,68,0.2)" 
+        <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:rgba(239,68,68,0.2);font-weight:bold" 
           onclick="borrarSala('${s.id}', '${s.nombre}')">
-          🗑️
+          ✕
         </button>
       </td>
     </tr>
