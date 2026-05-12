@@ -227,10 +227,10 @@
         const btnChangeAccount = document.getElementById('btnChangeAccount');
         const btnLogout = document.getElementById('btnLogout');
 
-        // Verificar si hay sesión de administrador
-        if (adminSessionStr && !sessionStr) {
+        // Verificar si hay sesión de administrador (tiene prioridad)
+        if (adminSessionStr) {
           const adminSession = JSON.parse(adminSessionStr);
-          const nombre = adminSession.username || 'Administrador';
+          const nombre = adminSession.username || adminSession.nombre || 'Administrador';
           userNameEl.textContent = nombre;
           userRoleEl.textContent = 'Administrador';
           btnChangeAccount.style.display = 'none';

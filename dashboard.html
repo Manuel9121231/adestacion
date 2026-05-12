@@ -20,17 +20,8 @@
   <script>
     // ── Guard de Seguridad Instantáneo ──
     (function() {
-      const adminSession = localStorage.getItem('sgi_admin_session');
-      const userSession  = localStorage.getItem('sgi_user_session');
-      let allow = false;
-      if (adminSession) allow = true;
-      else if (userSession) {
-        try {
-          const s = JSON.parse(userSession);
-          if (s.rol === 'tecnico' || s.rol === 'admin') allow = true;
-        } catch (e) { /* ignore parse errors */ }
-      }
-      if (!allow) {
+      const session = localStorage.getItem('sgi_admin_session');
+      if (!session) {
         document.documentElement.classList.add('auth-locked');
       }
     })();
@@ -95,9 +86,9 @@
     }
     .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(79,142,247,0.4); }
     .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .login-error { color: var(--danger); font-size: 13px; margin-top: 14px; min-height: 20px; }
-    .login-link { margin-top: 24px; font-size: 13px; color: var(--text-muted); }
-    .login-link a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .login-error { color: #ef4444; font-size: 13px; margin-top: 14px; min-height: 20px; }
+    .login-link { margin-top: 24px; font-size: 13px; color: #64748b; }
+    .login-link a { color: #4f8ef7; text-decoration: none; font-weight: 600; }
     .login-link a:hover { text-decoration: underline; }
     @keyframes shake {
       0%,100%{transform:translateX(0)}

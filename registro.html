@@ -764,28 +764,19 @@
           rol: rol
         }));
 
-        // Mostrar éxito
-        document.getElementById('loginWelcomeTitle').textContent = `👋 ¡Hola, ${nombre.split(' ')[0]}!`;
-
+        // Si es admin, también guardar sesión de admin para acceso al dashboard
         if (rol === 'admin') {
-          document.getElementById('loginWelcomeMsg').innerHTML =
-            'Has iniciado sesión como <strong>Administrador</strong>. Puedes acceder al panel de administración.';
-          document.getElementById('btnLoginRedirect').textContent = '🔐 Ir al Panel de Administración';
-          document.getElementById('btnLoginRedirect').onclick = () => {
-            // Guardar sesión admin también
-            localStorage.setItem('sgi_admin_session', JSON.stringify({
-              type: 'admin', userId: user.id, email: user.email, nombre: nombre
-            }));
-            window.location.href = 'dashboard.html';
-          };
-        } else {
-          document.getElementById('loginWelcomeMsg').innerHTML =
-            `Tu cuenta está activa con rol <strong>${rol}</strong>. Un administrador puede asignarte más privilegios.`;
-          document.getElementById('btnLoginRedirect').textContent = '🏠 Ir al inicio';
-          document.getElementById('btnLoginRedirect').onclick = () => window.location.href = 'index.html';
+          localStorage.setItem('sgi_admin_session', JSON.stringify({
+            type: 'admin', userId: user.id, email: user.email, nombre: nombre
+          }));
         }
 
-        activarStep('panelLogin', 'loginStep2');
+        // Redirigir automáticamente según el rol
+        if (rol === 'admin') {
+          window.location.href = 'dashboard.html';
+        } else {
+          window.location.href = 'index.html';
+        }
 
       } catch (err) {
         console.error(err);
