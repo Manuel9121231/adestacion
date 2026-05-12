@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f8fafc;
+      --bg: #eef2f7;
       --card-bg: #ffffff;
       --text: #1e293b;
       --text-muted: #64748b;
@@ -17,9 +17,30 @@
       --err: #ef4444;
       --warn: #f59e0b;
       --inactive: #6b7280;
-      --border: #e2e8f0;
+      --border: #cbd5e1;
       --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     }
+
+    body.dark-mode {
+      --bg: #0f0f1a;
+      --card-bg: #1a1a2e;
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+      --accent: #4f8ef7;
+      --border: rgba(255,255,255,0.08);
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+    }
+    body.dark-mode .m-card          { background: #1e2a3a; border-color: #2d4a6e; }
+    body.dark-mode .m-card.warn     { background: #2a2010; border-color: #78450a; }
+    body.dark-mode .m-card.inactive { background: #1e1e1e; border-color: #3a3a3a; }
+    body.dark-mode .m-card.down     { background: #2a1515; border-color: #7f1d1d; }
+    body.dark-mode .badge-ok        { background: #052e16; color: #34d399; }
+    body.dark-mode .badge-warn      { background: #2a1a00; color: #fbbf24; }
+    body.dark-mode .badge-inactive  { background: #1f2937; color: #9ca3af; }
+    body.dark-mode .badge-err       { background: #2a0a0a; color: #f87171; }
+    body.dark-mode .m-details       { border-top-color: rgba(255,255,255,0.08); }
+    body.dark-mode .sidebar-item    { background: #1a1a2e; border-color: rgba(255,255,255,0.08); }
+    body.dark-mode .sidebar-item:hover { background: #1e2a3a; border-color: #4f8ef7; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -29,11 +50,12 @@
       line-height: 1.5;
       padding-bottom: 40px;
     }
+    body, body * { transition-duration: 0s !important; }
 
     /* ══ HEADER ═══════════════════════════════════════════ */
     header {
-      background: #1e3a8a;
-      border-bottom: 1px solid #1e40af;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
       padding: 16px 20px;
       position: sticky;
       top: 0;
@@ -54,37 +76,51 @@
       width: 40px;
       height: 40px;
       border-radius: 10px;
-      color: #bfdbfe;
+      color: var(--text);
       text-decoration: none;
       transition: all 0.2s;
-      background: rgba(255,255,255,0.1);
+      background: var(--bg);
+      border: 1px solid var(--border);
     }
-    .back-btn:hover { color: #ffffff; background: rgba(255,255,255,0.2); }
+    .back-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .theme-toggle {
+      margin-left: auto;
+      padding: 7px 14px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
     
     .tv-btn {
-      margin-left: auto;
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 8px 16px;
-      background: rgba(255,255,255,0.15);
-      color: #bfdbfe;
+      background: var(--bg);
+      color: var(--text);
       text-decoration: none;
+      border: 1px solid var(--border);
       border-radius: 10px;
       font-size: 13px;
       font-weight: 700;
       transition: all 0.2s;
     }
     .tv-btn:hover {
-      background: rgba(255,255,255,0.25);
-      color: #ffffff;
+      border-color: var(--accent);
+      color: var(--accent);
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
     }
     .tv-btn svg { width: 18px; height: 18px; }
 
-    .header-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
-    .header-title p { font-size: 13px; color: #bfdbfe; }
+    .header-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+    .header-title p { font-size: 13px; color: var(--text-muted); }
 
     /* Buscador */
     .search-container {
@@ -96,27 +132,26 @@
       width: 100%;
       padding: 12px 16px 12px 44px;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.3);
-      background: rgba(255,255,255,0.1);
+      border: 1px solid var(--border);
+      background: var(--bg);
       font-size: 14px;
       outline: none;
       transition: all 0.2s;
-      color: #ffffff;
+      color: var(--text);
     }
     .search-input:focus {
-      background: rgba(255,255,255,0.2);
-      border-color: #bfdbfe;
-      box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.2);
+      background: var(--card-bg);
+      border-color: var(--accent);
     }
     .search-input::placeholder {
-      color: rgba(255,255,255,0.6);
+      color: var(--text-muted);
     }
     .search-icon {
       position: absolute;
       left: 14px;
       top: 50%;
       transform: translateY(-50%);
-      color: rgba(255,255,255,0.6);
+      color: var(--text-muted);
       width: 20px;
       height: 20px;
     }
@@ -153,7 +188,8 @@
       font-size: 14px;
       color: var(--text);
       background: var(--card-bg);
-      border: 1px solid var(--border);
+      border: 2px solid var(--border);
+      box-shadow: var(--shadow);
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -368,6 +404,7 @@
       <h1>Estado de Equipos</h1>
       <p id="statsLabel">Cargando disponibilidad...</p>
     </div>
+    <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
     <a href="estado-tv.html" class="tv-btn" title="Modo Pantalla Completa (TV)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
       <span>Modo TV</span>
@@ -574,7 +611,7 @@
     if (m.notas) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
 
     return `
-      <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}">
+      <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}" data-tipo="${(m.tipo||'').toLowerCase()}">
         <div class="m-top">
           <div class="m-status-dot ${statusClass}"></div>
           <div class="m-info">
@@ -588,19 +625,30 @@
     `;
   }
 
+  function fuzzyMatch(query, text) {
+    let qi = 0;
+    for (let i = 0; i < text.length && qi < query.length; i++) {
+      if (text[i] === query[qi]) qi++;
+    }
+    return qi === query.length;
+  }
+
   function filterMachines() {
-    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
     const sections = document.querySelectorAll('.sala-section');
-    
+
     sections.forEach(sec => {
-      const salaName = sec.dataset.sala;
       const cards = sec.querySelectorAll('.m-card');
       let hasVisible = false;
 
       cards.forEach(card => {
-        const machineName = card.dataset.nombre;
-        const badgeText = card.dataset.badge;
-        const visible = machineName.includes(query) || salaName.includes(query) || badgeText.includes(query);
+        if (!q) {
+          card.style.display = 'flex';
+          hasVisible = true;
+          return;
+        }
+        const haystack = [card.dataset.nombre||'', card.dataset.tipo||'', card.dataset.badge||'', sec.dataset.sala||''].join(' ');
+        const visible = fuzzyMatch(q, haystack);
         card.style.display = visible ? 'flex' : 'none';
         if (visible) hasVisible = true;
       });
@@ -615,5 +663,6 @@
 
   document.addEventListener('DOMContentLoaded', loadStatus);
 </script>
+<script src="js/theme.js"></script>
 </body>
 </html>
