@@ -82,6 +82,22 @@
       background: rgba(239, 68, 68, 0.1);
     }
 
+    .theme-toggle {
+      padding: 6px 12px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
     .container {
       max-width: 600px;
       margin: 0 auto;
@@ -177,6 +193,7 @@
       <div class="user-role" id="userRole">Sin sesión</div>
     </div>
     <div class="user-actions">
+      <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
       <button class="user-btn" id="btnChangeAccount" onclick="window.location.href='registro.html'" style="display:none">Cambiar cuenta</button>
       <button class="user-btn logout" id="btnLogout" onclick="cerrarSesion()" style="display:none">Cerrar sesión</button>
     </div>

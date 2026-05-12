@@ -19,6 +19,17 @@
       --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     }
 
+    body.dark-mode {
+      --bg: #0f0f1a;
+      --card-bg: #1a1a2e;
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --ok: #10b981;
+      --err: #ef4444;
+      --border: rgba(255,255,255,0.08);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
@@ -80,6 +91,27 @@
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
     }
     .tv-btn svg { width: 18px; height: 18px; }
+
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #f1f5f9;
+      color: var(--text-muted);
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover {
+      background: var(--accent);
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
 
     .header-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
     .header-title p { font-size: 13px; color: var(--text-muted); }
@@ -232,6 +264,7 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
+  <script src="js/theme.js"></script>
 </head>
 <body>
 
@@ -244,6 +277,7 @@
       <h1>Estado de Equipos</h1>
       <p id="statsLabel">Cargando disponibilidad...</p>
     </div>
+    <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
     <a href="estado-tv.html" class="tv-btn" title="Modo Pantalla Completa (TV)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
       <span>Modo TV</span>

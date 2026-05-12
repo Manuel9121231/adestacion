@@ -1399,7 +1399,7 @@ async function renderUsuarios() {
     }
 
     const session = window.sgiAdminSession || {};
-    const esSuperadmin = session.type === 'superadmin';
+    const esAdmin = session.type === 'superadmin' || session.type === 'admin';
 
     container.innerHTML = perfiles.map(u => {
       const rol = ROL_BADGES[u.rol] || { label: u.rol || 'usuario', cls: '' };
@@ -1411,14 +1411,14 @@ async function renderUsuarios() {
         <td data-label="Estado"><span class="estado-badge ok">✅ Activo</span></td>
         <td data-label="Registro" style="font-size:11px">${fecha}</td>
         <td data-label="Acciones">
-          ${esSuperadmin ? `
+          ${esAdmin ? `
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               ${u.rol !== 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--accent);border-color:var(--accent)" onclick="cambiarRolUsuario('${u.id}','admin')">🛡️ Hacer Admin</button>` : ''}
               ${u.rol === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="cambiarRolUsuario('${u.id}','usuario')">👤 Quitar Admin</button>` : ''}
               ${u.rol !== 'tecnico' ? `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success)" onclick="cambiarRolUsuario('${u.id}','tecnico')">🔧 Hacer Técnico</button>` : ''}
-              <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="eliminarUsuario('${u.id}')" title="Eliminar usuario permanentemente">🗑️ Eliminar</button>
+              ${session.type === 'superadmin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="eliminarUsuario('${u.id}')" title="Eliminar usuario permanentemente">🗑️ Eliminar</button>` : ''}
             </div>
-          ` : '<span style="color:var(--text-muted);font-size:12px">Solo superadmin puede cambiar roles</span>'}
+          ` : '<span style="color:var(--text-muted);font-size:12px">Solo los administradores pueden cambiar roles</span>'}
         </td>
       </tr>`;
     }).join('');
@@ -1463,8 +1463,9 @@ async function eliminarUsuario(userId) {
 
 async function cambiarRolUsuario(userId, nuevoRol) {
   const session = window.sgiAdminSession || {};
-  if (session.type !== 'superadmin') {
-    showFeedback('Acceso Denegado', 'Solo el administrador principal puede gestionar roles de usuario.', '🔒');
+  // Allow both admin and superadmin to change roles
+  if (session.type !== 'superadmin' && session.type !== 'admin') {
+    showFeedback('Acceso Denegado', 'Solo los administradores pueden gestionar roles de usuario.', '🔒');
     return;
   }
   const rolLabel = { admin: 'Administrador', tecnico: 'Técnico', usuario: 'Usuario' }[nuevoRol] || nuevoRol;

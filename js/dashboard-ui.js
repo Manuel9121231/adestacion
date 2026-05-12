@@ -70,6 +70,9 @@ const DASHBOARD_HTML = `
           </div>
         </div>
         <div class="topbar-actions">
+           <button class="btn btn-outline btn-sm" id="btnThemeToggle" onclick="toggleTheme()" style="border-radius:20px; padding: 6px 16px;">
+             🌙 Modo Oscuro
+           </button>
            <button class="btn btn-outline btn-sm" onclick="iniciarTour()" style="border-radius:20px; padding: 6px 16px;">
              ✨ Guía Rápida
            </button>

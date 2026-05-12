@@ -20,6 +20,25 @@
   --shadow:       0 8px 16px rgba(30,41,59,0.06);
 }
 
+body.dark-mode {
+  --bg:           #0f0f1a;
+  --bg2:          #1a1a2e;
+  --card:         #1e1e30;
+  --accent:       #4f8ef7;
+  --accent-dark:  #3b7ed8;
+  --success:      #22c55e;
+  --warning:      #f59e0b;
+  --danger:       #ef4444;
+  --text:         #ffffff;
+  --text-sub:     #94a3b8;
+  --text-muted:   #64748b;
+  --border:       rgba(255,255,255,0.08);
+  --critico:      #ef4444;
+  --critico-bg:   rgba(239,68,68,0.2);
+  --critico-brd:  rgba(239,68,68,0.4);
+  --shadow:       0 8px 16px rgba(0,0,0,0.4);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; }
 body {

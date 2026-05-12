@@ -18,6 +18,16 @@
       --border: rgba(30,41,59,0.06);
     }
 
+    body.dark-mode {
+      --bg: #0f0f1a;
+      --card-bg: #1a1a2e;
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+      --accent: #4f8ef7;
+      --accent-glow: rgba(79, 142, 247, 0.3);
+      --border: rgba(255,255,255,0.08);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
 
     body {
@@ -69,6 +79,22 @@
     .user-actions {
       display: flex;
       gap: 8px;
+    }
+
+    .theme-toggle {
+      padding: 6px 12px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     .user-btn {
@@ -269,6 +295,7 @@
       <div class="user-role" id="userRole">Sin sesión</div>
     </div>
     <div class="user-actions">
+      <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
       <button class="user-btn" id="btnChangeAccount" onclick="window.location.href='registro.html'" style="display:none">Cambiar cuenta</button>
       <button class="user-btn logout" id="btnLogout" onclick="cerrarSesion()" style="display:none">Cerrar sesión</button>
     </div>
@@ -359,9 +386,9 @@
         const navUsuarios = document.getElementById('navUsuarios');
 
         // Verificar si hay sesión de administrador
-        if (adminSessionStr && !sessionStr) {
+        if (adminSessionStr) {
           const adminSession = JSON.parse(adminSessionStr);
-          const nombre = adminSession.username || 'Administrador';
+          const nombre = adminSession.username || adminSession.nombre || 'Administrador';
           userNameEl.textContent = nombre;
           userRoleEl.textContent = 'Administrador';
           btnChangeAccount.style.display = 'none';

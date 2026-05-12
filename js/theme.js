@@ -12,17 +12,23 @@
     }
   };
 
-  // Inicializar: SIEMPRE claro por defecto (ignorar localStorage para el inicio)
-  // Solo aplicar modo oscuro si el usuario EXPLICITAMENTE lo activó en esta sesión
+  // Inicializar: cargar tema guardado o usar claro por defecto
   document.addEventListener('DOMContentLoaded', () => {
-    // Siempre iniciar en modo claro (eliminar dark-mode si existe)
+    // Cargar tema guardado desde localStorage
+    const savedTheme = localStorage.getItem('sgi_theme');
+    const isDark = savedTheme === 'dark';
+    
     if (document.body) {
-      document.body.classList.remove('dark-mode');
+      if (isDark) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
     }
 
     const btn = document.getElementById('btnThemeToggle');
     if (btn) {
-      btn.innerHTML = '🌙 Modo Oscuro';
+      btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
     }
   });
 })();
