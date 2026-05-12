@@ -1,5 +1,5 @@
 (function() {
-  // Definir función global primero (antes de cualquier operación que pueda fallar)
+  // Definir función global para cambiar tema
   window.toggleTheme = function() {
     const isDark = document.body.classList.toggle('dark-mode');
     const newTheme = isDark ? 'dark' : 'light';
@@ -12,17 +12,31 @@
     }
   };
 
-  // Inicializar: SIEMPRE claro por defecto (ignorar localStorage para el inicio)
-  // Solo aplicar modo oscuro si el usuario EXPLICITAMENTE lo activó en esta sesión
-  document.addEventListener('DOMContentLoaded', () => {
-    // Siempre iniciar en modo claro (eliminar dark-mode si existe)
+  // Inicializar tema inmediatamente (antes de DOMContentLoaded)
+  const savedTheme = localStorage.getItem('sgi_theme');
+  const isDark = savedTheme === 'dark';
+
+  // Función para aplicar tema al body
+  function applyTheme() {
     if (document.body) {
-      document.body.classList.remove('dark-mode');
+      if (isDark) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
     }
 
     const btn = document.getElementById('btnThemeToggle');
     if (btn) {
-      btn.innerHTML = '🌙 Modo Oscuro';
+      btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
     }
-  });
+  }
+
+  // Aplicar inmediatamente si body ya existe
+  if (document.body) {
+    applyTheme();
+  }
+
+  // También aplicar cuando DOM esté listo
+  document.addEventListener('DOMContentLoaded', applyTheme);
 })();
