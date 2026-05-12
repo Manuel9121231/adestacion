@@ -49,6 +49,7 @@
       color: var(--text);
       line-height: 1.5;
       padding-bottom: 40px;
+      overflow-y: scroll;
     }
     body, body * { transition-duration: 0s !important; }
 
@@ -625,6 +626,11 @@
     `;
   }
 
+  function fuzzyMatch(q, text) {
+    const pattern = q.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+    return new RegExp(pattern, 'i').test(text);
+  }
+
   function filterMachines() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
     const sections = document.querySelectorAll('.sala-section');
@@ -640,7 +646,7 @@
           return;
         }
         const fields = [card.dataset.nombre||'', card.dataset.tipo||'', card.dataset.badge||'', sec.dataset.sala||''];
-        const visible = fields.some(f => f.includes(q));
+        const visible = fields.some(f => fuzzyMatch(q, f));
         card.style.display = visible ? 'flex' : 'none';
         if (visible) hasVisible = true;
       });

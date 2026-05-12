@@ -53,6 +53,7 @@
       color: var(--text);
       line-height: 1.5;
       padding-bottom: 40px;
+      overflow-y: scroll;
     }
     body, body * { transition-duration: 0s !important; }
 
@@ -698,6 +699,11 @@
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    function fuzzyMatch(q, text) {
+      const pattern = q.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+      return new RegExp(pattern, 'i').test(text);
+    }
+
     function filterMachines() {
       const q = document.getElementById('searchInput').value.toLowerCase().trim();
       const bySala = {};
@@ -709,7 +715,7 @@
           return;
         }
         const fields = [(m.nombre||''), (m.codigo||''), salaName, (m.tipo||''), (m.notas||'')];
-        const match = fields.some(f => f.toLowerCase().includes(q));
+        const match = fields.some(f => fuzzyMatch(q, f));
         if (match) {
           if (!bySala[salaName]) bySala[salaName] = [];
           bySala[salaName].push(m);
