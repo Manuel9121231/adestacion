@@ -435,9 +435,10 @@
           if (navOperario) navOperario.style.display = 'flex';
           if (navAdmin) navAdmin.style.display = 'none';
         } else if (rol === 'tecnico') {
-          // Técnico - ver Portal Operario, Estado Público (NO Admin)
+          // Técnico - ver Portal Operario, Estado Público y acceso al Admin
+          // (los permisos dentro del panel seguirán aplicándose en admin.js)
           if (navOperario) navOperario.style.display = 'flex';
-          if (navAdmin) navAdmin.style.display = 'none';
+          if (navAdmin) navAdmin.style.display = 'flex';
         } else if (rol === 'admin') {
           // Admin - ver todos los paneles
           if (navOperario) navOperario.style.display = 'flex';
