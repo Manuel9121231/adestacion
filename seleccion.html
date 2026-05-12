@@ -2,325 +2,721 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Seleccionar Equipo — Estación</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
-  <link rel="stylesheet" href="css/mobile.css">
-  <script src="js/theme.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --accent: #3b82f6;
+      --ok: #10b981;
+      --err: #ef4444;
+      --warn: #f59e0b;
+      --inactive: #6b7280;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: var(--bg);
-      color: var(--text);
       font-family: 'Inter', sans-serif;
-      margin: 0; padding: 20px;
-      padding-top: 80px;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    /* User Info Panel */
-    .user-panel {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: #ffffff;
-      border-bottom: 1px solid var(--border);
-      padding: 12px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 1000;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .user-name {
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    .user-role {
-      font-size: 12px;
-      color: var(--text-muted);
       background: var(--bg);
-      padding: 4px 10px;
-      border-radius: 12px;
-    }
-
-    .user-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .user-btn {
-      padding: 6px 12px;
-      font-size: 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #ffffff;
       color: var(--text);
-      cursor: pointer;
-      transition: all 0.2s;
+      line-height: 1.5;
+      padding-bottom: 40px;
     }
 
-    .user-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
+    /* ══ HEADER ═══════════════════════════════════════════ */
+    header {
+      background: #1e3a8a;
+      border-bottom: 1px solid #1e40af;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
     }
-
-    .user-btn.logout {
-      color: #ef4444;
-      border-color: rgba(239, 68, 68, 0.3);
-    }
-
-    .user-btn.logout:hover {
-      background: rgba(239, 68, 68, 0.1);
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding-top: 20px;
-    }
-    .header {
-      margin-bottom: 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .header h1 {
-      font-size: 24px;
-      font-weight: 800;
-      margin: 0;
-    }
-    .sala-section { margin-bottom: 32px; }
-    .sala-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
-    }
-    .sala-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-    @media (min-width: 600px) {
-      .sala-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    .machine-card {
-      background: var(--card);
-      border-radius: 16px;
-      padding: 12px 16px;
+    .header-top {
       display: flex;
       align-items: center;
       gap: 16px;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s, background 0.3s;
+      max-width: 1200px;
+      margin: 0 auto 12px;
     }
-    .machine-card:active {
-      transform: scale(0.98);
-      border-color: var(--accent);
-    }
-    .machine-icon { font-size: 28px; flex-shrink: 0; display: block; }
-    .machine-info { flex: 1; text-align: left; }
-    .machine-name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
-    .machine-code { font-size: 11px; color: var(--accent); font-weight: 800; }
-    .machine-arrow { opacity: 0.3; font-weight: bold; font-size: 16px; transition: opacity 0.2s; }
-    .machine-card:hover .machine-arrow { opacity: 1; color: var(--accent); }
-    .loader { text-align: center; padding: 60px; opacity: 0.6; }
-    .btn-back {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 8px 16px;
-      border-radius: 12px;
+    .back-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      color: #bfdbfe;
       text-decoration: none;
+      transition: all 0.2s;
+      background: rgba(255,255,255,0.1);
+    }
+    .back-btn:hover { color: #ffffff; background: rgba(255,255,255,0.2); }
+    .header-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
+    .header-title p { font-size: 13px; color: #bfdbfe; }
+    .header-user {
+      flex: 1;
       font-size: 13px;
+      color: #bfdbfe;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+    .header-user strong {
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .account-btn {
+      position: relative;
+      margin-left: 12px;
+      flex-shrink: 0;
+    }
+    .account-btn-trigger {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: rgba(255,255,255,0.15);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .account-btn-trigger:hover { background: rgba(255,255,255,0.25); }
+    .account-btn-trigger svg { width: 16px; height: 16px; }
+    .account-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      min-width: 180px;
+      overflow: hidden;
+      z-index: 200;
+    }
+    .account-dropdown.open { display: block; }
+    .account-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      font-family: inherit;
+      text-align: left;
+    }
+    .account-dropdown-item:hover { background: #f1f5f9; }
+    .account-dropdown-item.danger { color: var(--err); }
+    .account-dropdown-item.danger:hover { background: #fef2f2; }
+    .account-dropdown-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+    .header-bottom {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .search-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-size: 14px;
+      outline: none;
       transition: all 0.2s;
     }
-    .btn-back:hover { background: var(--border); }
-
-    .status-badge {
-      font-size: 9px;
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-weight: 800;
-      text-transform: uppercase;
-      display: inline-block;
-      margin-top: 4px;
+    .search-input::placeholder {
+      color: rgba(255,255,255,0.5);
     }
-    .status-activa { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .status-inactiva { background: rgba(107, 114, 128, 0.15); color: #6b7280; border: 1px solid rgba(107, 114, 128, 0.3); }
-    .status-revision { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .status-averiada { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .search-input:focus {
+      background: rgba(255,255,255,0.15);
+      border-color: rgba(255,255,255,0.3);
+    }
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.6);
+      width: 20px;
+      height: 20px;
+    }
+
+    /* ══ CONTENIDO ════════════════════════════════════════ */
+    main {
+      max-width: 1400px;
+      margin: 24px auto;
+      padding: 0 20px;
+    }
+    .layout {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    .sidebar {
+      width: 200px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 140px;
+      align-self: flex-start;
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+      padding-right: 8px;
+      z-index: 50;
+    }
+    .sidebar-item {
+      padding: 12px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 4px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sidebar-item:hover {
+      background: #dbeafe;
+      border-color: #60a5fa;
+      transform: translateX(4px);
+    }
+    .sidebar-item:active {
+      transform: scale(0.98);
+    }
+    .sidebar-item.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #2563eb;
+    }
+    .content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sala-section { margin-bottom: 40px; }
+    .sala-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+    .sala-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .sala-badge {
+      background: var(--accent);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .sala-badge-ratio {
+      background: var(--accent);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .machine-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    /* ══ TARJETA (CARD) ═══════════════════════════════════ */
+    .m-card {
+      background: #dbeafe;
+      border: 1px solid #60a5fa;
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.15);
+      cursor: pointer;
+    }
+    .m-card.warn {
+      background: #fffbeb;
+      border-color: #fcd34d;
+      box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.15);
+    }
+    .m-card.inactive {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+      box-shadow: 0 4px 6px -1px rgba(107, 114, 128, 0.15);
+      opacity: 0.85;
+    }
+    .m-card.down {
+      background: #fee2e2;
+      border-color: #f87171;
+      box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15);
+    }
+    .m-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 12px -2px rgba(59, 130, 246, 0.25);
+    }
+    .m-card.warn:hover {
+      box-shadow: 0 8px 12px -2px rgba(245, 158, 11, 0.25);
+    }
+    .m-card.inactive:hover {
+      opacity: 1;
+      box-shadow: 0 8px 12px -2px rgba(107, 114, 128, 0.25);
+    }
+    .m-card.down:hover {
+      box-shadow: 0 8px 12px -2px rgba(239, 68, 68, 0.25);
+    }
+
+    .m-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .m-status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 6px;
+    }
+    .status-ok       { background: var(--ok);       box-shadow: 0 0 8px var(--ok); }
+    .status-warn     { background: var(--warn);     box-shadow: 0 0 8px var(--warn); }
+    .status-inactive { background: var(--inactive); box-shadow: 0 0 6px var(--inactive); }
+    .status-err      { background: var(--err);      box-shadow: 0 0 8px var(--err); }
+
+    .m-info { flex: 1; padding: 0 10px; }
+    .m-name { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
+    .m-type { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+    .m-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+    .badge-ok       { background: #ecfdf5; color: var(--ok); }
+    .badge-warn      { background: #fffbeb; color: #b45309; }
+    .badge-inactive  { background: #f3f4f6; color: #374151; }
+    .badge-err       { background: #fef2f2; color: var(--err); }
+
+    .m-details {
+      padding-top: 12px;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .m-nota { font-size: 12px; color: var(--text-muted); font-style: italic; }
+    .m-estado-sub {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--ok);
+      background: #ecfdf5;
+      border-radius: 4px;
+      padding: 1px 5px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e2e8f0;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) {
+      .layout {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .sidebar {
+        position: static;
+        width: 100%;
+        max-height: none;
+        padding-right: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .sidebar-item {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+        margin-bottom: 0;
+      }
+      .machine-grid { grid-template-columns: 1fr; }
+      .header-title h1 { font-size: 16px; }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
 </head>
 <body>
 
-  <!-- User Info Panel -->
-  <div class="user-panel" id="userPanel">
-    <div class="user-info">
-      <div class="user-name" id="userName">Cuenta sin iniciar</div>
-      <div class="user-role" id="userRole">Sin sesión</div>
+<header>
+  <div class="header-top">
+    <a href="index.html" class="back-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    </a>
+    <div class="header-title">
+      <h1>Seleccionar Equipo</h1>
+      <p id="statsLabel">Cargando disponibilidad...</p>
     </div>
-    <div class="user-actions">
-      <button class="user-btn" id="btnChangeAccount" onclick="window.location.href='registro.html'" style="display:none">Cambiar cuenta</button>
-      <button class="user-btn logout" id="btnLogout" onclick="cerrarSesion()" style="display:none">Cerrar sesión</button>
+    <div class="header-user" id="headerUser" style="display:none">
+      <span>Sesión iniciada como:</span><strong id="headerUserName"></strong><span>·</span><span>Rol:</span><strong id="headerUserRole"></strong>
+    </div>
+    <div class="account-btn" id="accountBtn">
+      <button class="account-btn-trigger" onclick="toggleAccountMenu()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Cuenta
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="account-dropdown" id="accountDropdown">
+        <button class="account-dropdown-item" onclick="cambiarCuenta()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Cambiar cuenta
+        </button>
+        <button class="account-dropdown-item danger" onclick="cerrarSesion()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
     </div>
   </div>
-
-  <div class="container">
-    <div class="header">
-      <h1>Portal Operario</h1>
-      <a href="index.html" class="btn-back">← Volver</a>
+  <div class="header-bottom">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre, sala o etiqueta..." oninput="filterMachines()">
     </div>
-
-    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 30px;">
-      Selecciona la máquina que deseas reportar:
-    </p>
-
-    <div id="loading" class="loader">
-      <p>Cargando equipos...</p>
-    </div>
-
-    <div class="machine-grid" id="machineGrid"></div>
   </div>
+</header>
+
+<main id="mainContent">
+  <div id="loader">
+    <div class="spinner"></div>
+    <p>Consultando base de datos...</p>
+  </div>
+  <div class="layout" id="layoutContainer" style="display:none">
+    <aside class="sidebar" id="sidebarSalas"></aside>
+    <div class="content" id="contentArea"></div>
+  </div>
+</main>
 
   <script>
-    // Update user panel
-    function updateUserPanel() {
+    // Guard: require session
+    (function checkSession() {
+      const user  = localStorage.getItem('sgi_user_session');
+      const admin = localStorage.getItem('sgi_admin_session');
+      if (!user && !admin) window.location.replace('registro.html');
+    })();
+
+    let allData = {};
+    let rawMachines = [];
+    let scrollSpyEnabled = true;
+
+    async function loadStatus() {
       try {
-        const sessionStr = localStorage.getItem('sgi_user_session');
-        const adminSessionStr = localStorage.getItem('sgi_admin_session');
-        const userNameEl = document.getElementById('userName');
-        const userRoleEl = document.getElementById('userRole');
-        const btnChangeAccount = document.getElementById('btnChangeAccount');
-        const btnLogout = document.getElementById('btnLogout');
+        if (!window.supabaseClient) { setTimeout(loadStatus, 500); return; }
+        const c = window.supabaseClient;
 
-        // Verificar si hay sesión de administrador
-        if (adminSessionStr && !sessionStr) {
-          const adminSession = JSON.parse(adminSessionStr);
-          const nombre = adminSession.username || 'Administrador';
-          userNameEl.textContent = nombre;
-          userRoleEl.textContent = 'Administrador';
-          btnChangeAccount.style.display = 'none';
-          btnLogout.style.display = 'block';
-          return;
-        }
+        const [mRes, iRes] = await Promise.all([
+          c.from('equipos').select('id,nombre,codigo,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
+          c.from('registros').select('maquina_id').eq('tipo','Incidencia').eq('resuelta',false)
+        ]);
 
-        if (!sessionStr) {
-          userNameEl.textContent = 'Cuenta sin iniciar';
-          userRoleEl.textContent = 'Sin sesión';
-          btnChangeAccount.style.display = 'none';
-          btnLogout.style.display = 'none';
-          return;
-        }
+        if (mRes.error) throw mRes.error;
 
-        const session = JSON.parse(sessionStr);
-        const rol = session.rol || 'usuario';
-        const nombre = session.nombre || session.email || 'Usuario';
+        rawMachines = mRes.data || [];
+        const incidencias = iRes.data || [];
+        const downIds = new Set(incidencias.map(i => i.maquina_id));
 
-        userNameEl.textContent = nombre;
-        const roleLabels = {
-          'usuario': 'Usuario',
-          'tecnico': 'Técnico',
-          'admin': 'Administrador'
-        };
-        userRoleEl.textContent = roleLabels[rol] || rol;
-        btnChangeAccount.style.display = 'block';
-        btnLogout.style.display = 'block';
-      } catch (err) {
-        console.error('Error updating user panel:', err);
+        const bySala = {};
+        rawMachines.forEach(m => {
+          const salaName = m.salas?.nombre || 'Sin Sala';
+          if (!bySala[salaName]) bySala[salaName] = [];
+
+          const inactiva = (m.estado||'').toLowerCase().trim() !== 'activa';
+          const incidencia = downIds.has(m.id);
+          const down = inactiva || incidencia;
+
+          // Build status text: always show operational status + incident if applicable
+          let statusParts = [m.estado || 'Activa'];
+          if (incidencia) statusParts.push('Incidencia');
+          const motivo = statusParts.join(' + ');
+
+          m.down = down;
+          m.motivo = motivo;
+          m.inactiva = inactiva;
+          m.incidencia = incidencia;
+          bySala[salaName].push(m);
+        });
+
+        allData = bySala;
+        const totOk  = rawMachines.filter(m => !m.down).length;
+        const totErr = rawMachines.filter(m =>  m.down).length;
+        document.getElementById('statsLabel').textContent = `${totOk} disponibles · ${totErr} fuera de servicio`;
+        renderData(bySala);
+
+      } catch(e) {
+        console.error(e);
+        document.getElementById('mainContent').innerHTML = `<div class="empty-state">⚠ Error al conectar con el servidor. Reintenta recargando la página.</div>`;
       }
     }
 
-    // Cerrar sesión
+    function renderData(data) {
+      const loader = document.getElementById('loader');
+      const layoutContainer = document.getElementById('layoutContainer');
+      const sidebar = document.getElementById('sidebarSalas');
+      const contentArea = document.getElementById('contentArea');
+
+      const sortedSalas = Object.keys(data).sort();
+
+      if (sortedSalas.length === 0) {
+        loader.innerHTML = `<div class="empty-state">No se encontraron equipos.</div>`;
+        return;
+      }
+
+      loader.style.display = 'none';
+      layoutContainer.style.display = 'flex';
+
+      // Render sidebar
+      sidebar.innerHTML = sortedSalas.map(sala => {
+        const count = data[sala].length;
+        return `
+          <div class="sidebar-item" data-sala="${sala.toLowerCase()}" onclick="scrollToSala('${sala.toLowerCase()}')">
+            ${sala} <span style="font-size:12px;opacity:0.6;margin-left:auto">${count}</span>
+          </div>
+        `;
+      }).join('');
+
+      // Render content
+      contentArea.innerHTML = sortedSalas.map(sala => {
+        const machines = data[sala];
+        return `
+          <section class="sala-section" data-sala="${sala.toLowerCase()}" id="sala-${sala.toLowerCase()}">
+            <div class="sala-header">
+              <h2>${sala}</h2>
+              <span class="sala-badge">${machines.length} equipos</span>
+              <span class="sala-badge-ratio">${machines.filter(m => !m.down).length}/${machines.length} disponibles</span>
+            </div>
+            <div class="machine-grid">
+              ${machines.map(m => machineHTML(m)).join('')}
+            </div>
+          </section>
+        `;
+      }).join('');
+
+      // Setup scroll spy
+      setupScrollSpy();
+    }
+
+    function scrollToSala(salaName) {
+      // Disable scroll spy during manual click
+      scrollSpyEnabled = false;
+
+      // Set active class immediately for visual feedback
+      const sidebarItems = document.querySelectorAll('.sidebar-item');
+      sidebarItems.forEach(item => {
+        item.classList.toggle('active', item.dataset.sala === salaName);
+      });
+
+      const section = document.getElementById(`sala-${salaName}`);
+      if (section) {
+        const yOffset = -160; // offset for header
+        const y = section.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+
+        // Re-enable scroll spy after scroll completes
+        setTimeout(() => {
+          scrollSpyEnabled = true;
+        }, 800);
+      } else {
+        scrollSpyEnabled = true;
+      }
+    }
+
+    // Scroll spy para resaltar sala activa
+    function setupScrollSpy() {
+      const sections = document.querySelectorAll('.sala-section');
+      const sidebarItems = document.querySelectorAll('.sidebar-item');
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && scrollSpyEnabled) {
+            const salaName = entry.target.dataset.sala;
+            sidebarItems.forEach(item => {
+              item.classList.toggle('active', item.dataset.sala === salaName);
+            });
+          }
+        });
+      }, { threshold: 0.3, rootMargin: '-100px 0px -70% 0px' });
+
+      sections.forEach(section => observer.observe(section));
+    }
+
+    function machineHTML(m) {
+      let statusClass, badgeClass, cardClass, badgeText;
+
+      if (!m.inactiva && !m.incidencia) {
+        statusClass = 'status-ok';
+        badgeClass  = 'badge-ok';
+        badgeText   = 'Activa';
+        cardClass   = 'm-card';
+      } else if (!m.inactiva && m.incidencia) {
+        statusClass = 'status-warn';
+        badgeClass  = 'badge-warn';
+        badgeText   = 'Activa';
+        cardClass   = 'm-card warn';
+      } else if (m.inactiva && !m.incidencia) {
+        statusClass = 'status-inactive';
+        badgeClass  = 'badge-inactive';
+        badgeText   = m.motivo;
+        cardClass   = 'm-card inactive';
+      } else {
+        statusClass = 'status-err';
+        badgeClass  = 'badge-err';
+        badgeText   = m.estado || 'Inactiva';
+        cardClass   = 'm-card down';
+      }
+
+      let detailsHTML = '';
+      if (m.incidencia) detailsHTML += `<span class="m-badge ${m.inactiva ? 'badge-err' : 'badge-warn'}" style="align-self:flex-start">Incidencia</span>`;
+      if (m.notas) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
+
+      return `
+        <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}" onclick="window.location.href='operario.html?maquinaId=${m.id}'">
+          <div class="m-top">
+            <div class="m-status-dot ${statusClass}"></div>
+            <div class="m-info">
+              <div class="m-name">${esc(m.nombre)}</div>
+              <div class="m-type">${esc(m.tipo)}</div>
+            </div>
+            <span class="m-badge ${badgeClass}">${badgeText}</span>
+          </div>
+          ${detailsHTML ? `<div class="m-details">${detailsHTML}</div>` : ''}
+        </div>
+      `;
+    }
+
+    function esc(s) {
+      if (!s) return '';
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function filterMachines() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const bySala = {};
+      rawMachines.forEach(m => {
+        const salaName = m.salas?.nombre || 'Sin Sala';
+        const match = (m.nombre||'').toLowerCase().includes(q) ||
+                     (m.codigo||'').toLowerCase().includes(q) ||
+                     salaName.toLowerCase().includes(q) ||
+                     (m.notas||'').toLowerCase().includes(q);
+        if (match) {
+          if (!bySala[salaName]) bySala[salaName] = [];
+          bySala[salaName].push(m);
+        }
+      });
+      renderData(bySala);
+    }
+
+    function toggleAccountMenu() {
+      document.getElementById('accountDropdown').classList.toggle('open');
+    }
+
     function cerrarSesion() {
       localStorage.removeItem('sgi_user_session');
       localStorage.removeItem('sgi_admin_session');
       window.location.href = 'index.html';
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      updateUserPanel();
+    function cambiarCuenta() {
+      window.location.href = 'registro.html';
+    }
 
-      // Reintento autónomo si el cliente no está listo
-      if (!window.supabaseClient) {
-        setTimeout(() => location.reload(), 500);
-        return;
-      }
-
-      const client = window.supabaseClient;
-
-      try {
-        const { data, error } = await client
-          .from('equipos')
-          .select('*, salas(nombre)')
-          .order('nombre', { ascending: true });
-
-        if (error) throw error;
-
-        const gridContainer = document.getElementById('machineGrid');
-        document.getElementById('loading').style.display = 'none';
-
-        // Agrupar por sala
-        const bySala = {};
-        data.forEach(m => {
-          const salaName = m.salas?.nombre || 'Sin Sala';
-          if (!bySala[salaName]) bySala[salaName] = [];
-          bySala[salaName].push(m);
-        });
-
-        // Generar secciones por sala
-        Object.keys(bySala).sort().forEach(salaName => {
-          const section = document.createElement('div');
-          section.className = 'sala-section';
-          section.innerHTML = `<div class="sala-title">${salaName}</div><div class="sala-grid"></div>`;
-          const salaGrid = section.querySelector('.sala-grid');
-
-          bySala[salaName].forEach(m => {
-            const card = document.createElement('div');
-            const statusClass = `status-${m.estado || 'activa'}`;
-            const statusLabel = (m.estado || 'activa').replace('_', ' ');
-            
-            card.className = `machine-card`;
-            card.onclick = () => window.location.href = `operario.html?maquinaId=${m.id}`;
-            
-            card.innerHTML = `
-              <span class="machine-icon">🖨️</span>
-              <div class="machine-info">
-                <div class="machine-name">${m.nombre}</div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <div class="machine-code">${m.codigo || 'S/ID'}</div>
-                  <div class="status-badge ${statusClass}">${statusLabel}</div>
-                </div>
-              </div>
-              <span class="machine-arrow">→</span>
-            `;
-            salaGrid.appendChild(card);
-          });
-          
-          gridContainer.appendChild(section);
-        });
-
-      } catch (err) {
-        document.getElementById('loading').innerHTML = '<p style="color:red">Error de conexión</p>';
-        console.error(err);
+    document.addEventListener('click', function(e) {
+      const btn = document.getElementById('accountBtn');
+      if (btn && !btn.contains(e.target)) {
+        document.getElementById('accountDropdown').classList.remove('open');
       }
     });
+
+    loadStatus();
+
+    (function loadUserInfo() {
+      try {
+        const adminStr = localStorage.getItem('sgi_admin_session');
+        const userStr  = localStorage.getItem('sgi_user_session');
+        const el       = document.getElementById('headerUser');
+        const nameEl   = document.getElementById('headerUserName');
+        const roleEl   = document.getElementById('headerUserRole');
+        const roleLabels = { usuario: 'Usuario', tecnico: 'Técnico', admin: 'Admin' };
+
+        if (adminStr && !userStr) {
+          const s = JSON.parse(adminStr);
+          nameEl.textContent = s.username || 'Administrador';
+          roleEl.textContent = 'Admin';
+          el.style.display = 'flex';
+        } else if (userStr) {
+          const s = JSON.parse(userStr);
+          nameEl.textContent = s.nombre || s.email || 'Usuario';
+          roleEl.textContent = roleLabels[s.rol] || s.rol || 'Usuario';
+          el.style.display = 'flex';
+        }
+      } catch(e) {}
+    })();
   </script>
 </body>
 </html>
