@@ -1758,9 +1758,9 @@ async function intentarLogin() {
     } catch (e) { console.warn('Perfil no encontrado:', e.message); }
 
     const rol = perfil?.rol || 'usuario';
-    if (rol !== 'admin') {
+    if (rol !== 'admin' && rol !== 'tecnico') {
       await client.auth.signOut();
-      throw new Error('No tienes permisos de administrador.');
+      throw new Error('No tienes permisos de administrador o técnico.');
     }
 
     localStorage.setItem('sgi_admin_session', JSON.stringify({
