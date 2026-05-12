@@ -29,6 +29,7 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+    body, body * { transition-duration: 0s !important; }
 
     body {
       background: var(--bg);
@@ -97,30 +98,61 @@
       color: var(--accent);
     }
 
-    .user-btn {
-      padding: 6px 12px;
-      font-size: 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--card-bg);
+    .account-btn {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .account-btn-trigger {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: var(--bg);
       color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
+      font-family: inherit;
     }
-
-    .user-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
+    .account-btn-trigger:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
+    .account-btn-trigger svg { width: 16px; height: 16px; }
+    .account-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      min-width: 180px;
+      overflow: hidden;
+      z-index: 200;
     }
-
-    .user-btn.logout {
-      color: var(--danger);
-      border-color: rgba(239, 68, 68, 0.3);
+    .account-dropdown.open { display: block; }
+    .account-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
     }
-
-    .user-btn.logout:hover {
-      background: rgba(239, 68, 68, 0.1);
-    }
+    .account-dropdown-item:hover { background: var(--bg); }
+    .account-dropdown-item.danger { color: var(--danger); }
+    .account-dropdown-item.danger:hover { background: rgba(239,68,68,0.08); }
+    .account-dropdown-item svg { width: 15px; height: 15px; flex-shrink: 0; }
 
     .hero {
       text-align: center;
@@ -297,8 +329,23 @@
     </div>
     <div class="user-actions">
       <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
-      <button class="user-btn" id="btnChangeAccount" onclick="window.location.href='registro.html'" style="display:none">Cambiar cuenta</button>
-      <button class="user-btn logout" id="btnLogout" onclick="cerrarSesion()" style="display:none">Cerrar sesión</button>
+      <div class="account-btn" id="accountBtn" style="display:none">
+        <button class="account-btn-trigger" onclick="toggleAccountMenu()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          Cuenta
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="account-dropdown" id="accountDropdown">
+          <button class="account-dropdown-item" id="btnChangeAccount" onclick="window.location.href='registro.html'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Cambiar cuenta
+          </button>
+          <button class="account-dropdown-item danger" id="btnLogout" onclick="cerrarSesion()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -392,8 +439,7 @@
           const nombre = adminSession.username || adminSession.nombre || 'Administrador';
           userNameEl.textContent = nombre;
           userRoleEl.textContent = 'Administrador';
-          btnChangeAccount.style.display = 'none';
-          btnLogout.style.display = 'block';
+          document.getElementById('accountBtn').style.display = 'block';
           if (navUsuarios) navUsuarios.style.display = 'none';
           if (navOperario) navOperario.style.display = 'flex';
           if (navAdmin) navAdmin.style.display = 'flex';
@@ -404,8 +450,7 @@
           // Usuario sin cuenta - solo ver Estado Público y Acceso Usuarios
           userNameEl.textContent = 'Cuenta sin iniciar';
           userRoleEl.textContent = 'Sin sesión';
-          btnChangeAccount.style.display = 'none';
-          btnLogout.style.display = 'none';
+          document.getElementById('accountBtn').style.display = 'none';
           if (navOperario) navOperario.style.display = 'none';
           if (navAdmin) navAdmin.style.display = 'none';
           if (navUsuarios) navUsuarios.style.display = 'flex';
@@ -424,8 +469,7 @@
           'admin': 'Administrador'
         };
         userRoleEl.textContent = roleLabels[rol] || rol;
-        btnChangeAccount.style.display = 'block';
-        btnLogout.style.display = 'block';
+        document.getElementById('accountBtn').style.display = 'block';
 
         // Ocultar "Acceso Usuarios" cuando hay sesión activa
         if (navUsuarios) navUsuarios.style.display = 'none';
@@ -452,6 +496,17 @@
         console.error('Error checking user role:', err);
       }
     }
+
+    function toggleAccountMenu() {
+      document.getElementById('accountDropdown').classList.toggle('open');
+    }
+
+    document.addEventListener('click', function(e) {
+      const btn = document.getElementById('accountBtn');
+      if (btn && !btn.contains(e.target)) {
+        document.getElementById('accountDropdown').classList.remove('open');
+      }
+    });
 
     // Cerrar sesión
     function cerrarSesion() {
