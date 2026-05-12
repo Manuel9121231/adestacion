@@ -122,6 +122,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
+    // Restaurar sección guardada al refrescar (si existe)
+    const savedSection = localStorage.getItem('sgi_admin_section');
+    if (savedSection && savedSection !== 'dashboard') {
+      navigateTo(savedSection);
+    }
+
     const grid = document.getElementById('gridMaquinas');
     if (grid) grid.innerHTML = skeletonMaquinas();
     const tbody = document.getElementById('dashboardUltimos');
@@ -353,6 +359,9 @@ function navigateTo(section) {
   const [title, sub] = sectionTitles[section] || [section, ''];
   document.getElementById('topbarTitle').textContent = title;
   document.getElementById('topbarSubtitle').textContent = sub;
+
+  // Guardar sección actual para persistencia al refrescar
+  localStorage.setItem('sgi_admin_section', section);
 
   // Cargar datos bajo demanda
   if (section === 'maquinas') renderMaquinas();
@@ -1880,9 +1889,9 @@ function renderListaSalas() {
         >
       </td>
       <td style="padding:10px;text-align:right">
-        <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:rgba(239,68,68,0.2)" 
+        <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:rgba(239,68,68,0.2);font-weight:bold" 
           onclick="borrarSala('${s.id}', '${s.nombre}')">
-          🗑️
+          ✕
         </button>
       </td>
     </tr>
