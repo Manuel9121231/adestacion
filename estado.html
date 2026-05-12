@@ -611,7 +611,7 @@
     if (m.notas) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
 
     return `
-      <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}">
+      <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}" data-tipo="${(m.tipo||'').toLowerCase()}">
         <div class="m-top">
           <div class="m-status-dot ${statusClass}"></div>
           <div class="m-info">
@@ -625,19 +625,30 @@
     `;
   }
 
+  function fuzzyMatch(query, text) {
+    let qi = 0;
+    for (let i = 0; i < text.length && qi < query.length; i++) {
+      if (text[i] === query[qi]) qi++;
+    }
+    return qi === query.length;
+  }
+
   function filterMachines() {
-    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
     const sections = document.querySelectorAll('.sala-section');
-    
+
     sections.forEach(sec => {
-      const salaName = sec.dataset.sala;
       const cards = sec.querySelectorAll('.m-card');
       let hasVisible = false;
 
       cards.forEach(card => {
-        const machineName = card.dataset.nombre;
-        const badgeText = card.dataset.badge;
-        const visible = machineName.includes(query) || salaName.includes(query) || badgeText.includes(query);
+        if (!q) {
+          card.style.display = 'flex';
+          hasVisible = true;
+          return;
+        }
+        const haystack = [card.dataset.nombre||'', card.dataset.tipo||'', card.dataset.badge||'', sec.dataset.sala||''].join(' ');
+        const visible = fuzzyMatch(q, haystack);
         card.style.display = visible ? 'flex' : 'none';
         if (visible) hasVisible = true;
       });

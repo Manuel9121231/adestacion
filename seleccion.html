@@ -698,16 +698,26 @@
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    function fuzzyMatch(query, text) {
+      let qi = 0;
+      for (let i = 0; i < text.length && qi < query.length; i++) {
+        if (text[i] === query[qi]) qi++;
+      }
+      return qi === query.length;
+    }
+
     function filterMachines() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
       const bySala = {};
       rawMachines.forEach(m => {
         const salaName = m.salas?.nombre || 'Sin Sala';
-        const match = (m.nombre||'').toLowerCase().includes(q) ||
-                     (m.codigo||'').toLowerCase().includes(q) ||
-                     salaName.toLowerCase().includes(q) ||
-                     (m.notas||'').toLowerCase().includes(q);
-        if (match) {
+        if (!q) {
+          if (!bySala[salaName]) bySala[salaName] = [];
+          bySala[salaName].push(m);
+          return;
+        }
+        const haystack = [(m.nombre||''), (m.codigo||''), salaName, (m.tipo||''), (m.notas||'')].join(' ').toLowerCase();
+        if (fuzzyMatch(q, haystack)) {
           if (!bySala[salaName]) bySala[salaName] = [];
           bySala[salaName].push(m);
         }
