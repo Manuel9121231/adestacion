@@ -63,7 +63,8 @@ function getNombreAdmin() {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const sessionStr = localStorage.getItem('sgi_admin_session');
+  const adminSessionStr = localStorage.getItem('sgi_admin_session');
+  const userSessionStr  = localStorage.getItem('sgi_user_session');
   detectarServidor(); // Cargar IP real para los QRs
   await cargarRolUsuario(); // Cargar rol del usuario
 
@@ -73,8 +74,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  if (!sessionStr) return; // Esperar al login manual
-  const sgiSession = JSON.parse(sessionStr || '{}');
+  // Prefer admin session; si no, permitir sesión de 'tecnico' (usuario) para entrar
+  let sgiSession = null;
+  if (adminSessionStr) {
+    sgiSession = JSON.parse(adminSessionStr || '{}');
+  } else if (userSessionStr && (rolActual === 'tecnico' || rolActual === 'admin')) {
+    // Permitimos que técnicos accedan al panel; los permisos internos seguirán aplicándose
+    try {
+      sgiSession = JSON.parse(userSessionStr || '{}');
+      sgiSession._isUserSession = true; // marca que viene de user_session
+    } catch(e) { sgiSession = null; }
+  } else {
+    // No hay sesión adecuada: esperar a login admin
+    return;
+  }
   window.sgiAdminSession = sgiSession;
 
   try {
@@ -99,6 +112,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       const navUsuarios = document.getElementById('nav-usuarios');
       if (navQr) navQr.style.display = 'none';
       if (navUsuarios) navUsuarios.style.display = 'none';
+    }
+
+    // Ocultar controles sensibles para técnicos (solo admin puede verlos)
+    if (rolActual !== 'admin') {
+      ['btnBorrarMaquinaModal','btnNuevaMaquina','btnToggleEditarMaquina','btnGuardarMaquina','btnGestionarSalas'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
     }
 
     const grid = document.getElementById('gridMaquinas');
@@ -508,10 +529,10 @@ function renderMaquinas() {
           <span style="font-size:11px; color:var(--accent)">📍 ${m.sala_nombre || 'Sin sala'}</span>
           <span>⚙️ ${m.modelo || 'Sin modelo'}</span>
         </div>
-        <div class="maquina-actions">
-           <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); verDetalleMaquina('${m.id}')">Ver</button>
-           <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation(); eliminarMaquina('${m.id}')">Eliminar</button>
-        </div>
+          <div class="maquina-actions">
+            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); verDetalleMaquina('${m.id}')">Ver</button>
+            ${rolActual === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation(); eliminarMaquina('${m.id}')">Eliminar</button>` : ''}
+          </div>
       </div>
     `;
   }
@@ -698,6 +719,10 @@ async function editarMaquina(id) {
 }
 
 async function guardarMaquina() {
+  if (rolActual !== 'admin') {
+    showFeedback('Acceso denegado', 'Solo los administradores pueden guardar cambios en máquinas.', '🔒');
+    return;
+  }
   const id = document.getElementById('editMaquinaId').value;
   let tipo = document.getElementById('editTipo').value;
 
@@ -804,6 +829,10 @@ async function handleTipoChange() {
 }
 
 async function crearMaquina() {
+  if (rolActual !== 'admin') {
+    showFeedback('Acceso denegado', 'Solo los administradores pueden crear máquinas.', '🔒');
+    return;
+  }
   const nombre = document.getElementById('nuevoMaquinaNombre').value.trim();
   const sala_id = document.getElementById('nuevoMaquinaSala').value;
   let tipo = document.getElementById('nuevoMaquinaTipo').value;
@@ -857,6 +886,10 @@ async function crearMaquina() {
 }
 
 async function eliminarMaquina(id) {
+  if (rolActual !== 'admin') {
+    showFeedback('Acceso denegado', 'Solo los administradores pueden eliminar máquinas.', '🔒');
+    return;
+  }
   const ok = await customConfirm(
     'Eliminar máquina',
     '¿Estás seguro? Se eliminarán también todos sus registros de mantenimiento. Esta acción no se puede deshacer.',
@@ -1170,7 +1203,7 @@ async function verDetalleSesion(id) {
         <div style="display:flex;gap:8px;align-items:center;">
           <div class="estado-badge ${isInc ? 'vencido' : 'ok'}">${isInc ? 'Incidencia' : 'Mantenimiento'}</div>
           ${isInc ? `<div class="estado-badge ${resuelta ? 'ok' : 'vencido'}">${resuelta ? '✅ Resuelta' : '🚨 Sin resolver'}</div>` : ''}
-          <button class="btn btn-icon" style="background:transparent;border:none;color:var(--danger);padding:4px;font-size:16px;cursor:pointer;" onclick="eliminarIncidencia('${sesion.id}')" title="Eliminar registro">❌</button>
+          ${rolActual === 'admin' ? `<button class="btn btn-icon" style="background:transparent;border:none;color:var(--danger);padding:4px;font-size:16px;cursor:pointer;" onclick="eliminarIncidencia('${sesion.id}')" title="Eliminar registro">❌</button>` : ''}
         </div>
       </div>
 
@@ -1319,6 +1352,10 @@ async function editarDescripcionIncidencia(id) {
 }
 
 async function eliminarIncidencia(id) {
+  if (rolActual !== 'admin') {
+    showFeedback('Acceso denegado', 'Solo los administradores pueden eliminar registros.', '🔒');
+    return;
+  }
   const ok = await customConfirm(
     'Eliminar registro',
     '¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.',
@@ -1853,6 +1890,10 @@ function renderListaSalas() {
 }
 
 async function editarSala(id, nuevoNombre) {
+  if (rolActual !== 'admin') {
+    showFeedback('Acceso denegado', 'Solo los administradores pueden editar salas.', '🔒');
+    return;
+  }
   if (!nuevoNombre.trim()) return;
   try {
     const { error } = await window.supabaseClient
@@ -1869,6 +1910,10 @@ async function editarSala(id, nuevoNombre) {
 }
 
 async function crearSala() {
+  if (rolActual !== 'admin') {
+    showFeedback('Acceso denegado', 'Solo los administradores pueden crear salas.', '🔒');
+    return;
+  }
   const input = document.getElementById('nuevaSalaNombre');
   const nombre = input.value.trim();
   if (!nombre) return showFeedback('Nombre requerido', "Debes escribir un nombre para la nueva sala.", '⚠️');
@@ -1892,6 +1937,10 @@ async function crearSala() {
 }
 
 async function borrarSala(id, nombre) {
+  if (rolActual !== 'admin') {
+    showFeedback('Acceso denegado', 'Solo los administradores pueden eliminar salas.', '🔒');
+    return;
+  }
   const maquinasEnSala = datosMaquinas.filter(m => m.sala_id === id);
   if (maquinasEnSala.length > 0) {
     return showFeedback('Sala con Máquinas', `No puedes borrar la sala "${nombre}" porque tiene ${maquinasEnSala.length} máquinas asociadas.`, '⚠️');

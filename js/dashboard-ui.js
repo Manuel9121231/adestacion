@@ -410,7 +410,7 @@ const DASHBOARD_HTML = `
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-text btn-sm" onclick="eliminarMaquina(document.getElementById('editMaquinaId').value)">Borrar</button>
+        <button class="btn btn-text btn-sm" id="btnBorrarMaquinaModal" onclick="eliminarMaquina(document.getElementById('editMaquinaId').value)">Borrar</button>
         <div style="flex:1"></div>
         <button class="btn btn-outline" onclick="cerrarModal('modalMaquina')">Cancelar</button>
         <button class="btn btn-primary" id="btnGuardarMaquina" onclick="guardarMaquina()">Guardar cambios</button>

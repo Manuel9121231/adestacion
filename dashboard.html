@@ -20,8 +20,17 @@
   <script>
     // ── Guard de Seguridad Instantáneo ──
     (function() {
-      const session = localStorage.getItem('sgi_admin_session');
-      if (!session) {
+      const adminSession = localStorage.getItem('sgi_admin_session');
+      const userSession  = localStorage.getItem('sgi_user_session');
+      let allow = false;
+      if (adminSession) allow = true;
+      else if (userSession) {
+        try {
+          const s = JSON.parse(userSession);
+          if (s.rol === 'tecnico' || s.rol === 'admin') allow = true;
+        } catch (e) { /* ignore parse errors */ }
+      }
+      if (!allow) {
         document.documentElement.classList.add('auth-locked');
       }
     })();

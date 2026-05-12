@@ -336,6 +336,7 @@
       <div class="card-text">
         <h2>Administración</h2>
         <p>Gestión técnica, historial y control total del sistema.</p>
+        <div id="navAdminBadge" style="display:none;margin-top:8px;font-size:12px;color:var(--text-muted);">🔒 Acceso limitado</div>
       </div>
     </a>
   </div>
@@ -439,10 +440,13 @@
           // (los permisos dentro del panel seguirán aplicándose en admin.js)
           if (navOperario) navOperario.style.display = 'flex';
           if (navAdmin) navAdmin.style.display = 'flex';
+          const badge = document.getElementById('navAdminBadge');
+          if (badge) { badge.style.display = 'block'; badge.textContent = '🔒 Acceso limitado'; }
         } else if (rol === 'admin') {
           // Admin - ver todos los paneles
           if (navOperario) navOperario.style.display = 'flex';
           if (navAdmin) navAdmin.style.display = 'flex';
+          const badge = document.getElementById('navAdminBadge'); if (badge) badge.style.display = 'none';
         }
       } catch (err) {
         console.error('Error checking user role:', err);
