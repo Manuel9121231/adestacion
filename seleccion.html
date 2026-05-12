@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f8fafc;
+      --bg: #eef2f7;
       --card-bg: #ffffff;
       --text: #1e293b;
       --text-muted: #64748b;
@@ -17,9 +17,34 @@
       --err: #ef4444;
       --warn: #f59e0b;
       --inactive: #6b7280;
-      --border: #e2e8f0;
+      --border: #cbd5e1;
       --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     }
+
+    body.dark-mode {
+      --bg: #0f0f1a;
+      --card-bg: #1a1a2e;
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+      --accent: #4f8ef7;
+      --border: rgba(255,255,255,0.08);
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+    }
+    body.dark-mode .m-card          { background: #1e2a3a; border-color: #2d4a6e; }
+    body.dark-mode .m-card.warn     { background: #2a2010; border-color: #78450a; }
+    body.dark-mode .m-card.inactive { background: #1e1e1e; border-color: #3a3a3a; }
+    body.dark-mode .m-card.down     { background: #2a1515; border-color: #7f1d1d; }
+    body.dark-mode .badge-ok        { background: #052e16; color: #34d399; }
+    body.dark-mode .badge-warn      { background: #2a1a00; color: #fbbf24; }
+    body.dark-mode .badge-inactive  { background: #1f2937; color: #9ca3af; }
+    body.dark-mode .badge-err       { background: #2a0a0a; color: #f87171; }
+    body.dark-mode .m-details       { border-top-color: rgba(255,255,255,0.08); }
+    body.dark-mode .sidebar-item    { background: #1a1a2e; border-color: rgba(255,255,255,0.08); }
+    body.dark-mode .sidebar-item:hover { background: #1e2a3a; border-color: #4f8ef7; }
+    body.dark-mode .account-dropdown { background: #1a1a2e; border-color: rgba(255,255,255,0.1); }
+    body.dark-mode .account-dropdown-item { color: var(--text); }
+    body.dark-mode .account-dropdown-item:hover { background: #252540; }
+    body.dark-mode .account-dropdown-item.danger:hover { background: #2a0a0a; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -29,11 +54,12 @@
       line-height: 1.5;
       padding-bottom: 40px;
     }
+    body, body * { transition-duration: 0s !important; }
 
     /* ══ HEADER ═══════════════════════════════════════════ */
     header {
-      background: #1e3a8a;
-      border-bottom: 1px solid #1e40af;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
       padding: 16px 20px;
       position: sticky;
       top: 0;
@@ -54,18 +80,32 @@
       width: 40px;
       height: 40px;
       border-radius: 10px;
-      color: #bfdbfe;
+      color: var(--text);
       text-decoration: none;
       transition: all 0.2s;
-      background: rgba(255,255,255,0.1);
+      background: var(--bg);
+      border: 1px solid var(--border);
     }
-    .back-btn:hover { color: #ffffff; background: rgba(255,255,255,0.2); }
-    .header-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
-    .header-title p { font-size: 13px; color: #bfdbfe; }
+    .back-btn:hover { color: var(--accent); background: var(--bg); }
+    .theme-toggle {
+      padding: 7px 14px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    .header-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+    .header-title p { font-size: 13px; color: var(--text-muted); }
     .header-user {
       flex: 1;
       font-size: 13px;
-      color: #bfdbfe;
+      color: var(--text-muted);
       white-space: nowrap;
       display: flex;
       align-items: center;
@@ -73,7 +113,7 @@
       gap: 4px;
     }
     .header-user strong {
-      color: #ffffff;
+      color: var(--text);
       font-weight: 700;
     }
     .account-btn {
@@ -86,9 +126,9 @@
       align-items: center;
       gap: 6px;
       padding: 7px 14px;
-      background: rgba(255,255,255,0.15);
-      color: #ffffff;
-      border: none;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
       border-radius: 10px;
       font-size: 13px;
       font-weight: 600;
@@ -96,17 +136,17 @@
       transition: all 0.2s;
       font-family: inherit;
     }
-    .account-btn-trigger:hover { background: rgba(255,255,255,0.25); }
+    .account-btn-trigger:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
     .account-btn-trigger svg { width: 16px; height: 16px; }
     .account-dropdown {
       display: none;
       position: absolute;
       top: calc(100% + 8px);
       right: 0;
-      background: #ffffff;
+      background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      box-shadow: var(--shadow);
       min-width: 180px;
       overflow: hidden;
       z-index: 200;
@@ -147,26 +187,26 @@
       width: 100%;
       padding: 12px 16px 12px 44px;
       border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.1);
-      color: white;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
       font-size: 14px;
       outline: none;
       transition: all 0.2s;
     }
     .search-input::placeholder {
-      color: rgba(255,255,255,0.5);
+      color: var(--text-muted);
     }
     .search-input:focus {
-      background: rgba(255,255,255,0.15);
-      border-color: rgba(255,255,255,0.3);
+      background: var(--card-bg);
+      border-color: var(--accent);
     }
     .search-icon {
       position: absolute;
       left: 14px;
       top: 50%;
       transform: translateY(-50%);
-      color: rgba(255,255,255,0.6);
+      color: var(--text-muted);
       width: 20px;
       height: 20px;
     }
@@ -203,7 +243,8 @@
       font-size: 14px;
       color: var(--text);
       background: var(--card-bg);
-      border: 1px solid var(--border);
+      border: 2px solid var(--border);
+      box-shadow: var(--shadow);
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -417,6 +458,7 @@
     <div class="header-user" id="headerUser" style="display:none">
       <span>Sesión iniciada como:</span><strong id="headerUserName"></strong><span>·</span><span>Rol:</span><strong id="headerUserRole"></strong>
     </div>
+    <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
     <div class="account-btn" id="accountBtn">
       <button class="account-btn-trigger" onclick="toggleAccountMenu()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -672,14 +714,14 @@
       renderData(bySala);
     }
 
-    function toggleAccountMenu() {
-      document.getElementById('accountDropdown').classList.toggle('open');
-    }
-
     function cerrarSesion() {
       localStorage.removeItem('sgi_user_session');
       localStorage.removeItem('sgi_admin_session');
       window.location.href = 'index.html';
+    }
+
+    function toggleAccountMenu() {
+      document.getElementById('accountDropdown').classList.toggle('open');
     }
 
     function cambiarCuenta() {
@@ -718,5 +760,6 @@
       } catch(e) {}
     })();
   </script>
+  <script src="js/theme.js"></script>
 </body>
 </html>
