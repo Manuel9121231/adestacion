@@ -15,19 +15,10 @@
       --accent: #3b82f6;
       --ok: #10b981;
       --err: #ef4444;
+      --warn: #f59e0b;
+      --inactive: #6b7280;
       --border: #e2e8f0;
       --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    }
-
-    body.dark-mode {
-      --bg: #0f0f1a;
-      --card-bg: #1a1a2e;
-      --text: #ffffff;
-      --text-muted: #94a3b8;
-      --accent: #3b82f6;
-      --ok: #10b981;
-      --err: #ef4444;
-      --border: rgba(255,255,255,0.08);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -41,8 +32,8 @@
 
     /* ══ HEADER ═══════════════════════════════════════════ */
     header {
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border);
+      background: #1e3a8a;
+      border-bottom: 1px solid #1e40af;
       padding: 16px 20px;
       position: sticky;
       top: 0;
@@ -63,12 +54,12 @@
       width: 40px;
       height: 40px;
       border-radius: 10px;
-      color: var(--text-muted);
+      color: #bfdbfe;
       text-decoration: none;
       transition: all 0.2s;
-      background: var(--bg);
+      background: rgba(255,255,255,0.1);
     }
-    .back-btn:hover { color: var(--accent); background: #f1f5f9; }
+    .back-btn:hover { color: #ffffff; background: rgba(255,255,255,0.2); }
     
     .tv-btn {
       margin-left: auto;
@@ -76,8 +67,8 @@
       align-items: center;
       gap: 8px;
       padding: 8px 16px;
-      background: #f1f5f9;
-      color: var(--text-muted);
+      background: rgba(255,255,255,0.15);
+      color: #bfdbfe;
       text-decoration: none;
       border-radius: 10px;
       font-size: 13px;
@@ -85,36 +76,15 @@
       transition: all 0.2s;
     }
     .tv-btn:hover {
-      background: var(--accent);
-      color: #fff;
+      background: rgba(255,255,255,0.25);
+      color: #ffffff;
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
     }
     .tv-btn svg { width: 18px; height: 18px; }
 
-    .theme-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      background: #f1f5f9;
-      color: var(--text-muted);
-      border: none;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .theme-toggle:hover {
-      background: var(--accent);
-      color: #fff;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-    }
-
-    .header-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
-    .header-title p { font-size: 13px; color: var(--text-muted); }
+    .header-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
+    .header-title p { font-size: 13px; color: #bfdbfe; }
 
     /* Buscador */
     .search-container {
@@ -126,32 +96,83 @@
       width: 100%;
       padding: 12px 16px 12px 44px;
       border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--bg);
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
       font-size: 14px;
       outline: none;
       transition: all 0.2s;
+      color: #ffffff;
     }
     .search-input:focus {
-      background: #fff;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      background: rgba(255,255,255,0.2);
+      border-color: #bfdbfe;
+      box-shadow: 0 0 0 3px rgba(191, 219, 254, 0.2);
+    }
+    .search-input::placeholder {
+      color: rgba(255,255,255,0.6);
     }
     .search-icon {
       position: absolute;
       left: 14px;
       top: 50%;
       transform: translateY(-50%);
-      color: var(--text-muted);
+      color: rgba(255,255,255,0.6);
       width: 20px;
       height: 20px;
     }
 
     /* ══ CONTENIDO ════════════════════════════════════════ */
     main {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 24px auto;
       padding: 0 20px;
+    }
+    .layout {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    .sidebar {
+      width: 200px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 140px;
+      align-self: flex-start;
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+      padding-right: 8px;
+      z-index: 50;
+    }
+    .sidebar-item {
+      padding: 12px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 4px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sidebar-item:hover {
+      background: #dbeafe;
+      border-color: #60a5fa;
+      transform: translateX(4px);
+    }
+    .sidebar-item:active {
+      transform: scale(0.98);
+    }
+    .sidebar-item.active {
+      background: #3b82f6;
+      color: white;
+      border-color: #2563eb;
+    }
+    .content {
+      flex: 1;
+      min-width: 0;
     }
 
     .sala-section { margin-bottom: 40px; }
@@ -167,10 +188,18 @@
     .sala-badge {
       font-size: 12px;
       font-weight: 600;
-      background: #e2e8f0;
-      padding: 2px 10px;
+      background: #3b82f6;
+      padding: 4px 12px;
       border-radius: 20px;
-      color: var(--text-muted);
+      color: white;
+    }
+    .sala-badge-ratio {
+      background: #3b82f6;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
     }
 
     .machine-grid {
@@ -181,8 +210,8 @@
 
     /* ══ TARJETA (CARD) ═══════════════════════════════════ */
     .m-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
+      background: #dbeafe;
+      border: 1px solid #60a5fa;
       border-radius: 16px;
       padding: 16px;
       display: flex;
@@ -190,10 +219,37 @@
       gap: 12px;
       transition: transform 0.2s, box-shadow 0.2s;
       position: relative;
+      box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.15);
+    }
+    .m-card.warn {
+      background: #fffbeb;
+      border-color: #fcd34d;
+      box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.15);
+    }
+    .m-card.inactive {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+      box-shadow: 0 4px 6px -1px rgba(107, 114, 128, 0.15);
+      opacity: 0.85;
+    }
+    .m-card.down {
+      background: #fee2e2;
+      border-color: #f87171;
+      box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15);
     }
     .m-card:hover {
       transform: translateY(-2px);
-      box-shadow: var(--shadow);
+      box-shadow: 0 8px 12px -2px rgba(59, 130, 246, 0.25);
+    }
+    .m-card.warn:hover {
+      box-shadow: 0 8px 12px -2px rgba(245, 158, 11, 0.25);
+    }
+    .m-card.inactive:hover {
+      opacity: 1;
+      box-shadow: 0 8px 12px -2px rgba(107, 114, 128, 0.25);
+    }
+    .m-card.down:hover {
+      box-shadow: 0 8px 12px -2px rgba(239, 68, 68, 0.25);
     }
     
     .m-top {
@@ -207,8 +263,10 @@
       border-radius: 50%;
       margin-top: 6px;
     }
-    .status-ok  { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
-    .status-err { background: var(--err); box-shadow: 0 0 8px var(--err); }
+    .status-ok       { background: var(--ok);       box-shadow: 0 0 8px var(--ok); }
+    .status-warn     { background: var(--warn);     box-shadow: 0 0 8px var(--warn); }
+    .status-inactive { background: var(--inactive); box-shadow: 0 0 6px var(--inactive); }
+    .status-err      { background: var(--err);      box-shadow: 0 0 8px var(--err); }
 
     .m-info { flex: 1; padding: 0 10px; }
     .m-name { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
@@ -221,8 +279,10 @@
       border-radius: 6px;
       text-transform: uppercase;
     }
-    .badge-ok  { background: #ecfdf5; color: var(--ok); }
-    .badge-err { background: #fef2f2; color: var(--err); }
+    .badge-ok       { background: #ecfdf5; color: var(--ok); }
+    .badge-warn      { background: #fffbeb; color: #b45309; }
+    .badge-inactive  { background: #f3f4f6; color: #374151; }
+    .badge-err       { background: #fef2f2; color: var(--err); }
 
     .m-details {
       padding-top: 12px;
@@ -232,6 +292,18 @@
       gap: 6px;
     }
     .m-nota { font-size: 12px; color: var(--text-muted); font-style: italic; }
+    .m-estado-sub {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--ok);
+      background: #ecfdf5;
+      border-radius: 4px;
+      padding: 1px 5px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
 
     .empty-state {
       text-align: center;
@@ -258,6 +330,25 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     @media (max-width: 600px) {
+      .layout {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .sidebar {
+        position: static;
+        width: 100%;
+        max-height: none;
+        padding-right: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .sidebar-item {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+        margin-bottom: 0;
+      }
       .machine-grid { grid-template-columns: 1fr; }
       .header-title h1 { font-size: 16px; }
     }
@@ -266,7 +357,6 @@
   <script src="js/supabase-config.js"></script>
 </head>
 <body>
-<script src="js/theme.js"></script>
 
 <header>
   <div class="header-top">
@@ -277,7 +367,6 @@
       <h1>Estado de Equipos</h1>
       <p id="statsLabel">Cargando disponibilidad...</p>
     </div>
-    <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
     <a href="estado-tv.html" class="tv-btn" title="Modo Pantalla Completa (TV)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
       <span>Modo TV</span>
@@ -294,11 +383,16 @@
     <div class="spinner"></div>
     <p>Consultando base de datos...</p>
   </div>
+  <div class="layout" id="layoutContainer" style="display:none">
+    <aside class="sidebar" id="sidebarSalas"></aside>
+    <div class="content" id="contentArea"></div>
+  </div>
 </main>
 
 <script>
   let allData = {};
   let rawMachines = [];
+  let scrollSpyEnabled = true;
 
   async function loadStatus() {
     try {
@@ -320,22 +414,29 @@
       (mRes.data||[]).forEach(m => {
         const sala = m.salas?.nombre || 'Sin sala';
         if (!bySala[sala]) bySala[sala] = [];
-        
+
         const inactiva = (m.estado||'').toLowerCase().trim() !== 'activa';
         const incidencia = enRep.has(m.id);
         const down = inactiva || incidencia;
-        const motivo = incidencia ? 'Incidencia' : (m.estado || 'Inactiva');
-        
+
+        // Build status text: always show operational status + incident if applicable
+        let statusParts = [m.estado || 'Activa'];
+        if (incidencia) statusParts.push('Incidencia');
+        const motivo = statusParts.join(' + ');
+
         const entry = {
           id: m.id,
           nombre: m.nombre || 'Sin nombre',
           sala,
           tipo: m.tipo || '',
           notas: m.notas || '',
+          estado: m.estado || 'Activa',
           down,
           motivo,
+          inactiva,
+          incidencia,
         };
-        
+
         bySala[sala].push(entry);
         rawMachines.push(entry);
         if (down) totErr++; else totOk++;
@@ -352,21 +453,40 @@
   }
 
   function renderData(data) {
-    const container = document.getElementById('mainContent');
+    const loader = document.getElementById('loader');
+    const layoutContainer = document.getElementById('layoutContainer');
+    const sidebar = document.getElementById('sidebarSalas');
+    const contentArea = document.getElementById('contentArea');
+
     const sortedSalas = Object.keys(data).sort();
-    
+
     if (sortedSalas.length === 0) {
-      container.innerHTML = `<div class="empty-state">No se encontraron equipos.</div>`;
+      loader.innerHTML = `<div class="empty-state">No se encontraron equipos.</div>`;
       return;
     }
 
-    container.innerHTML = sortedSalas.map(sala => {
+    loader.style.display = 'none';
+    layoutContainer.style.display = 'flex';
+
+    // Render sidebar
+    sidebar.innerHTML = sortedSalas.map(sala => {
+      const count = data[sala].length;
+      return `
+        <div class="sidebar-item" data-sala="${sala.toLowerCase()}" onclick="scrollToSala('${sala.toLowerCase()}')">
+          ${sala} <span style="font-size:12px;opacity:0.6;margin-left:auto">${count}</span>
+        </div>
+      `;
+    }).join('');
+
+    // Render content
+    contentArea.innerHTML = sortedSalas.map(sala => {
       const machines = data[sala];
       return `
-        <section class="sala-section" data-sala="${sala.toLowerCase()}">
+        <section class="sala-section" data-sala="${sala.toLowerCase()}" id="sala-${sala.toLowerCase()}">
           <div class="sala-header">
             <h2>${sala}</h2>
             <span class="sala-badge">${machines.length} equipos</span>
+            <span class="sala-badge-ratio">${machines.filter(m => !m.down).length}/${machines.length} disponibles</span>
           </div>
           <div class="machine-grid">
             ${machines.map(m => machineHTML(m)).join('')}
@@ -374,18 +494,86 @@
         </section>
       `;
     }).join('');
+
+    // Setup scroll spy
+    setupScrollSpy();
+  }
+
+  function scrollToSala(salaName) {
+    // Disable scroll spy during manual click
+    scrollSpyEnabled = false;
+
+    // Set active class immediately for visual feedback
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    sidebarItems.forEach(item => {
+      item.classList.toggle('active', item.dataset.sala === salaName);
+    });
+
+    const section = document.getElementById(`sala-${salaName}`);
+    if (section) {
+      const yOffset = -160; // offset for header
+      const y = section.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+
+      // Re-enable scroll spy after scroll completes
+      setTimeout(() => {
+        scrollSpyEnabled = true;
+      }, 800);
+    } else {
+      scrollSpyEnabled = true;
+    }
+  }
+
+  // Scroll spy para resaltar sala activa
+  function setupScrollSpy() {
+    const sections = document.querySelectorAll('.sala-section');
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && scrollSpyEnabled) {
+          const salaName = entry.target.dataset.sala;
+          sidebarItems.forEach(item => {
+            item.classList.toggle('active', item.dataset.sala === salaName);
+          });
+        }
+      });
+    }, { threshold: 0.3, rootMargin: '-100px 0px -70% 0px' });
+
+    sections.forEach(section => observer.observe(section));
   }
 
   function machineHTML(m) {
-    const statusClass = m.down ? 'status-err' : 'status-ok';
-    const badgeClass = m.down ? 'badge-err' : 'badge-ok';
-    const badgeText = m.down ? m.motivo : 'Disponible';
-    
+    let statusClass, badgeClass, cardClass, badgeText;
+
+    if (!m.inactiva && !m.incidencia) {
+      statusClass = 'status-ok';
+      badgeClass  = 'badge-ok';
+      badgeText   = 'Activa';
+      cardClass   = 'm-card';
+    } else if (!m.inactiva && m.incidencia) {
+      statusClass = 'status-warn';
+      badgeClass  = 'badge-warn';
+      badgeText   = 'Activa';
+      cardClass   = 'm-card warn';
+    } else if (m.inactiva && !m.incidencia) {
+      statusClass = 'status-inactive';
+      badgeClass  = 'badge-inactive';
+      badgeText   = m.motivo;
+      cardClass   = 'm-card inactive';
+    } else {
+      statusClass = 'status-err';
+      badgeClass  = 'badge-err';
+      badgeText   = m.estado || 'Inactiva';
+      cardClass   = 'm-card down';
+    }
+
     let detailsHTML = '';
+    if (m.incidencia) detailsHTML += `<span class="m-badge ${m.inactiva ? 'badge-err' : 'badge-warn'}" style="align-self:flex-start">Incidencia</span>`;
     if (m.notas) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
 
     return `
-      <div class="m-card" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}">
+      <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}">
         <div class="m-top">
           <div class="m-status-dot ${statusClass}"></div>
           <div class="m-info">
