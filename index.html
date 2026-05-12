@@ -150,9 +150,9 @@
 
     /* Centrar la última tarjeta cuando hay 3 elementos visibles */
     .home-grid:has(.nav-card:nth-child(3):not([style*="display: none"])) .nav-card:nth-child(3):not([style*="display: none"]) {
-      grid-column: 1 / -1;
+      grid-column: 1 / 3;
       justify-self: center;
-      max-width: 400px;
+      width: calc(50% - 10px);
     }
 
     .nav-card {
@@ -487,15 +487,15 @@
       cards.forEach(c => {
         c.style.gridColumn = '';
         c.style.justifySelf = '';
-        c.style.maxWidth = '';
+        c.style.width = '';
       });
 
       // If exactly 3 cards visible, center the last one
       if (visibleCards.length === 3) {
         const lastCard = visibleCards[2];
-        lastCard.style.gridColumn = '1 / -1';
+        lastCard.style.gridColumn = '1 / 3';
         lastCard.style.justifySelf = 'center';
-        lastCard.style.maxWidth = '400px';
+        lastCard.style.width = 'calc(50% - 10px)';
       }
     }
   </script>
