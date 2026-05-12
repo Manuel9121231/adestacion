@@ -538,7 +538,7 @@ function renderMaquinas() {
   }
 
   let htmlResult = '';
-  const commonBg = '#ffffff';
+  const commonBg = 'var(--bg-card)';
   const iconos = [''];
   datosSalas.forEach((sala, index) => {
     if (salaFiltro && String(sala.id) !== String(salaFiltro)) return;
