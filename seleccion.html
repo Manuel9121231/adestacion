@@ -698,14 +698,6 @@
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    function fuzzyMatch(query, text) {
-      let qi = 0;
-      for (let i = 0; i < text.length && qi < query.length; i++) {
-        if (text[i] === query[qi]) qi++;
-      }
-      return qi === query.length;
-    }
-
     function filterMachines() {
       const q = document.getElementById('searchInput').value.toLowerCase().trim();
       const bySala = {};
@@ -716,8 +708,9 @@
           bySala[salaName].push(m);
           return;
         }
-        const haystack = [(m.nombre||''), (m.codigo||''), salaName, (m.tipo||''), (m.notas||'')].join(' ').toLowerCase();
-        if (fuzzyMatch(q, haystack)) {
+        const fields = [(m.nombre||''), (m.codigo||''), salaName, (m.tipo||''), (m.notas||'')];
+        const match = fields.some(f => f.toLowerCase().includes(q));
+        if (match) {
           if (!bySala[salaName]) bySala[salaName] = [];
           bySala[salaName].push(m);
         }

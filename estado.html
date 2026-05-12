@@ -625,14 +625,6 @@
     `;
   }
 
-  function fuzzyMatch(query, text) {
-    let qi = 0;
-    for (let i = 0; i < text.length && qi < query.length; i++) {
-      if (text[i] === query[qi]) qi++;
-    }
-    return qi === query.length;
-  }
-
   function filterMachines() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
     const sections = document.querySelectorAll('.sala-section');
@@ -647,8 +639,8 @@
           hasVisible = true;
           return;
         }
-        const haystack = [card.dataset.nombre||'', card.dataset.tipo||'', card.dataset.badge||'', sec.dataset.sala||''].join(' ');
-        const visible = fuzzyMatch(q, haystack);
+        const fields = [card.dataset.nombre||'', card.dataset.tipo||'', card.dataset.badge||'', sec.dataset.sala||''];
+        const visible = fields.some(f => f.includes(q));
         card.style.display = visible ? 'flex' : 'none';
         if (visible) hasVisible = true;
       });
