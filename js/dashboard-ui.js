@@ -37,7 +37,7 @@ const DASHBOARD_HTML = `
           </div>
           <div class="nav-item" id="nav-historial" onclick="navigateTo('historial')">
             <span class="nav-icon">📋</span>
-            <span>Mantenimientos</span>
+            <span>Historial</span>
           </div>
           <div class="nav-item" id="nav-qrcodes" onclick="navigateTo('qrcodes')">
             <span class="nav-icon">📱</span>
@@ -162,7 +162,7 @@ const DASHBOARD_HTML = `
 
           <div class="table-wrap" style="margin-bottom:0">
             <div class="table-header">
-              <div class="table-title">📋 Últimos mantenimientos realizados</div>
+              <div class="table-title">📋 Últimos registros realizados</div>
               <button class="btn btn-outline btn-sm" onclick="navigateTo('historial')">Ver todos →</button>
             </div>
             <div style="overflow-x:auto">
@@ -264,7 +264,7 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-historial">
           <div class="section-header">
             <div>
-              <div class="section-title">📋 Historial de Mantenimientos</div>
+              <div class="section-title">📋 Historial</div>
               <div class="section-subtitle">Registro completo de todas las sesiones</div>
             </div>
             <button class="btn btn-outline btn-sm" onclick="exportarCSV()">⬇️ Exportar CSV</button>
@@ -272,6 +272,13 @@ const DASHBOARD_HTML = `
 
           <div class="table-wrap">
             <div class="filtros-bar">
+              <div class="filtro-item">
+                <select class="form-control" id="filtroTipoHistorial" onchange="setFiltroTipo(this.value)">
+                  <option value="">Todos los tipos</option>
+                  <option value="Mantenimiento">🛠 Mantenimiento</option>
+                  <option value="Incidencia">⚡ Incidencia</option>
+                </select>
+              </div>
               <div class="filtro-item">
                 <select class="form-control" id="filtroSala" onchange="cargarHistorial()">
                   <option value="">Todas las salas</option>
@@ -283,7 +290,7 @@ const DASHBOARD_HTML = `
                 </select>
               </div>
               <div class="filtro-item">
-                <input type="text" id="filtroOperario" class="form-control" placeholder="🔍 Buscar operario..." oninput="cargarHistorial()">
+                <input type="text" id="filtroOperario" class="form-control" placeholder="🔍 Buscar..." oninput="cargarHistorial()" title="Busca por máquina, sala, operario u observaciones" style="min-width:140px;flex:1">
               </div>
               <div class="filtro-item">
                 <input type="date" class="form-control" id="filtroDesde" onchange="cargarHistorial()">

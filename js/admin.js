@@ -351,7 +351,7 @@ const sectionTitles = {
   dashboard: ['Panel General', 'Resumen del sistema'],
   maquinas: ['Máquinas', 'Estado y gestión de todas las máquinas'],
   incidencias: ['Centro de Incidencias', 'Gestión de fallos técnicos y reparaciones'],
-  historial: ['Historial', 'Registro de mantenimientos e incidencias'],
+  historial: ['Historial', 'Registro completo de mantenimientos e incidencias'],
   qrcodes: ['Códigos QR', 'QR individuales para el operario móvil'],
   usuarios: ['Usuarios del Sistema', 'Gestión de accesos y privilegios de usuario']
 };
@@ -1191,45 +1191,66 @@ async function poblarFiltroMaquinasHistorial() {
   });
 }
 
-async function cargarHistorial() {
-  const params = new URLSearchParams();
-  const sala = document.getElementById('filtroSala')?.value;
-  const maquina = document.getElementById('filtroMaquina')?.value;
-  const operario = document.getElementById('filtroOperario')?.value.trim();
-  const desde = document.getElementById('filtroDesde')?.value;
-  const hasta = document.getElementById('filtroHasta')?.value;
+let filtroTipoHistorial = '';
 
-  if (sala) params.append('sala_id', sala);
-  if (maquina) params.append('maquina_id', maquina);
-  if (operario) params.append('operario_nombre', operario);
-  if (desde) params.append('desde', desde);
-  if (hasta) params.append('hasta', hasta);
+function setFiltroTipo(tipo) {
+  filtroTipoHistorial = tipo;
+  cargarHistorial();
+}
+
+async function cargarHistorial() {
+  const salaId  = document.getElementById('filtroSala')?.value;
+  const maqId   = document.getElementById('filtroMaquina')?.value;
+  const buscar  = (document.getElementById('filtroOperario')?.value || '').trim().toLowerCase();
+  const desde   = document.getElementById('filtroDesde')?.value;
+  const hasta   = document.getElementById('filtroHasta')?.value;
 
   const tbody = document.getElementById('tablaHistorial');
   const empty = document.getElementById('historialEmpty');
-  const hasFilters = sala || maquina || operario || desde || hasta;
 
-  if (!hasFilters && datosHistorial.length > 0) {
-    const mantenimientos = datosHistorial.filter(r => r.tipo === 'Mantenimiento');
-    renderizarContenidoHistorial(mantenimientos, tbody, empty);
-    return;
+  // Ensure we have data
+  let source = datosHistorial;
+  if (!source.length) {
+    if (tbody) tbody.innerHTML = skeletonTabla(8);
+    const res = await apiFetch('/api/historial?');
+    if (!res.ok) {
+      if (tbody) tbody.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+      return;
+    }
+    source = res.data;
   }
 
-  if (tbody) tbody.innerHTML = skeletonTabla(8);
-  const res = await apiFetch('/api/historial?' + params.toString());
+  // All filtering client-side
+  let base = source.filter(r => {
+    if (filtroTipoHistorial && r.tipo !== filtroTipoHistorial) return false;
+    if (salaId && String(r.sala_id) !== String(salaId) && (datosSalas.find(s => s.id == salaId)?.nombre !== r.sala)) return false;
+    if (maqId  && String(r.maquina_id) !== String(maqId) && (datosMaquinas.find(m => m.id == maqId)?.nombre !== r.maquina)) return false;
+    if (desde) {
+      const d = new Date(r.completado_en || r.iniciado_en);
+      if (d < new Date(desde)) return false;
+    }
+    if (hasta) {
+      const d = new Date(r.completado_en || r.iniciado_en);
+      if (d > new Date(hasta + 'T23:59:59')) return false;
+    }
+    if (buscar) {
+      const hayMatch =
+        (r.maquina       || '').toLowerCase().includes(buscar) ||
+        (r.sala          || '').toLowerCase().includes(buscar) ||
+        (r.operario      || '').toLowerCase().includes(buscar) ||
+        (r.observaciones || '').toLowerCase().includes(buscar);
+      if (!hayMatch) return false;
+    }
+    return true;
+  });
 
-  if (!res.ok || !res.data.length) {
+  if (!base.length) {
     if (tbody) tbody.innerHTML = '';
     if (empty) empty.style.display = 'block';
     return;
   }
-  const mantenimientosRes = res.data.filter(r => r.tipo === 'Mantenimiento');
-  if (mantenimientosRes.length === 0) {
-    if (tbody) tbody.innerHTML = '';
-    if (empty) empty.style.display = 'block';
-    return;
-  }
-  renderizarContenidoHistorial(mantenimientosRes, tbody, empty);
+  renderizarContenidoHistorial(base, tbody, empty);
 }
 
 function renderizarContenidoHistorial(data, tbody, empty) {
