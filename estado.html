@@ -467,6 +467,31 @@
     <div class="spinner"></div>
     <p>Consultando base de datos...</p>
   </div>
+
+  <!-- Filtros de máquinas -->
+  <div id="filtrosContainer" style="display:none; padding: 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+      <span style="font-weight: 600; color: var(--text-primary); font-size: 14px;">Filtros:</span>
+      
+      <select id="filtroEstado" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 14px; cursor: pointer;">
+        <option value="todos">Estado: Todos</option>
+        <option value="Activa">Activa</option>
+        <option value="Inactiva">Inactiva</option>
+      </select>
+      
+      <select id="filtroIncidencia" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 14px; cursor: pointer;">
+        <option value="todos">Máquinas: Todas</option>
+        <option value="sin_resolver">Sin resolver</option>
+        <option value="en_seguimiento">En seguimiento</option>
+        <option value="sin_errores">Sin errores (operativa)</option>
+      </select>
+      
+      <button id="btnResetFiltros" style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: all 0.2s;">
+        Restablecer
+      </button>
+    </div>
+  </div>
+
   <div class="layout" id="layoutContainer" style="display:none">
     <aside class="sidebar" id="sidebarSalas"></aside>
     <div class="content" id="contentArea"></div>
@@ -564,6 +589,10 @@
 
     loader.style.display = 'none';
     layoutContainer.style.display = 'flex';
+
+    // Mostrar contenedor de filtros
+    const filtrosContainer = document.getElementById('filtrosContainer');
+    if (filtrosContainer) filtrosContainer.style.display = 'block';
 
     // Render sidebar
     sidebar.innerHTML = sortedSalas.map(sala => {

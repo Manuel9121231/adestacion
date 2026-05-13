@@ -503,6 +503,74 @@
     // ─── Estado de la app ───
     let emailRegistro = '';
 
+    // ─── Manejar callback de confirmación de email ───
+    async function procesarConfirmacionEmail() {
+      const hash = window.location.hash;
+      if (!hash || !hash.includes('access_token')) return;
+
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      const type = params.get('type');
+
+      if (!accessToken) return;
+
+      // Mostrar mensaje de procesamiento
+      const msgDiv = document.createElement('div');
+      msgDiv.id = 'confirmacion-msg';
+      msgDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #3b82f6; color: white; padding: 16px; text-align: center; z-index: 9999; font-weight: 500;';
+      msgDiv.textContent = 'Verificando tu cuenta...';
+      document.body.appendChild(msgDiv);
+
+      try {
+        const client = window.supabaseClient || window.supabase?.createClient(
+          'https://qzbzqszxsswpvfxgknjt.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6Ynpxc3p4c3N3cHZmeGdrbmp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEyODc0NDQsImV4cCI6MjA1Njg2MzQ0NH0.UFw8fhlC4LaDvBFu7CRK6f_FlGqFjPkhgHIH2K6zLNI'
+        );
+
+        // Establecer sesión con el token recibido
+        const { data, error } = await client.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || ''
+        });
+
+        if (error) throw error;
+
+        if (data.session) {
+          const user = data.session.user;
+          const nombre = user.user_metadata?.nombre || user.email?.split('@')[0] || 'Usuario';
+
+          // Guardar sesión
+          localStorage.setItem('sgi_user_session', JSON.stringify({
+            userId: user.id,
+            email: user.email,
+            nombre: nombre,
+            rol: 'usuario'
+          }));
+
+          // Actualizar mensaje
+          msgDiv.style.background = '#22c55e';
+          msgDiv.textContent = '¡Cuenta verificada correctamente! Redirigiendo...';
+
+          // Limpiar URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          // Redirigir al portal
+          setTimeout(() => {
+            window.location.href = 'operario.html';
+          }, 1500);
+        }
+      } catch (err) {
+        console.error('Error en confirmación:', err);
+        msgDiv.style.background = '#ef4444';
+        msgDiv.textContent = 'Error al verificar: ' + (err.message || 'Inténtalo de nuevo');
+        setTimeout(() => msgDiv.remove(), 5000);
+      }
+    }
+
+    // Ejecutar al cargar
+    document.addEventListener('DOMContentLoaded', procesarConfirmacionEmail);
+
     // ─── Update user panel ───
     function updateUserPanel() {
       try {
