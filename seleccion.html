@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Seleccionar Equipo — Estación</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
-  <link rel="stylesheet" href="css/mobile.css?v=5">
+  <link rel="stylesheet" href="css/mobile.css?v=6">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -224,7 +224,7 @@
     .header-bottom {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       max-width: 1200px;
       margin: 0 auto;
     }
@@ -560,21 +560,6 @@
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o sala..." oninput="filterMachines()">
     </div>
-    <!-- Filtros desplegables -->
-    <div class="filtros-container" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto">
-      <select id="filtroEstadoMobile" onchange="onFiltroMobileChange()" style="flex:1;min-width:140px;padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--card-bg);color:var(--text);font-size:14px;cursor:pointer;">
-        <option value="todos">Estado: Todos</option>
-        <option value="activa">Activa</option>
-        <option value="inactiva">Inactiva</option>
-      </select>
-      <select id="filtroIncidenciaMobile" onchange="onFiltroMobileChange()" style="flex:1;min-width:140px;padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--card-bg);color:var(--text);font-size:14px;cursor:pointer;">
-        <option value="todos">Incidencias: Todas</option>
-        <option value="sin_resolver">Sin resolver</option>
-        <option value="en_seguimiento">En seguimiento</option>
-        <option value="sin_errores">Sin errores</option>
-      </select>
-      <button onclick="resetFilters()" style="padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--card-bg);color:var(--text);font-size:14px;cursor:pointer;">↺</button>
-    </div>
   </div>
   <div id="filtroResumen" style="padding:8px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:none">
     <span id="filtroTexto"></span> • <span id="resultadoCount" style="font-weight:600;color:var(--text-primary)"></span> equipos
@@ -598,6 +583,30 @@
   <div id="loader">
     <div class="spinner"></div>
     <p>Consultando base de datos...</p>
+  </div>
+
+  <!-- Filtros de máquinas -->
+  <div id="filtrosContainer" style="display:none; padding: 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+      <span style="font-weight: 600; color: var(--text-primary); font-size: 14px;">Filtros:</span>
+      
+      <select id="filtroEstado" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 14px; cursor: pointer;">
+        <option value="todos">Estado: Todos</option>
+        <option value="Activa">Activa</option>
+        <option value="Inactiva">Inactiva</option>
+      </select>
+      
+      <select id="filtroIncidencia" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 14px; cursor: pointer;">
+        <option value="todos">Máquinas: Todas</option>
+        <option value="sin_resolver">Sin resolver</option>
+        <option value="en_seguimiento">En seguimiento</option>
+        <option value="sin_errores">Sin errores (operativa)</option>
+      </select>
+      
+      <button id="btnResetFiltros" style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: all 0.2s;">
+        Restablecer
+      </button>
+    </div>
   </div>
 
   <div class="layout" id="layoutContainer" style="display:none">
@@ -892,19 +901,83 @@
     let filtroEstado = 'todos'; // 'todos', 'activa', 'inactiva'
     let filtroIncidencia = 'todos'; // 'todos', 'sin_errores', 'sin_resolver', 'en_seguimiento'
 
-    function onFiltroMobileChange() {
-      filtroEstado = document.getElementById('filtroEstadoMobile').value;
-      filtroIncidencia = document.getElementById('filtroIncidenciaMobile').value;
-      renderMachines();
+    // Event listeners para los selects de filtro
+    document.getElementById('filtroEstado')?.addEventListener('change', function() {
+      filtroEstado = this.value === 'todos' ? 'todos' : (this.value === 'Activa' ? 'activa' : 'inactiva');
+      applyFilters();
+    });
+
+    document.getElementById('filtroIncidencia')?.addEventListener('change', function() {
+      const mapValues = {
+        'todos': 'todos',
+        'sin_resolver': 'sin_resolver',
+        'en_seguimiento': 'en_seguimiento',
+        'sin_errores': 'sin_errores'
+      };
+      filtroIncidencia = mapValues[this.value] || 'todos';
+      applyFilters();
+    });
+
+    document.getElementById('btnResetFiltros')?.addEventListener('click', function() {
+      document.getElementById('filtroEstado').value = 'todos';
+      document.getElementById('filtroIncidencia').value = 'todos';
+      resetFilters();
+    });
+
+    function toggleEstadoFilter() {
+      const btn = document.getElementById('btnEstado');
+      if (filtroEstado === 'todos') {
+        filtroEstado = 'activa';
+        btn.textContent = 'Activa';
+        btn.style.borderColor = 'var(--success)';
+        btn.style.background = 'rgba(16, 185, 129, 0.1)';
+      } else if (filtroEstado === 'activa') {
+        filtroEstado = 'inactiva';
+        btn.textContent = 'Inactiva';
+        btn.style.borderColor = 'var(--danger)';
+        btn.style.background = 'rgba(239, 68, 68, 0.1)';
+      } else {
+        filtroEstado = 'todos';
+        btn.textContent = 'Todas';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.background = 'var(--card-bg)';
+      }
+      applyFilters();
+    }
+
+    function cycleIncidenciaFilter() {
+      const btn = document.getElementById('btnIncidencia');
+      if (filtroIncidencia === 'todos') {
+        filtroIncidencia = 'sin_resolver';
+        btn.textContent = 'Sin resolver';
+        btn.style.borderColor = 'var(--danger)';
+        btn.style.background = 'rgba(239, 68, 68, 0.1)';
+      } else if (filtroIncidencia === 'sin_resolver') {
+        filtroIncidencia = 'en_seguimiento';
+        btn.textContent = 'En seguimiento';
+        btn.style.borderColor = 'var(--warning)';
+        btn.style.background = 'rgba(245, 158, 11, 0.1)';
+      } else if (filtroIncidencia === 'en_seguimiento') {
+        filtroIncidencia = 'sin_errores';
+        btn.textContent = 'Sin errores';
+        btn.style.borderColor = 'var(--success)';
+        btn.style.background = 'rgba(16, 185, 129, 0.1)';
+      } else {
+        filtroIncidencia = 'todos';
+        btn.textContent = 'Todas';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.background = 'var(--card-bg)';
+      }
+      applyFilters();
     }
 
     function resetFilters() {
-      const mE = document.getElementById('filtroEstadoMobile');
-      const mI = document.getElementById('filtroIncidenciaMobile');
-      if (mE) mE.value = 'todos';
-      if (mI) mI.value = 'todos';
       filtroEstado = 'todos';
       filtroIncidencia = 'todos';
+      const selectEstado = document.getElementById('filtroEstado');
+      const selectIncidencia = document.getElementById('filtroIncidencia');
+      if (selectEstado) selectEstado.value = 'todos';
+      if (selectIncidencia) selectIncidencia.value = 'todos';
       document.getElementById('searchInput').value = '';
       applyFilters();
     }
