@@ -797,8 +797,9 @@
 
         if (adminStr && !userStr) {
           const s = JSON.parse(adminStr);
-          nameEl.textContent = s.username || 'Administrador';
-          roleEl.textContent = 'Administrador';
+          const roleLabelsAdmin = { superadmin: 'Administrador', admin: 'Administrador', tecnico: 'Técnico' };
+          nameEl.textContent = s.username || s.nombre || 'Administrador';
+          roleEl.textContent = roleLabelsAdmin[s.type] || 'Administrador';
           el.style.display = 'flex';
         } else if (userStr) {
           const s = JSON.parse(userStr);

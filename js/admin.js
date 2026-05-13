@@ -32,12 +32,15 @@ async function cargarRolUsuario() {
     console.log('DEBUG - admin_session:', adminSessionStr);
     if (adminSessionStr) {
       const adminSession = JSON.parse(adminSessionStr);
-      // Si es sesión de admin, asignar rol 'admin'
-      if (adminSession.username || adminSession.nombre) {
+      if (adminSession.type === 'superadmin') {
         rolActual = 'admin';
-        console.log('DEBUG - Rol asignado: admin');
-        return;
+      } else if (adminSession.type) {
+        rolActual = adminSession.type; // 'admin' o 'tecnico'
+      } else if (adminSession.username || adminSession.nombre) {
+        rolActual = 'admin';
       }
+      console.log('DEBUG - Rol asignado desde admin_session:', rolActual);
+      return;
     }
 
     // Si no hay sesión admin, verificar sesión de usuario normal
@@ -1895,7 +1898,7 @@ async function intentarLogin() {
     }
 
     localStorage.setItem('sgi_admin_session', JSON.stringify({
-      type: 'admin',
+      type: rol,
       userId: data.user.id,
       email: data.user.email,
       nombre: perfil?.nombre || data.user.email

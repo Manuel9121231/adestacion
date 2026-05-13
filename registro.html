@@ -516,9 +516,10 @@
         // Verificar si hay sesión de administrador
         if (adminSessionStr && !sessionStr) {
           const adminSession = JSON.parse(adminSessionStr);
-          const nombre = adminSession.username || 'Administrador';
+          const nombre = adminSession.username || adminSession.nombre || 'Administrador';
+          const roleLabelsAdmin = { superadmin: 'Administrador', admin: 'Administrador', tecnico: 'Técnico' };
           userNameEl.textContent = nombre;
-          userRoleEl.textContent = 'Administrador';
+          userRoleEl.textContent = roleLabelsAdmin[adminSession.type] || 'Administrador';
           btnChangeAccount.style.display = 'none';
           btnLogout.style.display = 'block';
           return;

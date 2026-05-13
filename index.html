@@ -651,10 +651,11 @@
         if (adminSessionStr) {
           const adminSession = JSON.parse(adminSessionStr);
           const nombre = adminSession.username || adminSession.nombre || 'Administrador';
+          const roleLabelsAdmin = { superadmin: 'Administrador', admin: 'Administrador', tecnico: 'Técnico' };
           userNameEl.textContent = nombre;
-          userRoleEl.textContent = 'Administrador';
+          userRoleEl.textContent = roleLabelsAdmin[adminSession.type] || 'Administrador';
           document.getElementById('accountBtn').style.display = 'block';
-          showPortals(adminSession, 'admin');
+          showPortals(adminSession, adminSession.type || 'admin');
           return;
         }
 
