@@ -257,7 +257,6 @@
   <script src="js/supabase-config.js"></script>
 </head>
 <body>
-<script src="js/theme.js"></script>
 
   <!-- User Info Panel -->
   <div class="user-panel" id="userPanel">
@@ -357,7 +356,22 @@
     <div class="screen-content" style="display: flex; flex-direction: column; gap: 16px;">
       
       <!-- Panel 1: Identificación -->
-      <!-- Panel 1: Tipo de Reporte -->
+      <div class="form-panel" style="
+        background: var(--card-bg); 
+        border: 1px solid var(--border); 
+        border-radius: 16px; 
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+      ">
+        <div class="reporte-label">🔑 IDENTIFICACIÓN (AUTO-ALTA)</div>
+        <div style="display:grid; grid-template-columns: 1fr; gap:12px; margin-top: 12px;">
+          <input type="text" id="userNameInput" class="reporte-textarea" style="height: 48px; font-size: 15px;" placeholder="Tu Nombre Completo">
+          <input type="email" id="userEmailInput" class="reporte-textarea" style="height: 48px; font-size: 15px;" placeholder="Email (Clave Única)">
+        </div>
+      </div>
+
+      <!-- Panel 2: Tipo de Reporte -->
       <div class="form-panel" style="
         background: var(--card-bg); 
         border: 1px solid var(--border); 

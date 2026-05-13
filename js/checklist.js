@@ -285,7 +285,19 @@ function cancelPhoto() {
 }
 
 async function enviarChecklist() {
+  const nombreUser = document.getElementById('userNameInput').value.trim();
+  const emailUser = document.getElementById('userEmailInput').value.trim().toLowerCase();
   const reporte = document.getElementById('reporteTextarea').value.trim();
+
+  if (!nombreUser || !emailUser) {
+    alert("Por favor, introduce tu nombre y email para identificarte (Clave Única).");
+    return;
+  }
+
+  if (!emailUser.includes('@')) {
+    alert("Introduce un email válido.");
+    return;
+  }
 
   if (reporte.length < 1) {
     document.getElementById('reporteError').style.display = 'block';
@@ -294,67 +306,53 @@ async function enviarChecklist() {
 
   const btn = document.getElementById('btnEnviar');
   btn.disabled = true;
+  btn.textContent = '⏳ Verificando Identidad...';
+
+  // --- AUTO-ALTA DE USUARIO ---
+  const client = window.supabaseClient;
+  const { data: userExists } = await client
+    .from('usuarios')
+    .select('id')
+    .eq('email', emailUser)
+    .single();
+
+  let userId;
+  if (!userExists) {
+    console.log("Nuevo usuario detectado. Realizando Auto-alta...");
+    const { data: newUser } = await client.from('usuarios').insert({
+      nombre: nombreUser,
+      email: emailUser,
+      rol: 'usuario',
+      activo: true
+    }).select('id').single();
+    userId = newUser.id;
+  } else {
+    userId = userExists.id;
+  }
+
   btn.textContent = '⏳ Enviando reporte...';
 
-  try {
-    // Obtener usuario de la sesión
-    const sessionStr = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
-    
-    let nombreUser = 'Anonimo';
-    let emailUser = 'desconocido@email.com';
+  const res = await apiFetch(`/api/sesion/${sesionId}/completar`, {
+    method: 'POST',
+    body: {
+      observaciones: reporte,
+      usuario_id: userId,
+      nombre_usuario: nombreUser,
+      email_usuario: emailUser,
+      fotos: selectedPhotos
+    },
+  });
 
-    if (sessionStr) {
-      try {
-        const session = JSON.parse(sessionStr);
-        nombreUser = session.nombre || 'Anonimo';
-        emailUser = session.email || 'desconocido@email.com';
-      } catch (e) {
-        console.error('Error al leer sesión:', e);
-      }
-    }
-
-    // Buscar ID en tabla usuarios usando email
-    const client = window.supabaseClient;
-    const { data: userData, error: userError } = await client
-      .from('usuarios')
-      .select('id,email,nombre')
-      .eq('email', emailUser)
-      .maybeSingle();
-
-    console.log('Buscando usuario con email:', emailUser);
-    console.log('Resultado:', userData, 'Error:', userError);
-
-    if (!userData) {
-      throw new Error('No se encontró usuario en tabla usuarios con email: ' + emailUser + '. Error: ' + (userError?.message || 'Desconocido'));
-    }
-
-    const userId = userData.id;
-
-    const res = await apiFetch(`/api/sesion/${sesionId}/completar`, {
-      method: 'POST',
-      body: {
-        observaciones: reporte,
-        usuario_id: userId,
-        nombre_usuario: nombreUser,
-        email_usuario: emailUser,
-        fotos: selectedPhotos
-      },
-    });
-
-    if (res.ok) {
-      document.getElementById('exitoMaquina').textContent = maquinaData.nombre;
-      document.getElementById('exitoOperario').textContent = nombreUser;
-      document.getElementById('exitoFecha').textContent = new Date().toLocaleString('es-ES');
-      showScreen('exito');
-    } else {
-      throw new Error(res.error || 'No se pudo enviar el informe');
-    }
-  } catch (error) {
-    console.error('Error al enviar reporte:', error);
+  if (res.ok) {
+    document.getElementById('exitoMaquina').textContent = maquinaData.nombre;
+    document.getElementById('exitoOperario').textContent = nombreUser;
+    document.getElementById('exitoFecha').textContent = new Date().toLocaleString('es-ES');
+    showScreen('exito');
+  } else {
     btn.disabled = false;
     btn.className = 'btn-enviar activo';
     btn.textContent = '⚠️ Error al enviar. Reintentar';
-    alert('Error: ' + error.message);
+    alert('Error: ' + (res.error || 'No se pudo enviar el informe'));
   }
 }
 
