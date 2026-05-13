@@ -110,11 +110,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       footerVersion.innerHTML = `👤 <strong>${adminName}</strong><br><span style="font-size:12px;opacity:1;color:var(--accent)">${rolLabel}</span>`;
     }
 
-    // Ocultar navegación para técnicos (QR codes y usuarios)
+    // Ocultar solo usuarios para técnicos
     if (rolActual === 'tecnico') {
-      const navQr = document.getElementById('nav-qrcodes');
       const navUsuarios = document.getElementById('nav-usuarios');
-      if (navQr) navQr.style.display = 'none';
       if (navUsuarios) navUsuarios.style.display = 'none';
     }
 
@@ -361,7 +359,7 @@ const sectionTitles = {
 function navigateTo(section, machineId = null, incFilter = null) {
   // Verificación de roles (solo admin puede ver gestión de usuarios y QR codes)
   // Técnicos pueden ver todo excepto usuarios y qrcodes
-  const rutasRestringidasParaTecnico = ['usuarios', 'qrcodes'];
+  const rutasRestringidasParaTecnico = ['usuarios'];
   let idToShow = section;
 
   if (rolActual === 'tecnico' && rutasRestringidasParaTecnico.includes(section)) {
@@ -1549,6 +1547,23 @@ const ROL_BADGES = {
   tecnico: { label: '🔧 Técnico', cls: 'verde' },
   usuario: { label: '👤 Usuario', cls: '' },
 };
+
+function toggleRolesHelp() {
+  const pop = document.getElementById('rolesHelpPopover');
+  if (!pop) return;
+  const visible = pop.style.display !== 'none';
+  pop.style.display = visible ? 'none' : 'block';
+  if (!visible) {
+    setTimeout(() => {
+      document.addEventListener('click', function handler(e) {
+        if (!pop.contains(e.target) && e.target.id !== 'btnRolesHelp') {
+          pop.style.display = 'none';
+        }
+        document.removeEventListener('click', handler);
+      });
+    }, 0);
+  }
+}
 
 async function renderUsuarios() {
   const container = document.getElementById('tablaUsuarios');
