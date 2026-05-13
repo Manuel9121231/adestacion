@@ -54,7 +54,7 @@ body {
 body { padding-top: var(--user-panel-h, 64px); }
 
 /* ── App Screens ─────────────────────────────────────────────────────────── */
-.screen { display: none; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+.screen { display: none; flex-direction: column; min-height: calc(100vh - var(--user-panel-h, 64px)); min-height: calc(100dvh - var(--user-panel-h, 64px)); }
 .screen.active { display: flex; }
 
 /* ── Header ──────────────────────────────────────────────────────────────── */

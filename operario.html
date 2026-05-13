@@ -14,14 +14,14 @@
       --accent-inc: #ff4757;
       --accent-maint: #4f8ef7;
       --text-white: #2b3440;
-      --border: rgba(0,0,0,0.06);
+      --border: rgba(0,0,0,0.15);
       --user-panel-h: 64px; /* altura reservada para el panel superior fijo */
     }
     body.dark-mode {
       --bg-portal: #0f0f1a;
       --card-bg: #1a1a2e;
       --text-white: #ffffff;
-      --border: rgba(255,255,255,0.05);
+      --border: rgba(255,255,255,0.15);
     }
 
     /* User Info Panel */
@@ -106,15 +106,17 @@
       color: var(--accent-maint);
     }
 
+    body { overflow-y: scroll; }
     .portal-container {
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      min-height: 100vh;
+      flex: 1;
       padding: 16px 20px 30px 20px;
       background: var(--bg-portal);
       color: var(--text-white);
       text-align: center;
+      box-sizing: border-box;
     }
 
      /* El desplazamiento ahora se gestiona por padding en el `body` global. */
@@ -301,11 +303,11 @@
           <p id="portalMaquinaSala" style="margin:0; opacity:0.6;">Elige una opción</p>
         </div>
         <div style="display:flex; gap:8px; flex-shrink: 0;">
-          <button onclick="window.location.href='seleccion.html'" style="background:var(--card-bg); border:1px solid var(--border); color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; cursor:pointer; white-space: nowrap;">
-            🔄 Cambiar
+          <button onclick="window.location.href='seleccion.html'" style="background:var(--card-bg); border:1.5px solid #c8cdd4; color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:500; cursor:pointer; white-space: nowrap;">
+            🔄 Cambiar máquina
           </button>
-          <button onclick="window.location.href='dashboard.html'" style="background:rgba(79, 142, 247, 0.1); border:1px solid var(--accent-maint); color:var(--accent-maint); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; white-space: nowrap;">
-            🛡️ Admin
+          <button onclick="window.location.href='index.html'" style="background:var(--card-bg); border:1.5px solid #c8cdd4; color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:500; cursor:pointer; white-space: nowrap;">
+            🏠 Inicio
           </button>
         </div>
       </div>
@@ -333,21 +335,24 @@
 
   <!-- ════ PANTALLA: CHECKLIST ════ -->
   <div class="screen" id="screen-checklist">
-    <header class="app-header">
-      <div class="header-icon">📋</div>
-      <div class="header-info">
-        <div class="header-title" id="checkMaquinaNombre">Mantenimiento</div>
-        <div class="header-sub" id="checkSalaNombre">–</div>
+    <div class="portal-container fade-up" style="padding-top:0">
+    <div class="portal-header" style="display:flex; justify-content:space-between; align-items:center; text-align:left; gap:20px; margin: 24px 0 20px 0; padding-top: 8px;">
+      <div style="flex:1; display:flex; align-items:center; gap:12px">
+        <div style="font-size:22px">📋</div>
+        <div>
+          <div style="font-size:20px; font-weight:800; margin:0" id="checkMaquinaNombre">Mantenimiento</div>
+          <div style="font-size:13px; opacity:0.6; margin:0" id="checkSalaNombre">–</div>
+        </div>
       </div>
       <div style="display:flex; gap:8px; flex-shrink: 0;">
-        <button onclick="window.location.href='seleccion.html'" style="background:var(--card-bg); border:1px solid var(--border); color:var(--text-white); padding:6px 10px; border-radius:8px; font-size:10px; cursor:pointer; white-space: nowrap;">
-          🔄 Cambiar
+        <button onclick="window.location.href='seleccion.html'" style="background:var(--card-bg); border:1.5px solid #c8cdd4; color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:500; cursor:pointer; white-space: nowrap;">
+          🔄 Cambiar máquina
         </button>
-        <button onclick="window.location.href='dashboard.html'" style="background:rgba(79, 142, 247, 0.1); border:1px solid var(--accent-maint); color:var(--accent-maint); padding:6px 10px; border-radius:8px; font-size:10px; font-weight:700; cursor:pointer; white-space: nowrap;">
-          🛡️ Admin
+        <button onclick="window.location.href='index.html'" style="background:var(--card-bg); border:1.5px solid #c8cdd4; color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:500; cursor:pointer; white-space: nowrap;">
+          🏠 Inicio
         </button>
       </div>
-    </header>
+    </div>
 
     <div class="screen-content" style="display: flex; flex-direction: column; gap: 16px;">
       
@@ -428,13 +433,14 @@
         ✏️ Rellena el reporte para continuar
       </button>
     </div>
+    </div>
   </div>
 
   <!-- ════ PANTALLA: ÉXITO ════ -->
   <div class="screen" id="screen-exito">
     <div class="success-screen">
       <div class="success-icon">✅</div>
-      <div class="success-title">¡Mantenimiento<br>registrado!</div>
+      <div class="success-title" id="exitoTitulo">¡Reporte<br>registrado!</div>
       <div class="success-sub">El registro ha quedado guardado<br>en la base de datos correctamente.</div>
 
       <div class="success-details fade-up">
@@ -452,7 +458,10 @@
         </div>
       </div>
 
-      <button class="btn-nuevo" onclick="reiniciar()">🔄 Nuevo mantenimiento</button>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-nuevo" onclick="reiniciar()" id="btnNuevoReporte">🔄 Nuevo reporte</button>
+        <button class="btn-nuevo" onclick="location.href='index.html'" style="background:#fff;border:1.5px solid #dde1e7;color:#1e2a38">🏠 Ir al inicio</button>
+      </div>
     </div>
   </div>
 
