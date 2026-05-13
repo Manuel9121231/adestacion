@@ -298,3 +298,112 @@ body { padding-top: var(--user-panel-h, 64px); }
   position: relative;
   z-index: 1;
 }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   MEJORAS RESPONSIVE PARA MÓVILES
+   ═════════════════════════════════════════════════════════════════════════════ */
+
+/* Prevenir zoom en inputs en iOS */
+@media screen and (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important; /* Evita zoom en iOS */
+    min-height: 44px; /* Tamaño mínimo táctil */
+  }
+  
+  button, .btn, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Mejorar áreas de toque */
+  a, button, input[type="submit"], input[type="button"], .clickable {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Prevenir selección de texto accidental */
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Permitir selección en inputs */
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  
+  /* Scroll suave en iOS */
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+  }
+  
+  /* Ajustar iframes y objetos */
+  iframe, object, embed {
+    max-width: 100%;
+  }
+  
+  /* Tablas responsive */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    width: 100%;
+  }
+  
+  /* Botones más grandes en móvil */
+  .btn-lg-mobile {
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+  
+  /* Espaciado para notch */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Ocultar scrollbar pero mantener funcionalidad */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Orientación landscape en móviles pequeños */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .hide-landscape {
+    display: none !important;
+  }
+  
+  .compact-landscape {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* Soporte para Dark Mode automático del sistema */
+@media (prefers-color-scheme: dark) {
+  @media screen and (max-width: 768px) {
+    body:not(.light-mode) {
+      color-scheme: dark;
+    }
+  }
+}
+
+/* Reducir animaciones si el usuario prefiere */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

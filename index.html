@@ -1016,6 +1016,14 @@
           return;
         }
 
+        // Verificar si hay maquinaId pendiente para redirigir
+        const pendingMaquinaId = localStorage.getItem('sgi_pending_maquinaId');
+        if (pendingMaquinaId) {
+          localStorage.removeItem('sgi_pending_maquinaId');
+          window.location.href = `operario.html?maquinaId=${pendingMaquinaId}`;
+          return;
+        }
+
         // Show portals without page reload
         document.getElementById('userName').textContent = nombre;
         const roleLabels = { 'usuario': 'Usuario', 'tecnico': 'Técnico', 'admin': 'Administrador' };
