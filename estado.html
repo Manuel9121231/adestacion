@@ -418,6 +418,11 @@
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
     </a>
     <div class="header-title">
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+        <span>Inicio</span>
+        <span style="opacity: 0.5;">/</span>
+        <span style="color: var(--accent); font-weight: 500;">Estado de Máquinas</span>
+      </div>
       <h1>Estado de Equipos</h1>
       <p id="statsLabel">Cargando disponibilidad...</p>
     </div>
@@ -431,17 +436,6 @@
     <div style="position:relative;flex:1;min-width:250px">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o sala..." oninput="filterMachines()">
-    </div>
-    <div class="filter-buttons" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-      <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
-        <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Estado</span>
-        <button id="btnEstado" onclick="toggleEstadoFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">Todas</button>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
-        <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Máquinas</span>
-        <button id="btnIncidencia" onclick="cycleIncidenciaFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">Todas</button>
-      </div>
-      <button onclick="resetFilters()" class="btn-filter" style="padding:10px 16px;border-radius:10px;border:2px solid var(--border);background:linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:all 0.2s">Limpiar filtros</button>
     </div>
   </div>
   <div id="filtroResumen" style="padding:8px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:none;max-width:1400px;margin:0 auto">
