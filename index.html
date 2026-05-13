@@ -1008,19 +1008,19 @@
           userId: user.id, email: user.email, nombre, rol
         }));
 
+        // Verificar si hay maquinaId pendiente para redirigir (PRIORIDAD para todos los roles)
+        const pendingMaquinaId = localStorage.getItem('sgi_pending_maquinaId');
+        if (pendingMaquinaId) {
+          localStorage.removeItem('sgi_pending_maquinaId');
+          window.location.href = `operario.html?maquinaId=${pendingMaquinaId}`;
+          return;
+        }
+
         if (rol === 'admin' || rol === 'tecnico') {
           localStorage.setItem('sgi_admin_session', JSON.stringify({
             type: rol, userId: user.id, email: user.email, nombre
           }));
           window.location.href = 'dashboard.html';
-          return;
-        }
-
-        // Verificar si hay maquinaId pendiente para redirigir
-        const pendingMaquinaId = localStorage.getItem('sgi_pending_maquinaId');
-        if (pendingMaquinaId) {
-          localStorage.removeItem('sgi_pending_maquinaId');
-          window.location.href = `operario.html?maquinaId=${pendingMaquinaId}`;
           return;
         }
 
