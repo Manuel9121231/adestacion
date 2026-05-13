@@ -552,8 +552,22 @@
   <div class="header-bottom">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre, sala o etiqueta..." oninput="filterMachines()">
+      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o sala..." oninput="filterMachines()">
     </div>
+    <div class="filter-buttons" style="display:flex;gap:12px;margin-left:auto;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+        <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Estado</span>
+        <button id="btnEstado" onclick="toggleEstadoFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">⚡ Todas</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+        <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Máquinas</span>
+        <button id="btnIncidencia" onclick="cycleIncidenciaFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">🚨 Todas</button>
+      </div>
+      <button onclick="resetFilters()" class="btn-filter" style="padding:10px 16px;border-radius:10px;border:2px solid var(--border);background:linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:all 0.2s">✨ Limpiar filtros</button>
+    </div>
+  </div>
+  <div id="filtroResumen" style="padding:8px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:none">
+    <span id="filtroTexto"></span> • <span id="resultadoCount" style="font-weight:600;color:var(--text-primary)"></span> equipos
   </div>
 </header>
 
@@ -598,9 +612,10 @@
         if (!window.supabaseClient) { setTimeout(loadStatus, 500); return; }
         const c = window.supabaseClient;
 
+        // 1. Cargar máquinas y obtener IDs de incidencias abiertas
         const [mRes, iRes] = await Promise.all([
           c.from('equipos').select('id,nombre,codigo,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
-          c.from('registros').select('maquina_id').eq('tipo','Incidencia').eq('resuelta',false)
+          c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta',false)
         ]);
 
         if (mRes.error) throw mRes.error;
@@ -608,6 +623,36 @@
         rawMachines = mRes.data || [];
         const incidencias = iRes.data || [];
         const downIds = new Set(incidencias.map(i => i.maquina_id));
+        
+        // Mapa de maquina_id -> datos de incidencia (incluyendo en_seguimiento)
+        const incidenciaPorMaquina = {};
+        // Mapa de incidencia_id -> maquina_id para buscar seguimientos
+        const incidenciaToMaquina = {};
+        incidencias.forEach(inc => {
+          incidenciaPorMaquina[inc.maquina_id] = inc;
+          incidenciaToMaquina[inc.id] = inc.maquina_id;
+        });
+
+        // 2. Cargar últimos seguimientos de esas incidencias
+        let seguimientosPorMaquina = {};
+        if (incidencias.length > 0) {
+          const incIds = incidencias.map(i => i.id);
+          const { data: segRes, error: segError } = await c
+            .from('seguimientos')
+            .select('incidencia_id,nota,timestamp')
+            .in('incidencia_id', incIds)
+            .order('timestamp', { ascending: false });
+            
+          if (!segError && segRes) {
+            // Agrupar por máquina y tomar el más reciente
+            segRes.forEach(s => {
+              const maqId = incidenciaToMaquina[s.incidencia_id];
+              if (maqId && !seguimientosPorMaquina[maqId]) {
+                seguimientosPorMaquina[maqId] = s.nota;
+              }
+            });
+          }
+        }
 
         const bySala = {};
         rawMachines.forEach(m => {
@@ -623,10 +668,16 @@
           if (incidencia) statusParts.push('Incidencia');
           const motivo = statusParts.join(' + ');
 
+          // Determinar estado de seguimiento
+          const incData = incidenciaPorMaquina[m.id];
+          const enSeguimiento = incData && incData.en_seguimiento;
+          
           m.down = down;
           m.motivo = motivo;
           m.inactiva = inactiva;
           m.incidencia = incidencia;
+          m.enSeguimiento = enSeguimiento;
+          m.ultimoSeguimiento = seguimientosPorMaquina[m.id] || '';
           bySala[salaName].push(m);
         });
 
@@ -651,6 +702,8 @@
       const sortedSalas = Object.keys(data).sort();
 
       if (sortedSalas.length === 0) {
+        layoutContainer.style.display = 'none';
+        loader.style.display = 'block';
         loader.innerHTML = `<div class="empty-state">No se encontraron equipos.</div>`;
         return;
       }
@@ -736,31 +789,62 @@
     function machineHTML(m) {
       let statusClass, badgeClass, cardClass, badgeText;
 
+      // Lógica de colores según el panel de administración:
+      // - Gris: Inactiva + Incidencia
+      // - Amarillo: Activa + Incidencia en seguimiento  
+      // - Rojo: Activa + Incidencia sin resolver
+      // - Verde: Activa sin incidencia
       if (!m.inactiva && !m.incidencia) {
+        // Activa sin incidencia - verde
         statusClass = 'status-ok';
         badgeClass  = 'badge-ok';
         badgeText   = 'Activa';
         cardClass   = 'm-card';
-      } else if (!m.inactiva && m.incidencia) {
+      } else if (!m.inactiva && m.incidencia && m.enSeguimiento) {
+        // Activa + en seguimiento - amarillo
         statusClass = 'status-warn';
         badgeClass  = 'badge-warn';
-        badgeText   = 'Activa';
+        badgeText   = 'En Seguimiento';
         cardClass   = 'm-card warn';
-      } else if (m.inactiva && !m.incidencia) {
-        statusClass = 'status-inactive';
-        badgeClass  = 'badge-inactive';
-        badgeText   = m.motivo;
-        cardClass   = 'm-card inactive';
-      } else {
+      } else if (!m.inactiva && m.incidencia && !m.enSeguimiento) {
+        // Activa + sin resolver - rojo
         statusClass = 'status-err';
         badgeClass  = 'badge-err';
-        badgeText   = m.estado || 'Inactiva';
+        badgeText   = 'Sin Resolver';
         cardClass   = 'm-card down';
+      } else if (m.inactiva && m.incidencia) {
+        // Inactiva + incidencia - gris
+        statusClass = 'status-inactive';
+        badgeClass  = 'badge-inactive';
+        badgeText   = 'Incidencia';
+        cardClass   = 'm-card inactive';
+      } else {
+        // Inactiva sin incidencia - gris
+        statusClass = 'status-inactive';
+        badgeClass  = 'badge-inactive';
+        badgeText   = m.estado || 'Inactiva';
+        cardClass   = 'm-card inactive';
       }
 
       let detailsHTML = '';
-      if (m.incidencia) detailsHTML += `<span class="m-badge ${m.inactiva ? 'badge-err' : 'badge-warn'}" style="align-self:flex-start">Incidencia</span>`;
-      if (m.notas) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
+      if (m.incidencia) {
+        // Color del badge según estado: gris=inactiva, amarillo=seguimiento, rojo=sin resolver
+        let badgeTipo = 'err'; // Por defecto rojo (sin resolver)
+        let badgeTexto = 'Incidencia';
+        if (m.inactiva) {
+          badgeTipo = 'inactive';
+          badgeTexto = 'Incidencia (Inactiva)';
+        } else if (m.enSeguimiento) {
+          badgeTipo = 'warn';
+          badgeTexto = 'En Seguimiento';
+        }
+        
+        detailsHTML += `<span class="m-badge badge-${badgeTipo}" style="align-self:flex-start">${badgeTexto}</span>`;
+        if (m.ultimoSeguimiento) {
+          detailsHTML += `<span class="m-nota" style="font-style:italic;color:var(--accent);font-size:11px">📝 ${esc(m.ultimoSeguimiento.substring(0, 40))}${m.ultimoSeguimiento.length > 40 ? '...' : ''}</span>`;
+        }
+      }
+      if (m.notas && !m.incidencia) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
 
       return `
         <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}" onclick="window.location.href='operario.html?maquinaId=${m.id}'">
@@ -789,38 +873,131 @@
     }
     function getMachineState(m) { return m.inactiva ? 'inactiva' : 'activa'; }
 
-    function filterMachines() {
+    // Filtros
+    let filtroEstado = 'todos'; // 'todos', 'activa', 'inactiva'
+    let filtroIncidencia = 'todos'; // 'todos', 'sin_errores', 'sin_resolver', 'en_seguimiento'
+
+    function toggleEstadoFilter() {
+      const btn = document.getElementById('btnEstado');
+      if (filtroEstado === 'todos') {
+        filtroEstado = 'activa';
+        btn.textContent = '⚡ Activa';
+        btn.style.borderColor = 'var(--success)';
+        btn.style.background = 'rgba(16, 185, 129, 0.1)';
+      } else if (filtroEstado === 'activa') {
+        filtroEstado = 'inactiva';
+        btn.textContent = '⛔ Inactiva';
+        btn.style.borderColor = 'var(--danger)';
+        btn.style.background = 'rgba(239, 68, 68, 0.1)';
+      } else {
+        filtroEstado = 'todos';
+        btn.textContent = '⚡ Todas';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.background = 'var(--card-bg)';
+      }
+      applyFilters();
+    }
+
+    function cycleIncidenciaFilter() {
+      const btn = document.getElementById('btnIncidencia');
+      if (filtroIncidencia === 'todos') {
+        filtroIncidencia = 'sin_resolver';
+        btn.textContent = '🚨 Sin resolver';
+        btn.style.borderColor = 'var(--danger)';
+        btn.style.background = 'rgba(239, 68, 68, 0.1)';
+      } else if (filtroIncidencia === 'sin_resolver') {
+        filtroIncidencia = 'en_seguimiento';
+        btn.textContent = '⏳ En seguimiento';
+        btn.style.borderColor = 'var(--warning)';
+        btn.style.background = 'rgba(245, 158, 11, 0.1)';
+      } else if (filtroIncidencia === 'en_seguimiento') {
+        filtroIncidencia = 'sin_errores';
+        btn.textContent = '✅ Sin errores';
+        btn.style.borderColor = 'var(--success)';
+        btn.style.background = 'rgba(16, 185, 129, 0.1)';
+      } else {
+        filtroIncidencia = 'todos';
+        btn.textContent = '🚨 Todas';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.background = 'var(--card-bg)';
+      }
+      applyFilters();
+    }
+
+    function resetFilters() {
+      filtroEstado = 'todos';
+      filtroIncidencia = 'todos';
+      document.getElementById('btnEstado').textContent = '⚡ Todas';
+      document.getElementById('btnEstado').style.borderColor = 'var(--border)';
+      document.getElementById('btnEstado').style.background = 'var(--card-bg)';
+      document.getElementById('btnIncidencia').textContent = '🚨 Todas';
+      document.getElementById('btnIncidencia').style.borderColor = 'var(--border)';
+      document.getElementById('btnIncidencia').style.background = 'var(--card-bg)';
+      document.getElementById('searchInput').value = '';
+      applyFilters();
+    }
+
+    function applyFilters() {
       const q = document.getElementById('searchInput').value.toLowerCase().trim();
       const normQ = normalize(q);
 
-      if (!q) {
-        const all = {};
-        rawMachines.forEach(m => {
-          const s = m.salas?.nombre || 'Sin Sala';
-          if (!all[s]) all[s] = [];
-          all[s].push(m);
-        });
-        renderData(all);
-        return;
-      }
-
       const results = {};
+      let count = 0;
       rawMachines.forEach(m => {
         const salaName = m.salas?.nombre || 'Sin Sala';
-        const estado = getMachineState(m);
-        const textFields = [(m.nombre||''), (m.codigo||''), salaName, (m.tipo||''), (m.notas||'')];
-
-        const match =
-          estado.startsWith(q) ||
-          textFields.some(f => normalize(f).includes(normQ)) ||
-          textFields.some(f => fuzzyMatch(q, f));
-
-        if (match) {
-          if (!results[salaName]) results[salaName] = [];
-          results[salaName].push(m);
+        
+        // Filtro de búsqueda texto - solo nombre y sala
+        if (q) {
+          const textFields = [(m.nombre||''), salaName];
+          const matchSearch = textFields.some(f => normalize(f).includes(normQ)) ||
+                             textFields.some(f => fuzzyMatch(q, f));
+          if (!matchSearch) return;
         }
+
+        // Filtro de estado (activa/inactiva)
+        if (filtroEstado === 'activa' && m.inactiva) return;
+        if (filtroEstado === 'inactiva' && !m.inactiva) return;
+
+        // Filtro de incidencia
+        if (filtroIncidencia === 'sin_errores' && m.incidencia) return;
+        if (filtroIncidencia === 'sin_resolver' && (!m.incidencia || m.enSeguimiento)) return;
+        if (filtroIncidencia === 'en_seguimiento' && (!m.incidencia || !m.enSeguimiento)) return;
+
+        if (!results[salaName]) results[salaName] = [];
+        results[salaName].push(m);
+        count++;
       });
+
+      // Mostrar resumen de filtros
+      const resumenEl = document.getElementById('filtroResumen');
+      const filtroTextoEl = document.getElementById('filtroTexto');
+      const countEl = document.getElementById('resultadoCount');
+      
+      const partes = [];
+      if (filtroEstado !== 'todos') partes.push(filtroEstado === 'activa' ? '⚡ Activas' : '⛔ Inactivas');
+      if (filtroIncidencia !== 'todos') {
+        const incText = {
+          'sin_errores': '✅ Sin incidencias',
+          'sin_resolver': '🚨 Sin resolver',
+          'en_seguimiento': '📝 En seguimiento'
+        }[filtroIncidencia];
+        partes.push(incText);
+      }
+      if (q) partes.push(`🔍 "${q}"`);
+      
+      if (partes.length > 0) {
+        filtroTextoEl.textContent = partes.join(' + ');
+        countEl.textContent = count;
+        resumenEl.style.display = 'block';
+      } else {
+        resumenEl.style.display = 'none';
+      }
+
       renderData(results);
+    }
+
+    function filterMachines() {
+      applyFilters();
     }
 
     function cerrarSesion() {

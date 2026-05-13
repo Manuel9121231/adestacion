@@ -8,6 +8,7 @@ let sesionId = null;
 let pinBuffer = '';
 let modoActual = 'Mantenimiento'; // 'Mantenimiento' o 'Incidencia'
 let selectedPhotos = [];
+let incidenciaAbiertaId = null; // ID de incidencia abierta para seguimiento
 
 // ── Arranque ──────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -52,20 +53,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     maquinaId = maquinaData.id;
 
     // --- VERIFICACIÓN DE SEMÁFORO (INCIDENCIAS ABIERTAS) ---
-    const { data: openInc, error: incError } = await client
-      .from('registros')
-      .select('id')
-      .eq('maquina_id', maquinaId)
-      .eq('tipo', 'Incidencia')
-      .eq('resuelta', false)
-      .limit(1);
+    console.log('🔍 Verificando incidencias para máquina:', maquinaId);
+    
+    // Consulta simplificada para evitar errores de columnas que no existan
+    let openInc = [];
+    let incError = null;
+    try {
+      const result = await client
+        .from('registros')
+        .select('*')
+        .eq('maquina_id', maquinaId)
+        .eq('tipo', 'Incidencia')
+        .order('timestamp', { ascending: false });
+      
+      if (result.error) {
+        incError = result.error;
+        console.error('❌ Error consulta:', result.error);
+      } else {
+        // Filtrar manualmente las no resueltas (por si el campo tiene otro nombre)
+        openInc = result.data ? result.data.filter(r => !r.resuelta && !r.fecha_resolucion) : [];
+      }
+    } catch (e) {
+      incError = e;
+      console.error('❌ Excepción:', e);
+    }
+
+    console.log('📊 Resultado incidencias:', { count: openInc?.length || 0, error: incError?.message });
 
     const banner = document.getElementById('statusBanner');
     const icon = document.getElementById('statusIcon');
     const text = document.getElementById('statusText');
     const maintCard = document.querySelector('.portal-card.maintenance');
+    const incCard = document.querySelector('.portal-card.incident');
+    
+    console.log('🎴 Tarjeta incidencia encontrada:', incCard);
 
     if (openInc && openInc.length > 0) {
+      incidenciaAbiertaId = openInc[0].id;
+      console.log('✅ Incidencia abierta detectada, ID:', incidenciaAbiertaId);
+      console.log('📋 Datos incidencia:', openInc[0]);
       banner.className = 'status-banner status-repair';
       icon.textContent = '🔴';
       text.textContent = 'Máquina en Reparación / Parada';
@@ -75,7 +101,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         maintCard.style.pointerEvents = 'none';
         maintCard.innerHTML += '<div style="font-size:10px; color:var(--accent-inc); margin-top:5px; font-weight:700;">⚠️ BLOQUEADO POR INCIDENCIA</div>';
       }
+      // Cambiamos el botón de incidencia para mostrar seguimiento
+      if (incCard) {
+        incCard.removeAttribute('onclick'); // Eliminar el onclick inline original
+        incCard.onclick = function(e) {
+          console.log('🖱️ Click en tarjeta incidencia - yendo a seguimiento');
+          e.preventDefault();
+          e.stopPropagation();
+          showScreen('incidencia-seguimiento');
+          return false;
+        };
+        const titleEl = incCard.querySelector('.portal-card-title');
+        const subEl = incCard.querySelector('.portal-card-sub');
+        if (titleEl) {
+          titleEl.textContent = 'Ver/Actualizar incidencia';
+          console.log('📝 Título cambiado');
+        }
+        if (subEl) {
+          subEl.textContent = 'Hay una incidencia abierta - añade notas o resuélvela';
+          console.log('📝 Subtítulo cambiado');
+        }
+        console.log('✅ Botón de incidencia configurado para seguimiento');
+      } else {
+        console.error('❌ No se encontró la tarjeta de incidencia');
+      }
     } else {
+      incidenciaAbiertaId = null;
       banner.className = 'status-banner status-operative';
       icon.textContent = '🟢';
       text.textContent = 'Máquina Operativa';
@@ -96,6 +147,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
+  
+  // Si mostramos la pantalla de seguimiento, cargar datos
+  if (name === 'incidencia-seguimiento') {
+    document.getElementById('segIncMaquinaNombre').textContent = maquinaData?.nombre || 'Incidencia';
+    document.getElementById('segIncSalaNombre').textContent = maquinaData?.sala_nombre || '';
+    cargarSeguimientoIncidencia();
+  }
 }
 
 function showError(msg) {
@@ -227,19 +285,7 @@ function cancelPhoto() {
 }
 
 async function enviarChecklist() {
-  const nombreUser = document.getElementById('userNameInput').value.trim();
-  const emailUser = document.getElementById('userEmailInput').value.trim().toLowerCase();
   const reporte = document.getElementById('reporteTextarea').value.trim();
-
-  if (!nombreUser || !emailUser) {
-    alert("Por favor, introduce tu nombre y email para identificarte (Clave Única).");
-    return;
-  }
-
-  if (!emailUser.includes('@')) {
-    alert("Introduce un email válido.");
-    return;
-  }
 
   if (reporte.length < 1) {
     document.getElementById('reporteError').style.display = 'block';
@@ -248,53 +294,67 @@ async function enviarChecklist() {
 
   const btn = document.getElementById('btnEnviar');
   btn.disabled = true;
-  btn.textContent = '⏳ Verificando Identidad...';
-
-  // --- AUTO-ALTA DE USUARIO ---
-  const client = window.supabaseClient;
-  const { data: userExists } = await client
-    .from('usuarios')
-    .select('id')
-    .eq('email', emailUser)
-    .single();
-
-  let userId;
-  if (!userExists) {
-    console.log("Nuevo usuario detectado. Realizando Auto-alta...");
-    const { data: newUser } = await client.from('usuarios').insert({
-      nombre: nombreUser,
-      email: emailUser,
-      rol: 'usuario',
-      activo: true
-    }).select('id').single();
-    userId = newUser.id;
-  } else {
-    userId = userExists.id;
-  }
-
   btn.textContent = '⏳ Enviando reporte...';
 
-  const res = await apiFetch(`/api/sesion/${sesionId}/completar`, {
-    method: 'POST',
-    body: {
-      observaciones: reporte,
-      usuario_id: userId,
-      nombre_usuario: nombreUser,
-      email_usuario: emailUser, // Trazabilidad por email
-      fotos: selectedPhotos
-    },
-  });
+  try {
+    // Obtener usuario de la sesión
+    const sessionStr = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
+    
+    let nombreUser = 'Anonimo';
+    let emailUser = 'desconocido@email.com';
 
-  if (res.ok) {
-    document.getElementById('exitoMaquina').textContent = maquinaData.nombre;
-    document.getElementById('exitoOperario').textContent = nombreUser;
-    document.getElementById('exitoFecha').textContent = new Date().toLocaleString('es-ES');
-    showScreen('exito');
-  } else {
+    if (sessionStr) {
+      try {
+        const session = JSON.parse(sessionStr);
+        nombreUser = session.nombre || 'Anonimo';
+        emailUser = session.email || 'desconocido@email.com';
+      } catch (e) {
+        console.error('Error al leer sesión:', e);
+      }
+    }
+
+    // Buscar ID en tabla usuarios usando email
+    const client = window.supabaseClient;
+    const { data: userData, error: userError } = await client
+      .from('usuarios')
+      .select('id,email,nombre')
+      .eq('email', emailUser)
+      .maybeSingle();
+
+    console.log('Buscando usuario con email:', emailUser);
+    console.log('Resultado:', userData, 'Error:', userError);
+
+    if (!userData) {
+      throw new Error('No se encontró usuario en tabla usuarios con email: ' + emailUser + '. Error: ' + (userError?.message || 'Desconocido'));
+    }
+
+    const userId = userData.id;
+
+    const res = await apiFetch(`/api/sesion/${sesionId}/completar`, {
+      method: 'POST',
+      body: {
+        observaciones: reporte,
+        usuario_id: userId,
+        nombre_usuario: nombreUser,
+        email_usuario: emailUser,
+        fotos: selectedPhotos
+      },
+    });
+
+    if (res.ok) {
+      document.getElementById('exitoMaquina').textContent = maquinaData.nombre;
+      document.getElementById('exitoOperario').textContent = nombreUser;
+      document.getElementById('exitoFecha').textContent = new Date().toLocaleString('es-ES');
+      showScreen('exito');
+    } else {
+      throw new Error(res.error || 'No se pudo enviar el informe');
+    }
+  } catch (error) {
+    console.error('Error al enviar reporte:', error);
     btn.disabled = false;
     btn.className = 'btn-enviar activo';
     btn.textContent = '⚠️ Error al enviar. Reintentar';
-    alert('Error: ' + (res.error || 'No se pudo enviar el informe'));
+    alert('Error: ' + error.message);
   }
 }
 
@@ -304,9 +364,7 @@ function reiniciar() {
   modoActual = 'Mantenimiento';
 
   // Limpiar campos del formulario
-  const userInp = document.getElementById('userNameInput');
   const reportTxt = document.getElementById('reporteTextarea');
-  if (userInp) userInp.value = '';
   if (reportTxt) reportTxt.value = '';
 
   // Resetear botón de envío
@@ -424,7 +482,14 @@ async function apiFetch(url, options = {}) {
 
       if (rError) throw rError;
 
-      // 3. Update last maintenance date on the machine
+      // 3. Update machine state if it's an incident
+      if (modoActual === 'Incidencia') {
+        await client.from('equipos')
+          .update({ estado: 'Inactiva' })
+          .eq('id', maquinaId);
+      }
+
+      // 4. Update last maintenance date on the machine
       await client.from('equipos')
         .update({ ultimo_mantenimiento: new Date().toISOString() })
         .eq('id', maquinaId);
@@ -440,4 +505,364 @@ async function apiFetch(url, options = {}) {
     }
     return { ok: false, error: err.message };
   }
+}
+
+// ── Cambiar Estado de Máquina ────────────────────────────────────────────────
+async function cargarEstadoMaquina() {
+  if (!maquinaId) return;
+  
+  const client = window.supabaseClient;
+  const { data: maq, error } = await client
+    .from('equipos')
+    .select('estado')
+    .eq('id', maquinaId)
+    .single();
+    
+  if (error) {
+    console.error('Error cargando estado:', error);
+    return;
+  }
+  
+  const estado = maq.estado || 'activa';
+  const btnActiva = document.getElementById('btnEstadoActiva');
+  const btnInactiva = document.getElementById('btnEstadoInactiva');
+  const msg = document.getElementById('estadoMaquinaMsg');
+  
+  if (estado === 'activa') {
+    btnActiva.style.opacity = '1';
+    btnActiva.style.borderWidth = '3px';
+    btnInactiva.style.opacity = '0.5';
+    btnInactiva.style.borderWidth = '1px';
+    msg.textContent = 'La máquina está operativa';
+  } else {
+    btnActiva.style.opacity = '0.5';
+    btnActiva.style.borderWidth = '1px';
+    btnInactiva.style.opacity = '1';
+    btnInactiva.style.borderWidth = '3px';
+    msg.textContent = 'La máquina está inactiva';
+  }
+}
+
+// ── Notificación Toast ────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const existing = document.querySelector('.toast-notification');
+  if (existing) existing.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${type === 'success' ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)'};
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    animation: fadeInDown 0.3s ease;
+  `;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'fadeOutUp 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+async function cambiarEstadoMaquina(nuevoEstado) {
+  if (!maquinaId) return;
+  
+  // Verificar si es técnico o admin
+  const sessionStr = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
+  if (!sessionStr) {
+    showToast('Debes iniciar sesión para cambiar el estado', 'error');
+    return;
+  }
+  
+  try {
+    const session = JSON.parse(sessionStr);
+    const rol = session.rol || session.type;
+    if (rol !== 'tecnico' && rol !== 'admin' && rol !== 'superadmin') {
+      showToast('Solo técnicos y administradores pueden cambiar el estado', 'error');
+      return;
+    }
+  } catch(e) {
+    showToast('Error verificando permisos', 'error');
+    return;
+  }
+  
+  const client = window.supabaseClient;
+  const { error } = await client
+    .from('equipos')
+    .update({ estado: nuevoEstado })
+    .eq('id', maquinaId);
+    
+  if (error) {
+    showToast('Error al cambiar estado: ' + error.message, 'error');
+    return;
+  }
+  
+  await cargarEstadoMaquina();
+  showToast(`Estado cambiado a ${nuevoEstado}`, 'success');
+}
+
+// ── Seguimiento de Incidencias ────────────────────────────────────────────────
+async function cargarSeguimientoIncidencia() {
+  console.log('🔄 Cargando seguimiento para incidencia:', incidenciaAbiertaId);
+  
+  if (!incidenciaAbiertaId) {
+    console.error('❌ No hay ID de incidencia abierta');
+    return;
+  }
+  
+  const client = window.supabaseClient;
+  
+  // Cargar datos de la incidencia
+  const { data: incidencia, error: incError } = await client
+    .from('registros')
+    .select('*')
+    .eq('id', incidenciaAbiertaId)
+    .single();
+    
+  if (incError) {
+    console.error('❌ Error cargando incidencia:', incError);
+    document.getElementById('incDescTexto').textContent = 'Error al cargar datos de la incidencia';
+    return;
+  }
+  
+  console.log('✅ Incidencia cargada:', incidencia);
+  
+  // Cargar estado de la máquina
+  await cargarEstadoMaquina();
+  
+  // Mostrar descripción de la incidencia
+  document.getElementById('incDescTexto').textContent = incidencia.observaciones || 'Sin descripción';
+  document.getElementById('incDescMeta').textContent = `Reportado por ${incidencia.usuario_nombre || 'Desconocido'} el ${new Date(incidencia.timestamp).toLocaleString('es-ES')}`;
+  
+  // Cargar seguimientos
+  const timeline = document.getElementById('seguimientoTimeline');
+  timeline.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.5">Cargando seguimientos...</div>';
+  
+  const { data: seguimientos, error: segError } = await client
+    .from('seguimientos')
+    .select('*')
+    .eq('incidencia_id', incidenciaAbiertaId)
+    .order('timestamp', { ascending: true });
+    
+  if (segError) {
+    timeline.innerHTML = '<div style="color:var(--danger);font-size:12px;text-align:center">Error al cargar seguimientos</div>';
+    return;
+  }
+  
+  if (!seguimientos || seguimientos.length === 0) {
+    timeline.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.5;font-size:13px">No hay notas de seguimiento aún.<br>Escribe una nota abajo.</div>';
+  } else {
+    timeline.innerHTML = seguimientos.map(s => `
+      <div style="margin-bottom:16px;padding:12px;background:rgba(79,142,247,0.05);border-radius:8px;border-left:3px solid var(--accent)">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">
+          <strong>${s.usuario_nombre || 'Técnico'}</strong> · ${new Date(s.timestamp).toLocaleString('es-ES', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+        </div>
+        <div style="font-size:14px;color:var(--text-primary)">${s.nota}</div>
+      </div>
+    `).join('');
+  }
+  
+  // Scroll al final
+  timeline.scrollTop = timeline.scrollHeight;
+}
+
+async function guardarNotaSeguimiento() {
+  const input = document.getElementById('nuevaNotaSeguimiento');
+  const nota = input.value.trim();
+  
+  if (!nota || !incidenciaAbiertaId) {
+    alert('Escribe una nota primero');
+    return;
+  }
+  
+  // Obtener usuario actual
+  let usuarioNombre = 'Técnico';
+  const sessionStr = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
+  if (sessionStr) {
+    try {
+      const session = JSON.parse(sessionStr);
+      usuarioNombre = session.nombre || session.username || 'Técnico';
+    } catch(e) {}
+  }
+  
+  const btn = document.getElementById('btnGuardarNota');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  
+  const client = window.supabaseClient;
+  
+  // 1. Insertar la nota de seguimiento
+  const { error } = await client
+    .from('seguimientos')
+    .insert({
+      incidencia_id: incidenciaAbiertaId,
+      nota: nota,
+      usuario_nombre: usuarioNombre,
+      timestamp: new Date().toISOString()
+    });
+    
+  if (error) {
+    alert('Error al guardar nota: ' + error.message);
+    btn.disabled = false;
+    btn.textContent = '➕ Añadir Nota';
+    return;
+  }
+  
+  // 2. Marcar la incidencia como "en seguimiento" (si existe el campo)
+  try {
+    await client
+      .from('registros')
+      .update({ en_seguimiento: true })
+      .eq('id', incidenciaAbiertaId);
+  } catch (e) {
+    // Si el campo no existe, ignorar el error
+    console.log('Campo en_seguimiento no existe o error al actualizar:', e);
+  }
+  
+  input.value = '';
+  await cargarSeguimientoIncidencia();
+  btn.disabled = false;
+  btn.textContent = '➕ Añadir Nota';
+}
+
+// ── Custom Confirm Modal ─────────────────────────────────────────────────────
+function customConfirm(message, onConfirm, onCancel) {
+  // Remover modal existente si hay
+  const existing = document.getElementById('customConfirmModal');
+  if (existing) existing.remove();
+  
+  const modal = document.createElement('div');
+  modal.id = 'customConfirmModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+  `;
+  
+  modal.innerHTML = `
+    <div style="
+      background: var(--card-bg, white);
+      border-radius: 16px;
+      padding: 24px 28px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: slideUp 0.3s ease;
+    ">
+      <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary, #1f2937);">
+        ¿Resolver incidencia?
+      </div>
+      <div style="font-size: 14px; color: var(--text-muted, #6b7280); margin-bottom: 24px; line-height: 1.5;">
+        ${message}
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button id="confirmCancel" style="
+          padding: 10px 20px;
+          border-radius: 10px;
+          border: 1.5px solid var(--border, #e5e7eb);
+          background: transparent;
+          color: var(--text-muted, #6b7280);
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+        ">Cancelar</button>
+        <button id="confirmAccept" style="
+          padding: 10px 20px;
+          border-radius: 10px;
+          border: none;
+          background: var(--success, #10b981);
+          color: white;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        ">Resolver</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+      if (onCancel) onCancel();
+    }
+  });
+  
+  document.getElementById('confirmCancel').addEventListener('click', () => {
+    modal.remove();
+    if (onCancel) onCancel();
+  });
+  
+  document.getElementById('confirmAccept').addEventListener('click', () => {
+    modal.remove();
+    if (onConfirm) onConfirm();
+  });
+}
+
+async function resolverIncidencia() {
+  const comentario = document.getElementById('notaResolucion').value.trim();
+  
+  if (!comentario) {
+    showToast('Añade un comentario de resolución', 'error');
+    return;
+  }
+  
+  customConfirm(
+    '¿Marcar esta incidencia como RESUELTA?',
+    async () => {
+      // Obtener usuario actual
+      let usuarioNombre = 'Técnico';
+      const sessionStr = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr);
+          usuarioNombre = session.nombre || session.username || 'Técnico';
+        } catch(e) {}
+      }
+      
+      const client = window.supabaseClient;
+      
+      // Añadir nota de resolución
+      await client.from('seguimientos').insert({
+        incidencia_id: incidenciaAbiertaId,
+        nota: `✅ RESUELTO: ${comentario}`,
+        usuario_nombre: usuarioNombre,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Marcar incidencia como resuelta
+      const { error } = await client
+        .from('registros')
+        .update({ 
+          resuelta: true, 
+          en_seguimiento: false
+        })
+        .eq('id', incidenciaAbiertaId);
+        
+      if (error) {
+        showToast('Error al resolver: ' + error.message, 'error');
+        return;
+      }
+      
+      showToast('Incidencia marcada como resuelta', 'success');
+      setTimeout(() => window.location.href = 'seleccion.html', 1500);
+    }
+  );
 }

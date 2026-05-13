@@ -357,22 +357,7 @@
     <div class="screen-content" style="display: flex; flex-direction: column; gap: 16px;">
       
       <!-- Panel 1: Identificación -->
-      <div class="form-panel" style="
-        background: var(--card-bg); 
-        border: 1px solid var(--border); 
-        border-radius: 16px; 
-        padding: 20px;
-        position: relative;
-        z-index: 1;
-      ">
-        <div class="reporte-label">🔑 IDENTIFICACIÓN (AUTO-ALTA)</div>
-        <div style="display:grid; grid-template-columns: 1fr; gap:12px; margin-top: 12px;">
-          <input type="text" id="userNameInput" class="reporte-textarea" style="height: 48px; font-size: 15px;" placeholder="Tu Nombre Completo">
-          <input type="email" id="userEmailInput" class="reporte-textarea" style="height: 48px; font-size: 15px;" placeholder="Email (Clave Única)">
-        </div>
-      </div>
-
-      <!-- Panel 2: Tipo de Reporte -->
+      <!-- Panel 1: Tipo de Reporte -->
       <div class="form-panel" style="
         background: var(--card-bg); 
         border: 1px solid var(--border); 
@@ -433,6 +418,76 @@
         ✏️ Rellena el reporte para continuar
       </button>
     </div>
+    </div>
+  </div>
+
+  <!-- ════ PANTALLA: SEGUIMIENTO INCIDENCIA ════ -->
+  <div class="screen" id="screen-incidencia-seguimiento">
+    <div class="portal-container fade-up" style="padding-top:0">
+      <div class="portal-header" style="display:flex; justify-content:space-between; align-items:center; text-align:left; gap:20px; margin: 24px 0 20px 0; padding-top: 8px;">
+        <div style="flex:1; display:flex; align-items:center; gap:12px">
+          <div style="font-size:22px">🚨</div>
+          <div>
+            <div style="font-size:20px; font-weight:800; margin:0" id="segIncMaquinaNombre">Incidencia Abierta</div>
+            <div style="font-size:13px; opacity:0.6; margin:0" id="segIncSalaNombre">–</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; flex-shrink: 0;">
+          <button onclick="showScreen('portal')" style="background:var(--card-bg); border:1.5px solid #c8cdd4; color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:500; cursor:pointer; white-space: nowrap;">
+            ← Volver
+          </button>
+        </div>
+      </div>
+
+      <div class="screen-content" style="display: flex; flex-direction: column; gap: 16px; max-width: 600px; margin: 0 auto;">
+        
+        <!-- Descripción de la incidencia -->
+        <div class="form-panel" style="background: rgba(255, 71, 87, 0.08); border: 1px solid var(--accent-inc); border-radius: 16px; padding: 20px;">
+          <div class="reporte-label" style="color: var(--accent-inc); margin-bottom: 8px;">📋 DESCRIPCIÓN DEL REPORTE INICIAL</div>
+          <div id="incDescTexto" style="font-size: 15px; line-height: 1.5; color: var(--text-primary); margin-bottom: 8px;">Cargando...</div>
+          <div id="incDescMeta" style="font-size: 12px; color: var(--text-muted);">–</div>
+        </div>
+
+        <!-- Timeline de seguimientos -->
+        <div class="form-panel" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px;">
+          <div class="reporte-label" style="margin-bottom: 12px;">📝 HISTORIAL DE SEGUIMIENTO</div>
+          <div id="seguimientoTimeline" style="max-height: 300px; overflow-y: auto; padding-right: 8px;">
+            <div style="text-align:center;padding:20px;opacity:0.5">Cargando seguimientos...</div>
+          </div>
+        </div>
+
+        <!-- Añadir nueva nota -->
+        <div class="form-panel" style="background: rgba(79, 142, 247, 0.05); border: 1px solid var(--accent); border-radius: 16px; padding: 20px;">
+          <div class="reporte-label" style="margin-bottom: 12px;">➕ AÑADIR NOTA DE SEGUIMIENTO</div>
+          <textarea id="nuevaNotaSeguimiento" class="reporte-textarea" rows="4" placeholder="Describe las acciones realizadas, avances, o cualquier información relevante..." style="margin-bottom: 12px;"></textarea>
+          <button id="btnGuardarNota" onclick="guardarNotaSeguimiento()" style="width:100%; padding:12px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+            ➕ Añadir Nota
+          </button>
+        </div>
+
+        <!-- Cambiar estado de la máquina (solo técnicos/admins) -->
+        <div class="form-panel" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px;">
+          <div class="reporte-label" style="margin-bottom: 12px;">⚡ ESTADO DE LA MÁQUINA</div>
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            <button id="btnEstadoActiva" onclick="cambiarEstadoMaquina('activa')" style="flex:1;padding:10px;border:2px solid var(--success);background:rgba(16,185,129,0.1);border-radius:8px;color:var(--success);font-weight:600;cursor:pointer">
+              ✅ Activa
+            </button>
+            <button id="btnEstadoInactiva" onclick="cambiarEstadoMaquina('inactiva')" style="flex:1;padding:10px;border:2px solid var(--danger);background:rgba(239,68,68,0.1);border-radius:8px;color:var(--danger);font-weight:600;cursor:pointer">
+              ⛔ Inactiva
+            </button>
+          </div>
+          <div id="estadoMaquinaMsg" style="font-size:12px;color:var(--text-muted);text-align:center">Cargando estado...</div>
+        </div>
+
+        <!-- Resolver incidencia -->
+        <div class="form-panel" style="background: rgba(16, 185, 129, 0.05); border: 1px solid var(--success); border-radius: 16px; padding: 20px;">
+          <div class="reporte-label" style="color: var(--success); margin-bottom: 12px;">✅ MARCAR COMO RESUELTA</div>
+          <textarea id="notaResolucion" class="reporte-textarea" rows="3" placeholder="Describe la solución aplicada..." style="margin-bottom: 12px;"></textarea>
+          <button onclick="resolverIncidencia()" style="width:100%; padding:12px; background: var(--success); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
+            ✅ Resolver Incidencia
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
