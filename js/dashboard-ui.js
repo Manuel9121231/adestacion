@@ -502,15 +502,9 @@ const DASHBOARD_HTML = `
       </div>
       <div class="modal-body">
         <div id="msgNuevaMaquina"></div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label class="form-label">Código <span style="color:var(--danger)">*</span></label>
-            <input class="form-control" id="nuevoMaquinaCodigo" type="text" placeholder="Ej: IMP-01">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Nombre <span style="color:var(--danger)">*</span></label>
-            <input class="form-control" id="nuevoMaquinaNombre" type="text" placeholder="Ej: Impresora A-11">
-          </div>
+        <div class="form-group">
+          <label class="form-label">Nombre <span style="color:var(--danger)">*</span></label>
+          <input class="form-control" id="nuevoMaquinaNombre" type="text" placeholder="Ej: Impresora A-11">
         </div>
         <div class="form-group">
           <label class="form-label">Sala <span style="color:var(--danger)">*</span></label>

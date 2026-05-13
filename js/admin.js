@@ -664,7 +664,7 @@ function renderMaquinas() {
           <div>
             <div class="maquina-nombre">${m.nombre}</div>
             <div class="maquina-tipo" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
-              <span>${m.codigo || 'S/ID'} · ${m.tipo}</span>
+              <span>${m.tipo}</span>
               <span class="estado-badge ${m.estado === 'activa' ? 'ok' : (m.estado === 'inactiva' ? 'gris' : 'naranja')}" style="font-size:9px; padding:1px 6px">
                 ${m.estado || 'activa'}
               </span>
@@ -975,38 +975,48 @@ async function guardarMaquina() {
 }
 
 function abrirModalNuevaMaquina() {
-  document.getElementById('nuevoMaquinaCodigo').value = '';
-  document.getElementById('nuevoMaquinaNombre').value = '';
-  document.getElementById('nuevoMaquinaModelo').value = '';
-  document.getElementById('nuevoMaquinaAncho').value = '';
-  document.getElementById('nuevoMaquinaAlto').value = '';
-  document.getElementById('nuevoMaquinaProfundidad').value = '';
-  document.getElementById('nuevoMaquinaNotas').value = '';
-  const estadoEl = document.getElementById('nuevoMaquinaEstado');
-  if (estadoEl) estadoEl.value = 'activa';
-  document.getElementById('msgNuevaMaquina').innerHTML = '';
+  try {
+    const nombreEl = document.getElementById('nuevoMaquinaNombre');
+    const modeloEl = document.getElementById('nuevoMaquinaModelo');
+    const anchoEl = document.getElementById('nuevoMaquinaAncho');
+    const altoEl = document.getElementById('nuevoMaquinaAlto');
+    const profEl = document.getElementById('nuevoMaquinaProfundidad');
+    const notasEl = document.getElementById('nuevoMaquinaNotas');
+    const estadoEl = document.getElementById('nuevoMaquinaEstado');
+    const msgEl = document.getElementById('msgNuevaMaquina');
+    const tipoSelect = document.getElementById('nuevoMaquinaTipo');
+    const salaSelect = document.getElementById('nuevoMaquinaSala');
 
-  // Configurar opciones del select de tipo según el rol
-  const tipoSelect = document.getElementById('nuevoMaquinaTipo');
-  const crearNuevoOption = tipoSelect.querySelector('option[value="__CREAR_NUEVO__"]');
+    if (nombreEl) nombreEl.value = '';
+    if (modeloEl) modeloEl.value = '';
+    if (anchoEl) anchoEl.value = '';
+    if (altoEl) altoEl.value = '';
+    if (profEl) profEl.value = '';
+    if (notasEl) notasEl.value = '';
+    if (estadoEl) estadoEl.value = 'activa';
+    if (msgEl) msgEl.innerHTML = '';
 
-  // Solo el administrador puede ver la opción "Crear nuevo tipo"
-  if (crearNuevoOption) {
-    crearNuevoOption.style.display = (rolActual === 'admin') ? '' : 'none';
-    // Restaurar texto original
-    crearNuevoOption.textContent = '+ Crear nuevo tipo';
+    // Configurar opciones del select de tipo según el rol
+    if (tipoSelect) {
+      const crearNuevoOption = tipoSelect.querySelector('option[value="__CREAR_NUEVO__"]');
+      if (crearNuevoOption) {
+        crearNuevoOption.style.display = (rolActual === 'admin') ? '' : 'none';
+      }
+      tipoSelect.value = 'Impresora FDM';
+      // Configurar event listener para crear nuevo tipo
+      tipoSelect.onchange = handleTipoChange;
+    }
+
+    // Poblar el select de salas si está vacío
+    if (salaSelect && salaSelect.options.length <= 1) {
+      poblarSelectsSalas();
+    }
+
+    abrirModal('modalNuevaMaquina');
+  } catch (err) {
+    console.error('Error al abrir modal de nueva máquina:', err);
+    showFeedback('Error', 'No se pudo abrir el formulario de nueva máquina.', '');
   }
-
-  // Resetear variable de tipo personalizado
-  nuevoTipoPersonalizado = null;
-
-  // Resetear a valor por defecto
-  tipoSelect.value = 'Impresora FDM';
-
-  // Añadir event listener para manejar cambio de tipo (eliminar anterior si existe)
-  tipoSelect.onchange = handleTipoChange;
-
-  abrirModal('modalNuevaMaquina');
 }
 
 // Variable para almacenar el tipo personalizado creado
@@ -1045,16 +1055,26 @@ async function crearMaquina() {
     showFeedback('Acceso denegado', 'Solo los administradores pueden crear máquinas.', '');
     return;
   }
-  const nombre = document.getElementById('nuevoMaquinaNombre').value.trim();
-  const sala_id = document.getElementById('nuevoMaquinaSala').value;
-  let tipo = document.getElementById('nuevoMaquinaTipo').value;
-  const modelo = document.getElementById('nuevoMaquinaModelo').value.trim();
-  const estado = document.getElementById('nuevoMaquinaEstado')?.value || 'activa';
-  const ancho_mm = parseInt(document.getElementById('nuevoMaquinaAncho').value) || null;
-  const alto_mm = parseInt(document.getElementById('nuevoMaquinaAlto').value) || null;
-  const profundidad_mm = parseInt(document.getElementById('nuevoMaquinaProfundidad').value) || null;
-  const notas = document.getElementById('nuevoMaquinaNotas').value.trim() || null;
-  const msg = document.getElementById('msgNuevaMaquina');
+  const nombreEl = document.getElementById('nuevoMaquinaNombre');
+  const salaEl = document.getElementById('nuevoMaquinaSala');
+  const tipoEl = document.getElementById('nuevoMaquinaTipo');
+  const modeloEl = document.getElementById('nuevoMaquinaModelo');
+  const estadoEl = document.getElementById('nuevoMaquinaEstado');
+  const notasEl = document.getElementById('nuevoMaquinaNotas');
+  const msgEl = document.getElementById('msgNuevaMaquina');
+  
+  if (!nombreEl || !salaEl || !tipoEl) {
+    showFeedback('Error', 'No se pudieron cargar los campos del formulario. Recarga la página.', '');
+    return;
+  }
+  
+  const nombre = nombreEl.value.trim();
+  const sala_id = salaEl.value;
+  let tipo = tipoEl.value;
+  const modelo = modeloEl?.value.trim() || '';
+  const estado = estadoEl?.value || 'activa';
+  const notas = notasEl?.value.trim() || null;
+  const msg = msgEl;
 
   console.log('DEBUG crearMaquina - rolActual:', rolActual, 'tipo:', tipo, 'nuevoTipoPersonalizado:', nuevoTipoPersonalizado);
 
@@ -1082,9 +1102,7 @@ async function crearMaquina() {
   const res = await apiFetch('/api/maquinas', {
     method: 'POST',
     body: {
-      codigo: document.getElementById('nuevoMaquinaCodigo').value.trim(),
-      nombre, sala_id, tipo, modelo, estado,
-      ancho_mm, alto_mm, profundidad_mm, notas
+      nombre, sala_id, tipo, modelo, estado, notas
     }
   });
 
@@ -1264,8 +1282,7 @@ async function poblarFiltroMaquinasHistorial() {
   sel.innerHTML = '<option value="">Todas las máquinas</option>';
   datosMaquinas.forEach(m => {
     const opt = document.createElement('option');
-    const label = m.codigo ? `[${m.codigo}] ${m.nombre}` : m.nombre;
-    opt.value = m.id; opt.textContent = `${label} (${m.sala_nombre})`;
+    opt.value = m.id; opt.textContent = `${m.nombre} (${m.sala_nombre})`;
     sel.appendChild(opt);
   });
 }
