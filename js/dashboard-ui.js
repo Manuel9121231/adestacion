@@ -37,7 +37,7 @@ const DASHBOARD_HTML = `
           </div>
           <div class="nav-item" id="nav-historial" onclick="navigateTo('historial')">
             <span class="nav-icon">📋</span>
-            <span>Reportes</span>
+            <span>Mantenimientos</span>
           </div>
           <div class="nav-item" id="nav-qrcodes" onclick="navigateTo('qrcodes')">
             <span class="nav-icon">📱</span>
@@ -162,7 +162,7 @@ const DASHBOARD_HTML = `
 
           <div class="table-wrap" style="margin-bottom:0">
             <div class="table-header">
-              <div class="table-title">📋 Últimos reportes realizados</div>
+              <div class="table-title">📋 Últimos mantenimientos realizados</div>
               <button class="btn btn-outline btn-sm" onclick="navigateTo('historial')">Ver todos →</button>
             </div>
             <div style="overflow-x:auto">
