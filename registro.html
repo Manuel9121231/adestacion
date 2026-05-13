@@ -671,11 +671,28 @@
       if (pass !== passC) return showMsg('msgReg', '⚠️ Las contraseñas no coinciden.');
 
       btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Enviando código...';
+      btn.innerHTML = '<span class="spinner"></span> Verificando...';
 
       try {
         const client = window.supabaseClient;
         if (!client) throw new Error('No se pudo conectar al servidor.');
+
+        // Verificar si el nombre ya existe
+        const { data: existingUsers, error: checkError } = await client
+          .from('perfiles')
+          .select('nombre')
+          .eq('nombre', nombre)
+          .limit(1);
+
+        if (checkError) throw checkError;
+
+        if (existingUsers && existingUsers.length > 0) {
+          btn.disabled = false;
+          btn.innerHTML = 'Crear cuenta';
+          return showMsg('msgReg', '⚠️ Este nombre de usuario ya está en uso. Por favor, elige otro.');
+        }
+
+        btn.innerHTML = '<span class="spinner"></span> Enviando código...';
 
         const { data, error } = await client.auth.signUp({
           email,
