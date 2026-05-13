@@ -1779,8 +1779,7 @@ async function renderUsuarios() {
     const client = window.supabaseClient;
     const { data: perfiles, error } = await client
       .from('perfiles')
-      .select('*')
-      .order('creado_en', { ascending: false });
+      .select('*');
 
     if (error) throw error;
 
@@ -1788,6 +1787,14 @@ async function renderUsuarios() {
       container.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No hay usuarios registrados aún</td></tr>';
       return;
     }
+
+    // Ordenar por roles: admin → tecnico → usuario
+    const ordenRoles = { 'admin': 0, 'tecnico': 1, 'usuario': 2 };
+    perfiles.sort((a, b) => {
+      const ordenA = ordenRoles[a.rol] ?? 3;
+      const ordenB = ordenRoles[b.rol] ?? 3;
+      return ordenA - ordenB;
+    });
 
     const session = window.sgiAdminSession || {};
     const esAdmin = session.type === 'superadmin' || session.type === 'admin';
@@ -1807,6 +1814,7 @@ async function renderUsuarios() {
               ${u.rol !== 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--accent);border-color:var(--accent)" onclick="cambiarRolUsuario('${u.id}','admin')">Hacer Admin</button>` : ''}
               ${u.rol === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="cambiarRolUsuario('${u.id}','usuario')">Quitar Admin</button>` : ''}
               ${u.rol !== 'tecnico' ? `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success)" onclick="cambiarRolUsuario('${u.id}','tecnico')">Hacer Técnico</button>` : ''}
+              ${u.rol === 'tecnico' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="cambiarRolUsuario('${u.id}','usuario')">Quitar Técnico</button>` : ''}
               ${session.type === 'superadmin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="eliminarUsuario('${u.id}')" title="Eliminar usuario permanentemente">Eliminar</button>` : ''}
             </div>
           ` : '<span style="color:var(--text-muted);font-size:12px">Solo los administradores pueden cambiar roles</span>'}

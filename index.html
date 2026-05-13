@@ -618,7 +618,7 @@
         <button class="btn-login" id="btnLogin" onclick="iniciarSesion()">🔑 Iniciar Sesión</button>
 
         <div style="text-align:center; margin-top:12px; font-size:13px; color:var(--text-muted)">
-          <a href="#" onclick="mostrarRecuperacion(); return false;" style="color:var(--text-muted); text-decoration:none; font-weight:500">¿Has olvidado la contraseña? Haz clic aquí</a>
+          <a href="#" onclick="mostrarRecuperacion(); return false;" style="color:var(--accent); text-decoration:none; font-weight:500">¿Has olvidado la contraseña? Haz clic aquí</a>
         </div>
 
         <div style="text-align:center; margin-top:12px; font-size:13px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:12px;">
@@ -941,7 +941,7 @@
         if (!client) throw new Error('No se pudo conectar al servidor.');
 
         const { error } = await client.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + '/index.html'
+          redirectTo: window.location.origin + '/reset-password.html'
         });
 
         if (error) throw error;
