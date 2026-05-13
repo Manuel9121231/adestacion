@@ -379,7 +379,9 @@ const DASHBOARD_HTML = `
               <div class="section-title">📱 Códigos QR</div>
               <div class="section-subtitle">QR individuales para cada máquina — escanear con el móvil del operario</div>
             </div>
-            <div style="display:flex; gap:12px; align-items:center">
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+              <input type="text" id="buscarQR" class="form-control" placeholder="🔍 Buscar máquina…"
+                oninput="filtrarQRs()" style="width:180px;padding:8px 12px;font-size:13px">
               <select class="form-control" id="filtroSalaQR" onchange="filtrarQRs()"
                 style="width:160px;padding:8px 12px;font-size:13px">
                 <option value="">Todas las salas</option>

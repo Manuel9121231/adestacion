@@ -1041,10 +1041,13 @@ async function eliminarMaquina(id) {
 
 // ── QR Codes ──────────────────────────────────────────────────────────────────
 function renderQRs() {
-  const salaFiltro = document.getElementById('filtroSalaQR').value;
-  const lista = salaFiltro
-    ? datosMaquinas.filter(m => String(m.sala_id) === String(salaFiltro))
-    : datosMaquinas;
+  const salaFiltro = document.getElementById('filtroSalaQR')?.value || '';
+  const buscar = (document.getElementById('buscarQR')?.value || '').toLowerCase().trim();
+  const lista = datosMaquinas.filter(m => {
+    const salaMach = !salaFiltro || String(m.sala_id) === String(salaFiltro);
+    const textMatch = !buscar || (m.nombre || '').toLowerCase().includes(buscar) || (m.sala_nombre || '').toLowerCase().includes(buscar);
+    return salaMach && textMatch;
+  });
 
   const grid = document.getElementById('gridQRs');
   if (isCargando && !datosMaquinas.length) {
