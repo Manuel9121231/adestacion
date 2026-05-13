@@ -1129,8 +1129,14 @@
 
     // Cerrar sesión
     function cerrarSesion() {
+      // Preservar pending_maquinaId para permitir redirección después de nuevo login
+      const pendingMaquinaId = localStorage.getItem('sgi_pending_maquinaId');
       localStorage.removeItem('sgi_user_session');
       localStorage.removeItem('sgi_admin_session');
+      // Restaurar pending_maquinaId si existía
+      if (pendingMaquinaId) {
+        localStorage.setItem('sgi_pending_maquinaId', pendingMaquinaId);
+      }
       window.location.reload();
     }
 
