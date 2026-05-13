@@ -617,10 +617,42 @@
 
         <button class="btn-login" id="btnLogin" onclick="iniciarSesion()">🔑 Iniciar Sesión</button>
 
-        <div style="text-align:center; margin-top:16px; font-size:13px; color:var(--text-muted)">
+        <div style="text-align:center; margin-top:12px; font-size:13px; color:var(--text-muted)">
+          <a href="#" onclick="mostrarRecuperacion(); return false;" style="color:var(--text-muted); text-decoration:none; font-weight:500">¿Has olvidado la contraseña? Haz clic aquí</a>
+        </div>
+
+        <div style="text-align:center; margin-top:12px; font-size:13px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:12px;">
           ¿No tienes una cuenta? <a href="registro.html" style="color:var(--accent); text-decoration:none; font-weight:600">Regístrate aquí</a>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal Recuperación Contraseña -->
+  <div id="recuperacionModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:var(--card-bg); border-radius:16px; padding:32px; max-width:400px; width:90%; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid var(--border);">
+      <h2 style="margin:0 0 8px 0; font-size:20px; color:var(--text-primary);">Recuperar contraseña</h2>
+      <p style="margin:0 0 20px 0; font-size:14px; color:var(--text-muted);">Introduce tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
+      
+      <input type="email" id="recuperacionEmail" placeholder="tu@email.com" style="width:100%; padding:12px 16px; border-radius:8px; border:1px solid var(--border); background:var(--bg-secondary); color:var(--text-primary); font-size:15px; margin-bottom:16px; box-sizing:border-box;">
+      
+      <div id="recuperacionMensaje" style="display:none; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px;"></div>
+      
+      <div style="display:flex; gap:12px;">
+        <button onclick="cerrarRecuperacion()" style="flex:1; padding:12px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text-secondary); font-size:14px; cursor:pointer; font-weight:600;">Cancelar</button>
+        <button onclick="enviarRecuperacion()" style="flex:1; padding:12px; border-radius:8px; border:none; background:var(--accent); color:white; font-size:14px; cursor:pointer; font-weight:600;">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bloqueo Modal -->
+  <div id="bloqueoModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:2000; justify-content:center; align-items:center;">
+    <div style="background:var(--card-bg); border-radius:16px; padding:32px; max-width:350px; width:90%; text-align:center; box-shadow:0 25px 50px rgba(0,0,0,0.3); border:1px solid var(--danger);">
+      <div style="font-size:48px; margin-bottom:16px;">🔒</div>
+      <h2 style="margin:0 0 12px 0; font-size:20px; color:var(--danger);">Cuenta bloqueada</h2>
+      <p style="margin:0 0 20px 0; font-size:14px; color:var(--text-muted);">Has excedido el número de intentos permitidos.</p>
+      <div id="bloqueoContador" style="font-size:24px; font-weight:700; color:var(--accent); margin-bottom:20px;">05:00</div>
+      <p style="margin:0; font-size:12px; color:var(--text-muted);">Por seguridad, debes esperar antes de intentar nuevamente.</p>
     </div>
   </div>
 
@@ -794,6 +826,139 @@
       el.style.display = e.getModifierState('CapsLock') ? 'block' : 'none';
     }
 
+    // ── Sistema de Bloqueo por Intentos ──
+    const MAX_ATTEMPTS = 6;
+    const BASE_LOCK_TIME = 5 * 60 * 1000; // 5 minutos en ms
+    const MAX_LOCK_TIME = 2 * 60 * 60 * 1000; // 2 horas en ms
+
+    function getLoginAttempts() {
+      const data = localStorage.getItem('sgi_login_attempts');
+      if (!data) return { count: 0, lockedUntil: null, consecutiveLocks: 0 };
+      return JSON.parse(data);
+    }
+
+    function setLoginAttempts(attempts) {
+      localStorage.setItem('sgi_login_attempts', JSON.stringify(attempts));
+    }
+
+    function clearLoginAttempts() {
+      localStorage.removeItem('sgi_login_attempts');
+    }
+
+    function isAccountLocked() {
+      const attempts = getLoginAttempts();
+      if (!attempts.lockedUntil) return false;
+      return Date.now() < attempts.lockedUntil;
+    }
+
+    function getRemainingLockTime() {
+      const attempts = getLoginAttempts();
+      if (!attempts.lockedUntil) return 0;
+      return Math.max(0, attempts.lockedUntil - Date.now());
+    }
+
+    function recordFailedAttempt() {
+      const attempts = getLoginAttempts();
+      attempts.count++;
+      
+      if (attempts.count >= MAX_ATTEMPTS) {
+        // Calcular tiempo de bloqueo progresivo
+        const lockMultiplier = Math.pow(2, attempts.consecutiveLocks || 0);
+        let lockTime = BASE_LOCK_TIME * lockMultiplier;
+        
+        // Limitar a máximo 2 horas
+        lockTime = Math.min(lockTime, MAX_LOCK_TIME);
+        
+        attempts.lockedUntil = Date.now() + lockTime;
+        attempts.consecutiveLocks = (attempts.consecutiveLocks || 0) + 1;
+        attempts.count = 0; // Resetear contador para próximo ciclo
+      }
+      
+      setLoginAttempts(attempts);
+      return attempts;
+    }
+
+    function formatLockTime(ms) {
+      const minutes = Math.floor(ms / 60000);
+      const seconds = Math.floor((ms % 60000) / 1000);
+      if (minutes >= 60) {
+        const hours = Math.floor(minutes / 60);
+        const remainingMins = minutes % 60;
+        return `${hours}h ${remainingMins}m`;
+      }
+      return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+    }
+
+    function showLockModal() {
+      const modal = document.getElementById('bloqueoModal');
+      const counter = document.getElementById('bloqueoContador');
+      modal.style.display = 'flex';
+      
+      const updateCounter = () => {
+        const remaining = getRemainingLockTime();
+        if (remaining <= 0) {
+          modal.style.display = 'none';
+          return;
+        }
+        counter.textContent = formatLockTime(remaining);
+      };
+      
+      updateCounter();
+      const interval = setInterval(() => {
+        if (getRemainingLockTime() <= 0) {
+          clearInterval(interval);
+          modal.style.display = 'none';
+        } else {
+          updateCounter();
+        }
+      }, 1000);
+    }
+
+    // ── Recuperación de Contraseña ──
+    function mostrarRecuperacion() {
+      document.getElementById('recuperacionModal').style.display = 'flex';
+      document.getElementById('recuperacionMensaje').style.display = 'none';
+      document.getElementById('recuperacionEmail').value = document.getElementById('loginEmail').value;
+    }
+
+    function cerrarRecuperacion() {
+      document.getElementById('recuperacionModal').style.display = 'none';
+      document.getElementById('recuperacionMensaje').style.display = 'none';
+    }
+
+    async function enviarRecuperacion() {
+      const email = document.getElementById('recuperacionEmail').value.trim();
+      const msgDiv = document.getElementById('recuperacionMensaje');
+      
+      if (!email) {
+        msgDiv.textContent = '⚠️ Introduce tu email.';
+        msgDiv.style.cssText = 'display:block; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; background:#fef3c7; color:#92400e;';
+        return;
+      }
+
+      try {
+        const client = window.supabaseClient;
+        if (!client) throw new Error('No se pudo conectar al servidor.');
+
+        const { error } = await client.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/index.html'
+        });
+
+        if (error) throw error;
+
+        msgDiv.textContent = '✅ Se ha enviado un enlace de recuperación a tu email.';
+        msgDiv.style.cssText = 'display:block; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; background:#d1fae5; color:#065f46;';
+        
+        setTimeout(() => {
+          cerrarRecuperacion();
+        }, 3000);
+
+      } catch (err) {
+        msgDiv.textContent = '❌ ' + (err.message || 'Error al enviar el email.');
+        msgDiv.style.cssText = 'display:block; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; background:#fee2e2; color:#991b1b;';
+      }
+    }
+
     // ── Login ──
     function showLoginMsg(text, type = 'error') {
       const el = document.getElementById('msgLogin');
@@ -807,6 +972,13 @@
       const btn   = document.getElementById('btnLogin');
 
       document.getElementById('msgLogin').className = 'login-msg';
+      
+      // Verificar si la cuenta está bloqueada
+      if (isAccountLocked()) {
+        showLockModal();
+        return;
+      }
+      
       if (!email || !pass) return showLoginMsg('⚠️ Rellena todos los campos.');
 
       btn.disabled = true;
@@ -818,6 +990,9 @@
 
         const { data, error } = await client.auth.signInWithPassword({ email, password: pass });
         if (error) throw error;
+
+        // Login exitoso - limpiar intentos fallidos
+        clearLoginAttempts();
 
         const user = data.user;
         let perfil = null;
@@ -849,9 +1024,21 @@
         showPortals(null, rol);
 
       } catch (err) {
+        // Registrar intento fallido
+        const attempts = recordFailedAttempt();
+        
+        // Verificar si ahora está bloqueado
+        if (isAccountLocked()) {
+          showLockModal();
+          btn.disabled = false;
+          btn.innerHTML = '🔑 Iniciar Sesión';
+          return;
+        }
+        
         let msg = '❌ ' + (err.message || 'Error al iniciar sesión.');
         if (err.message?.includes('Invalid login') || err.message?.includes('credentials')) {
-          msg = '❌ Email o contraseña incorrectos.';
+          const remainingAttempts = MAX_ATTEMPTS - attempts.count;
+          msg = `❌ Email o contraseña incorrectos. (${remainingAttempts} intentos restantes)`;
         } else if (err.message?.includes('confirmed')) {
           msg = '⚠️ Debes confirmar tu email antes de iniciar sesión.';
         }
