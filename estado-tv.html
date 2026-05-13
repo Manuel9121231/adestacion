@@ -404,7 +404,7 @@
   const PANEL_HDR  = 48;
 
   let salasArr = [], curIdx = 0, slideTimer = null, paused = false;
-  const ICONS = ['🖨','⚙️','🔧','🖥','📡','🏭'];
+  const ICONS = ['M1','M2','M3','M4','M5','M6'];
   const iconMap = {};
 
   /* ── DATOS ──────────────────────────────────────────── */
@@ -414,7 +414,7 @@
       const c = window.supabaseClient;
 
       const [mRes, iRes] = await Promise.all([
-        c.from('equipos').select('id,nombre,codigo,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
+        c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
         c.from('registros').select('maquina_id').eq('tipo','Incidencia').eq('resuelta',false)
       ]);
       if (mRes.error) throw mRes.error;
@@ -432,7 +432,7 @@
         const down       = inactiva || incidencia;
         const motivo = incidencia ? 'Incidencia' : (m.estado || 'Inactiva');
         const entry  = {
-          nombre: m.nombre||'—', codigo: m.codigo||'S/ID',
+          nombre: m.nombre||'—',
           tipo: m.tipo||'', notas: m.notas||'',
           motivo,
         };
@@ -606,7 +606,6 @@
       <span class="row-name" style="font-size:${nameFs}px">${esc(m.nombre)}</span>
       ${infoHTML ? `<div class="row-info">${infoHTML}</div>` : ''}
       ${m.tipo ? `<span class="row-type" style="font-size:${typeFs}px">${esc(m.tipo)}</span>` : ''}
-      <span class="row-code" style="font-size:${codeFs}px">${esc(m.codigo)}</span>
       ${badge}
     </div>`;
   }

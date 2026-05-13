@@ -435,13 +435,13 @@
     <div class="filter-buttons" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
         <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Estado</span>
-        <button id="btnEstado" onclick="toggleEstadoFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">⚡ Todas</button>
+        <button id="btnEstado" onclick="toggleEstadoFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">Todas</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
         <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Máquinas</span>
-        <button id="btnIncidencia" onclick="cycleIncidenciaFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">🚨 Todas</button>
+        <button id="btnIncidencia" onclick="cycleIncidenciaFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">Todas</button>
       </div>
-      <button onclick="resetFilters()" class="btn-filter" style="padding:10px 16px;border-radius:10px;border:2px solid var(--border);background:linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:all 0.2s">✨ Limpiar filtros</button>
+      <button onclick="resetFilters()" class="btn-filter" style="padding:10px 16px;border-radius:10px;border:2px solid var(--border);background:linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:all 0.2s">Limpiar filtros</button>
     </div>
   </div>
   <div id="filtroResumen" style="padding:8px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:none;max-width:1400px;margin:0 auto">
@@ -451,15 +451,15 @@
 
 <!-- CTA banner: shown when no session -->
 <div id="ctaBanner" style="display:none; background:linear-gradient(135deg,rgba(79,142,247,0.12),rgba(124,58,237,0.08)); border-bottom:1px solid rgba(79,142,247,0.2); padding:10px 20px; text-align:center; font-size:13px; color:var(--text-muted)">
-  🔒 Estás viendo el estado público.
+  Estás viendo el estado público.
   <a href="index.html" style="color:var(--accent); font-weight:600; text-decoration:none; margin:0 4px">Inicia sesión</a>
   para reportar incidencias o mantenimientos.
 </div>
 
 <!-- Warning banner: only shown when logged in -->
 <div id="loggedInBanner" style="display:none; background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(251,191,36,0.08)); border-bottom:1px solid rgba(245,158,11,0.3); padding:12px 20px; text-align:center; font-size:13px; color:var(--text-muted); display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap">
-  <span>ℹ️ Esta página solo muestra el estado. Para ver detalles de máquinas y gestionar incidencias, usa el portal de selección.</span>
-  <a href="seleccion.html" style="background:var(--accent); color:white; padding:6px 14px; border-radius:6px; font-weight:600; text-decoration:none; font-size:12px; white-space:nowrap">👉 Ir a Selección de Equipo</a>
+  <span>Esta página solo muestra el estado. Para ver detalles de máquinas y gestionar incidencias, usa el portal de selección.</span>
+  <a href="seleccion.html" style="background:var(--accent); color:white; padding:6px 14px; border-radius:6px; font-weight:600; text-decoration:none; font-size:12px; white-space:nowrap">Ir a Selección de Equipo</a>
 </div>
 
 <main id="mainContent">
@@ -485,7 +485,7 @@
 
       // 1. Cargar máquinas y obtener IDs de incidencias abiertas con en_seguimiento
       const [mRes, iRes] = await Promise.all([
-        c.from('equipos').select('id,nombre,codigo,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
+        c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
         c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta',false)
       ]);
 
@@ -730,17 +730,17 @@
     const btn = document.getElementById('btnEstado');
     if (filtroEstado === 'todos') {
       filtroEstado = 'activa';
-      btn.textContent = '⚡ Activa';
+      btn.textContent = 'Activa';
       btn.style.borderColor = 'var(--success)';
       btn.style.background = 'rgba(16, 185, 129, 0.1)';
     } else if (filtroEstado === 'activa') {
       filtroEstado = 'inactiva';
-      btn.textContent = '⛔ Inactiva';
+      btn.textContent = 'Inactiva';
       btn.style.borderColor = 'var(--danger)';
       btn.style.background = 'rgba(239, 68, 68, 0.1)';
     } else {
       filtroEstado = 'todos';
-      btn.textContent = '⚡ Todas';
+      btn.textContent = 'Todas';
       btn.style.borderColor = 'var(--border)';
       btn.style.background = 'var(--card-bg)';
     }
@@ -751,22 +751,22 @@
     const btn = document.getElementById('btnIncidencia');
     if (filtroIncidencia === 'todos') {
       filtroIncidencia = 'sin_resolver';
-      btn.textContent = '🚨 Sin resolver';
+      btn.textContent = 'Sin resolver';
       btn.style.borderColor = 'var(--danger)';
       btn.style.background = 'rgba(239, 68, 68, 0.1)';
     } else if (filtroIncidencia === 'sin_resolver') {
       filtroIncidencia = 'en_seguimiento';
-      btn.textContent = '⏳ En seguimiento';
+      btn.textContent = 'En seguimiento';
       btn.style.borderColor = 'var(--warning)';
       btn.style.background = 'rgba(245, 158, 11, 0.1)';
     } else if (filtroIncidencia === 'en_seguimiento') {
       filtroIncidencia = 'sin_errores';
-      btn.textContent = '✅ Sin errores';
+      btn.textContent = 'Sin errores';
       btn.style.borderColor = 'var(--success)';
       btn.style.background = 'rgba(16, 185, 129, 0.1)';
     } else {
       filtroIncidencia = 'todos';
-      btn.textContent = '🚨 Todas';
+      btn.textContent = 'Todas';
       btn.style.borderColor = 'var(--border)';
       btn.style.background = 'var(--card-bg)';
     }
@@ -776,10 +776,10 @@
   function resetFilters() {
     filtroEstado = 'todos';
     filtroIncidencia = 'todos';
-    document.getElementById('btnEstado').textContent = '⚡ Todas';
+    document.getElementById('btnEstado').textContent = 'Todas';
     document.getElementById('btnEstado').style.borderColor = 'var(--border)';
     document.getElementById('btnEstado').style.background = 'var(--card-bg)';
-    document.getElementById('btnIncidencia').textContent = '🚨 Todas';
+    document.getElementById('btnIncidencia').textContent = 'Todas';
     document.getElementById('btnIncidencia').style.borderColor = 'var(--border)';
     document.getElementById('btnIncidencia').style.background = 'var(--card-bg)';
     document.getElementById('searchInput').value = '';
@@ -833,16 +833,16 @@
     const countEl = document.getElementById('resultadoCount');
 
     const partes = [];
-    if (filtroEstado !== 'todos') partes.push(filtroEstado === 'activa' ? '⚡ Activas' : '⛔ Inactivas');
+    if (filtroEstado !== 'todos') partes.push(filtroEstado === 'activa' ? 'Activas' : 'Inactivas');
     if (filtroIncidencia !== 'todos') {
       const incText = {
-        'sin_errores': '✅ Sin incidencias',
-        'sin_resolver': '🚨 Sin resolver',
-        'en_seguimiento': '⏳ En seguimiento'
+        'sin_errores': 'Sin incidencias',
+        'sin_resolver': 'Sin resolver',
+        'en_seguimiento': 'En seguimiento'
       }[filtroIncidencia];
       partes.push(incText);
     }
-    if (q) partes.push(`🔍 "${q}"`);
+    if (q) partes.push(`Búsqueda: "${q}"`);
 
     if (partes.length > 0) {
       filtroTextoEl.textContent = partes.join(' + ');

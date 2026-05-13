@@ -557,13 +557,13 @@
     <div class="filter-buttons" style="display:flex;gap:12px;margin-left:auto;align-items:center;flex-wrap:wrap">
       <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
         <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Estado</span>
-        <button id="btnEstado" onclick="toggleEstadoFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">⚡ Todas</button>
+        <button id="btnEstado" onclick="toggleEstadoFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">Todas</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
         <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Máquinas</span>
-        <button id="btnIncidencia" onclick="cycleIncidenciaFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">🚨 Todas</button>
+        <button id="btnIncidencia" onclick="cycleIncidenciaFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">Todas</button>
       </div>
-      <button onclick="resetFilters()" class="btn-filter" style="padding:10px 16px;border-radius:10px;border:2px solid var(--border);background:linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:all 0.2s">✨ Limpiar filtros</button>
+      <button onclick="resetFilters()" class="btn-filter" style="padding:10px 16px;border-radius:10px;border:2px solid var(--border);background:linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:all 0.2s">Limpiar filtros</button>
     </div>
   </div>
   <div id="filtroResumen" style="padding:8px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:none">
@@ -614,7 +614,7 @@
 
         // 1. Cargar máquinas y obtener IDs de incidencias abiertas
         const [mRes, iRes] = await Promise.all([
-          c.from('equipos').select('id,nombre,codigo,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
+          c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
           c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta',false)
         ]);
 
@@ -841,7 +841,7 @@
         
         detailsHTML += `<span class="m-badge badge-${badgeTipo}" style="align-self:flex-start">${badgeTexto}</span>`;
         if (m.ultimoSeguimiento) {
-          detailsHTML += `<span class="m-nota" style="font-style:italic;color:var(--accent);font-size:11px">📝 ${esc(m.ultimoSeguimiento.substring(0, 40))}${m.ultimoSeguimiento.length > 40 ? '...' : ''}</span>`;
+          detailsHTML += `<span class="m-nota" style="font-style:italic;color:var(--accent);font-size:11px">${esc(m.ultimoSeguimiento.substring(0, 40))}${m.ultimoSeguimiento.length > 40 ? '...' : ''}</span>`;
         }
       }
       if (m.notas && !m.incidencia) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
@@ -881,17 +881,17 @@
       const btn = document.getElementById('btnEstado');
       if (filtroEstado === 'todos') {
         filtroEstado = 'activa';
-        btn.textContent = '⚡ Activa';
+        btn.textContent = 'Activa';
         btn.style.borderColor = 'var(--success)';
         btn.style.background = 'rgba(16, 185, 129, 0.1)';
       } else if (filtroEstado === 'activa') {
         filtroEstado = 'inactiva';
-        btn.textContent = '⛔ Inactiva';
+        btn.textContent = 'Inactiva';
         btn.style.borderColor = 'var(--danger)';
         btn.style.background = 'rgba(239, 68, 68, 0.1)';
       } else {
         filtroEstado = 'todos';
-        btn.textContent = '⚡ Todas';
+        btn.textContent = 'Todas';
         btn.style.borderColor = 'var(--border)';
         btn.style.background = 'var(--card-bg)';
       }
@@ -902,22 +902,22 @@
       const btn = document.getElementById('btnIncidencia');
       if (filtroIncidencia === 'todos') {
         filtroIncidencia = 'sin_resolver';
-        btn.textContent = '🚨 Sin resolver';
+        btn.textContent = 'Sin resolver';
         btn.style.borderColor = 'var(--danger)';
         btn.style.background = 'rgba(239, 68, 68, 0.1)';
       } else if (filtroIncidencia === 'sin_resolver') {
         filtroIncidencia = 'en_seguimiento';
-        btn.textContent = '⏳ En seguimiento';
+        btn.textContent = 'En seguimiento';
         btn.style.borderColor = 'var(--warning)';
         btn.style.background = 'rgba(245, 158, 11, 0.1)';
       } else if (filtroIncidencia === 'en_seguimiento') {
         filtroIncidencia = 'sin_errores';
-        btn.textContent = '✅ Sin errores';
+        btn.textContent = 'Sin errores';
         btn.style.borderColor = 'var(--success)';
         btn.style.background = 'rgba(16, 185, 129, 0.1)';
       } else {
         filtroIncidencia = 'todos';
-        btn.textContent = '🚨 Todas';
+        btn.textContent = 'Todas';
         btn.style.borderColor = 'var(--border)';
         btn.style.background = 'var(--card-bg)';
       }
@@ -927,10 +927,10 @@
     function resetFilters() {
       filtroEstado = 'todos';
       filtroIncidencia = 'todos';
-      document.getElementById('btnEstado').textContent = '⚡ Todas';
+      document.getElementById('btnEstado').textContent = 'Todas';
       document.getElementById('btnEstado').style.borderColor = 'var(--border)';
       document.getElementById('btnEstado').style.background = 'var(--card-bg)';
-      document.getElementById('btnIncidencia').textContent = '🚨 Todas';
+      document.getElementById('btnIncidencia').textContent = 'Todas';
       document.getElementById('btnIncidencia').style.borderColor = 'var(--border)';
       document.getElementById('btnIncidencia').style.background = 'var(--card-bg)';
       document.getElementById('searchInput').value = '';
@@ -974,16 +974,16 @@
       const countEl = document.getElementById('resultadoCount');
       
       const partes = [];
-      if (filtroEstado !== 'todos') partes.push(filtroEstado === 'activa' ? '⚡ Activas' : '⛔ Inactivas');
+      if (filtroEstado !== 'todos') partes.push(filtroEstado === 'activa' ? 'Activas' : 'Inactivas');
       if (filtroIncidencia !== 'todos') {
         const incText = {
-          'sin_errores': '✅ Sin incidencias',
-          'sin_resolver': '🚨 Sin resolver',
-          'en_seguimiento': '📝 En seguimiento'
+          'sin_errores': 'Sin incidencias',
+          'sin_resolver': 'Sin resolver',
+          'en_seguimiento': 'En seguimiento'
         }[filtroIncidencia];
         partes.push(incText);
       }
-      if (q) partes.push(`🔍 "${q}"`);
+      if (q) partes.push(`Búsqueda: "${q}"`);
       
       if (partes.length > 0) {
         filtroTextoEl.textContent = partes.join(' + ');
@@ -1015,7 +1015,7 @@
       const overlay = document.getElementById('misReportesOverlay');
       const body = document.getElementById('misReportesBody');
       overlay.classList.add('open');
-      body.innerHTML = '<div class="mis-reportes-loading">⏳ Cargando reportes...</div>';
+      body.innerHTML = '<div class="mis-reportes-loading">Cargando reportes...</div>';
       try {
         const sessionStr = localStorage.getItem('sgi_user_session');
         if (!sessionStr) { body.innerHTML = '<div class="mis-reportes-empty">No hay sesión de usuario activa.</div>'; return; }
@@ -1031,13 +1031,13 @@
           .limit(50);
         if (error) throw error;
         if (!reportes || reportes.length === 0) {
-          body.innerHTML = '<div class="mis-reportes-empty">🗂️ Aún no tienes reportes enviados.</div>';
+          body.innerHTML = '<div class="mis-reportes-empty">Aún no tienes reportes enviados.</div>';
           return;
         }
         body.innerHTML = reportes.map(r => {
           const fecha = new Date(r.timestamp).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
           const badgeClass = r.tipo === 'Incidencia' ? 'incidencia' : 'mantenimiento';
-          const estadoStr = r.tipo === 'Incidencia' ? (r.resuelta ? ' · ✅ Resuelta' : ' · 🔴 Abierta') : '';
+          const estadoStr = r.tipo === 'Incidencia' ? (r.resuelta ? ' · Resuelta' : ' · Abierta') : '';
           return `
             <div class="reporte-item">
               <div class="reporte-item-top">
@@ -1049,7 +1049,7 @@
             </div>`;
         }).join('');
       } catch (err) {
-        body.innerHTML = `<div class="mis-reportes-empty">❌ Error al cargar reportes: ${err.message}</div>`;
+        body.innerHTML = `<div class="mis-reportes-empty">Error al cargar reportes: ${err.message}</div>`;
       }
     }
 
