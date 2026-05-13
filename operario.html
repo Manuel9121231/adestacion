@@ -541,58 +541,57 @@
     if (!user && !admin) window.location.replace('index.html');
   })();
 
+  // Guardar sesión del usuario
+  let currentUser = null;
+
+  // Función para cargar usuario desde sesión
+  function cargarUsuarioSesion() {
+    try {
+      const sessionStr = localStorage.getItem('sgi_user_session');
+      const adminSessionStr = localStorage.getItem('sgi_admin_session');
+      
+      // Si no hay sesión, redirigir a login
+      if (!sessionStr && !adminSessionStr) {
+        window.location.href = 'index.html';
+        return false;
+      }
+      
+      // Usar sesión de usuario o admin
+      let session = null;
+      if (sessionStr) {
+        session = JSON.parse(sessionStr);
+      } else if (adminSessionStr) {
+        session = JSON.parse(adminSessionStr);
+      }
+      
+      if (session) {
+        currentUser = {
+          id: session.userId,
+          nombre: session.nombre || session.username || 'Usuario',
+          email: session.email || ''
+        };
+        
+        // Actualizar UI
+        const infoDisplay = document.getElementById('userInfoDisplay');
+        
+        if (infoDisplay) {
+          infoDisplay.innerHTML = `<div style="font-weight: 600; font-size: 16px;">${currentUser.nombre}</div><div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">${currentUser.email}</div>`;
+        }
+        
+        return true;
+      }
+    } catch (err) {
+      console.error('Error cargando sesión:', err);
+      window.location.href = 'index.html';
+      return false;
+    }
+  }
+
   // Update user panel
   function updateUserPanel() {
     try {
       const sessionStr = localStorage.getItem('sgi_user_session');
       const adminSessionStr = localStorage.getItem('sgi_admin_session');
-      const reporteTextarea = document.getElementById('reporteTextarea');
-
-    // Guardar sesión del operario
-    let currentUser = null;
-
-    // Función para cargar usuario desde sesión
-    function cargarUsuarioSesion() {
-      try {
-        const sessionStr = localStorage.getItem('sgi_user_session');
-        const adminSessionStr = localStorage.getItem('sgi_admin_session');
-        
-        // Si no hay sesión, redirigir a login
-        if (!sessionStr && !adminSessionStr) {
-          window.location.href = 'index.html';
-          return false;
-        }
-        
-        // Usar sesión de usuario o admin
-        let session = null;
-        if (sessionStr) {
-          session = JSON.parse(sessionStr);
-        } else if (adminSessionStr) {
-          session = JSON.parse(adminSessionStr);
-        }
-        
-        if (session) {
-          currentUser = {
-            id: session.userId,
-            nombre: session.nombre || session.username || 'Usuario',
-            email: session.email || ''
-          };
-          
-          // Actualizar UI
-          const infoDisplay = document.getElementById('userInfoDisplay');
-          
-          if (infoDisplay) {
-            infoDisplay.innerHTML = `<div style="font-weight: 600; font-size: 16px;">${currentUser.nombre}</div><div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">${currentUser.email}</div>`;
-          }
-          
-          return true;
-        }
-      } catch (err) {
-        console.error('Error cargando sesión:', err);
-        window.location.href = 'index.html';
-        return false;
-      }
-    }
 
       const userNameEl = document.getElementById('userName');
       const userRoleEl = document.getElementById('userRole');
