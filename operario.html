@@ -365,11 +365,8 @@
         z-index: 1;
       ">
         <div class="reporte-label">USUARIO IDENTIFICADO</div>
-        <div style="display:grid; grid-template-columns: 1fr; gap:12px; margin-top: 12px;">
-          <input type="text" id="userNameInput" class="reporte-textarea" style="height: 48px; font-size: 15px;" placeholder="Tu Nombre Completo" readonly>
-          <div id="userInfoDisplay" style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; font-size: 14px; color: var(--text-secondary);">
-            Cargando usuario...
-          </div>
+        <div id="userInfoDisplay" style="padding: 16px; background: var(--bg-secondary); border-radius: 8px; font-size: 15px; color: var(--text-primary); text-align: center; margin-top: 12px;">
+          <div style="font-weight: 600;">Cargando usuario...</div>
         </div>
       </div>
 
@@ -582,12 +579,10 @@
           };
           
           // Actualizar UI
-          const nameInput = document.getElementById('userNameInput');
           const infoDisplay = document.getElementById('userInfoDisplay');
           
-          if (nameInput) nameInput.value = currentUser.nombre;
           if (infoDisplay) {
-            infoDisplay.innerHTML = `<strong>${currentUser.nombre}</strong><br><span style="font-size: 12px; opacity: 0.7;">ID: ${currentUser.id}</span>`;
+            infoDisplay.innerHTML = `<div style="font-weight: 600; font-size: 16px;">${currentUser.nombre}</div><div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">${currentUser.email}</div>`;
           }
           
           return true;
