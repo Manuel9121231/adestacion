@@ -354,7 +354,7 @@ const sectionTitles = {
   usuarios: ['Usuarios del Sistema', 'Gestión de accesos y privilegios de usuario']
 };
 
-function navigateTo(section, machineId = null) {
+function navigateTo(section, machineId = null, incFilter = null) {
   // Verificación de roles (solo admin puede ver gestión de usuarios y QR codes)
   // Técnicos pueden ver todo excepto usuarios y qrcodes
   const rutasRestringidasParaTecnico = ['usuarios', 'qrcodes'];
@@ -395,7 +395,7 @@ function navigateTo(section, machineId = null) {
 
   // Cargar datos bajo demanda
   if (section === 'maquinas') renderMaquinas();
-  if (section === 'incidencias') renderIncidencias();
+  if (section === 'incidencias') renderIncidencias(incFilter || filtroIncActual);
   if (section === 'historial') { cargarHistorial(); poblarFiltroMaquinasHistorial(); }
   if (section === 'usuarios') renderUsuarios();
   if (section === 'qrcodes') renderQRs();

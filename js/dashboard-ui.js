@@ -100,13 +100,13 @@ const DASHBOARD_HTML = `
               <div class="kpi-icon">🚨</div>
               <div class="kpi-value" id="kpi-sin-resolver" style="color:var(--danger)">–</div>
               <div class="kpi-label">Sin resolver</div>
-              <button onclick="navigateTo('incidencias')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--danger);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
+              <button onclick="navigateTo('incidencias', null, 'pendientes')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--danger);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
             </div>
             <div class="kpi-card amarillo" style="border:2px solid var(--warning)">
               <div class="kpi-icon">📝</div>
               <div class="kpi-value" id="kpi-en-seguimiento-dash" style="color:var(--warning)">–</div>
               <div class="kpi-label">En seguimiento</div>
-              <button onclick="navigateTo('incidencias')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--warning);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
+              <button onclick="navigateTo('incidencias', null, 'seguimiento')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--warning);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
             </div>
             <div class="kpi-card" style="border:2px solid var(--border)">
               <div class="kpi-icon">🖨️</div>
