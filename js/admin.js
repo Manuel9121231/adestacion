@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rolLabel = { superadmin: 'Administrador', admin: 'Administrador', tecnico: 'Técnico' }[rolActual] || 'Usuario';
     const footerVersion = container?.querySelector('.sidebar-footer div');
     if (footerVersion) {
-      footerVersion.innerHTML = `👤 <strong>${adminName}</strong><br><span style="font-size:12px;opacity:1;color:var(--accent)">${rolLabel}</span>`;
+      footerVersion.innerHTML = `<strong>${adminName}</strong><br><span style="font-size:12px;opacity:1;color:var(--accent)">${rolLabel}</span>`;
     }
 
     // Ocultar solo usuarios para técnicos
@@ -343,7 +343,7 @@ async function renderIncidencias(filtro = 'todas') {
     const resuelta = r.resuelta || false;
     const esSeguimiento = !resuelta && r.en_seguimiento;
     const statusClass = resuelta ? 'resuelto' : (esSeguimiento ? 'seguimiento' : 'urgente');
-    const statusText = resuelta ? '✅ Finalizado' : (esSeguimiento ? '📝 En Seguimiento' : '🚨 Sin resolver');
+    const statusText = resuelta ? 'Finalizado' : (esSeguimiento ? 'En Seguimiento' : 'Sin resolver');
 
     // Buscar estado actual de la máquina
     const maq = datosMaquinas.find(m => m.id === r.maquina_id);
@@ -359,14 +359,14 @@ async function renderIncidencias(filtro = 'todas') {
           <span class="estado-badge ${statusClass}">${statusText}</span>
         </div>
         <div class="ticket-body">
-          <div class="ticket-sala">📍 ${r.sala}</div>
+          <div class="ticket-sala">${r.sala}</div>
           <div class="ticket-desc">${truncate(r.observaciones || 'Sin descripción detallada', 120)}</div>
-          <div class="ticket-date">🗓️ Reportado: ${formatFechaHora(r.completado_en)}</div>
-          <div class="ticket-date">👤 ${r.rol === 'usuario' ? 'Usuario' : (r.rol === 'admin' ? 'Admin' : 'Técnico')}: ${r.operario}</div>
+          <div class="ticket-date">Reportado: ${formatFechaHora(r.completado_en)}</div>
+          <div class="ticket-date">${r.rol === 'usuario' ? 'Usuario' : (r.rol === 'admin' ? 'Admin' : 'Técnico')}: ${r.operario}</div>
           
           ${esSeguimiento ? `
             <div class="ticket-last-note">
-              📝 ${ultimasNotas[r.id] ? truncate(ultimasNotas[r.id], 80) : 'En seguimiento - sin notas aún'}
+              ${ultimasNotas[r.id] ? truncate(ultimasNotas[r.id], 80) : 'En seguimiento - sin notas aún'}
             </div>
           ` : ''}
         </div>
@@ -502,9 +502,9 @@ function actualizarVistaDashboard(stats, historial) {
     maqInactivasEl.innerHTML = listaMaqInactivas.length
       ? listaMaqInactivas.map(m => `
           <div onclick="navigateTo('maquinas', '${m.id}')" style="cursor:pointer;padding:5px 8px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.nombre} · ${m.sala_nombre}">
-            🖨️ ${m.nombre} · ${m.sala_nombre}
+            ${m.nombre} · ${m.sala_nombre}
           </div>`).join('')
-      : `<div style="font-size:11px;color:var(--success);text-align:center;padding:4px">✅ Todas operativas</div>`;
+      : `<div style="font-size:11px;color:var(--success);text-align:center;padding:4px">Todas operativas</div>`;
   }
 
   // Mini-lista incidencias sin resolver
@@ -527,7 +527,7 @@ function renderIncPendientesDashboard(lista) {
   if (empty) empty.style.display = 'none';
   tbody.innerHTML = lista.map(r => `
     <tr onclick="verDetalleSesion('${r.id}')" style="cursor:pointer">
-      <td><span style="font-weight:600;color:var(--danger)">🚨 ${r.maquina}</span></td>
+      <td><span style="font-weight:600;color:var(--danger)">${r.maquina}</span></td>
       <td><span class="text-muted">${r.sala}</span></td>
       <td>${r.operario}</td>
       <td>${formatFechaHora(r.completado_en)}</td>
@@ -539,7 +539,7 @@ function renderIncPendientesDashboard(lista) {
 function renderBarChart(containerId, items) {
   const container = document.getElementById(containerId);
   if (!container || !items.length) {
-    container.innerHTML = '<div class="empty-state" style="padding:24px"><div class="icon">📊</div><p>Sin datos aún</p></div>';
+    container.innerHTML = '<div class="empty-state" style="padding:24px"><div class="icon"></div><p>Sin datos aún</p></div>';
     return;
   }
   const max = Math.max(...items.map(i => i.value), 1);
@@ -564,8 +564,8 @@ function renderUltimosMantenimientos(registros) {
     const isIncidencia = r.tipo === 'Incidencia';
     const resuelta = r.resuelta || false;
     const tipoBadge = isIncidencia
-      ? `<span class="estado-badge ${resuelta ? 'ok' : 'vencido'}" style="font-size:10px">🚨 Incidencia</span>`
-      : `<span class="estado-badge ok" style="font-size:10px;background:rgba(79,142,247,0.15);color:var(--accent)">🛠️ Mantenimiento</span>`;
+      ? `<span class="estado-badge ${resuelta ? 'ok' : 'vencido'}" style="font-size:10px">Incidencia</span>`
+      : `<span class="estado-badge ok" style="font-size:10px;background:rgba(79,142,247,0.15);color:var(--accent)">Mantenimiento</span>`;
 
     const maq = datosMaquinas.find(m => m.id === r.maquina_id);
     const maquinaEstado = maq ? maq.estado : 'activa';
@@ -641,7 +641,7 @@ function renderMaquinas() {
   }
 
   if (!lista.length) {
-    grid.innerHTML = '<div class="empty-state"><div class="icon">🖨️</div><p>No hay máquinas registradas</p></div>';
+    grid.innerHTML = '<div class="empty-state"><div class="icon"></div><p>No hay máquinas registradas</p></div>';
     return;
   }
 
@@ -672,8 +672,8 @@ function renderMaquinas() {
           </div>
         </div>
         <div class="maquina-info">
-          <span style="font-size:11px; color:var(--accent)">📍 ${m.sala_nombre || 'Sin sala'}</span>
-          <span>⚙️ ${m.modelo || 'Sin modelo'}</span>
+          <span style="font-size:11px; color:var(--accent)">${m.sala_nombre || 'Sin sala'}</span>
+          <span>${m.modelo || 'Sin modelo'}</span>
         </div>
           <div class="maquina-actions">
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); verDetalleMaquina('${m.id}')">Ver</button>
@@ -711,14 +711,14 @@ function renderMaquinas() {
     if (salaFiltro && String(sala.id) !== String(salaFiltro)) return;
     const maquinasSala = lista.filter(m => m.sala_id === sala.id);
     const color = commonBg;
-    const icono = iconos[index % iconos.length];
+    const icono = '';
     htmlResult += seccionEspacio(sala.id, sala.nombre, icono, color, maquinasSala);
   });
 
   // Sección para máquinas sin sala asignada
   const sinSala = lista.filter(m => !m.sala_id);
   if (sinSala.length > 0 && !salaFiltro) {
-    htmlResult += seccionEspacio('', 'Sin Sala Asignada', '❓', 'rgba(100,100,100,0.05)', sinSala);
+    htmlResult += seccionEspacio('', 'Sin Sala Asignada', '', 'rgba(100,100,100,0.05)', sinSala);
   }
 
   grid.innerHTML = htmlResult;
@@ -774,7 +774,7 @@ async function handleDrop(e, idSalaDestino) {
     await recargarTodo();
     renderMaquinas();
   } catch (err) {
-    showFeedback('Error al mover', 'No se ha podido cambiar la máquina de sala.', '❌');
+    showFeedback('Error al mover', 'No se ha podido cambiar la máquina de sala.', '');
   }
 }
 
@@ -827,7 +827,7 @@ async function handleTipoChangeEdit() {
   if (tipoSelect.value === '__CREAR_NUEVO__') {
     // Solo permitir a administradores crear nuevos tipos
     if (rolActual !== 'admin') {
-      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '❌');
+      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '');
       tipoSelect.value = 'Impresora FDM';
       return;
     }
@@ -874,14 +874,14 @@ function setModoEdicionMaquina(editando, soloEstado = false) {
   const btnToggle = document.getElementById('btnToggleEditarMaquina');
   if (btnToggle) {
     if (editando && !soloEstado) {
-      btnToggle.innerHTML = '❌ Cancelar';
+      btnToggle.innerHTML = 'Cancelar';
       btnToggle.className = 'btn btn-outline btn-sm';
       btnToggle.style.cssText = 'padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; transition:all 0.2s ease; border-color:var(--danger); color:var(--danger);';
     } else if (soloEstado) {
       // Ocultar botón de edición para técnicos
       btnToggle.style.display = 'none';
     } else {
-      btnToggle.innerHTML = '✏️ Editar';
+      btnToggle.innerHTML = 'Editar';
       btnToggle.className = 'btn btn-primary btn-sm';
       btnToggle.style.cssText = 'padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:all 0.2s ease;';
       btnToggle.style.display = 'block';
@@ -920,11 +920,11 @@ async function guardarMaquina() {
       .eq('id', id);
       
     if (error) {
-      showFeedback('Error', 'No se pudo actualizar el estado: ' + error.message, '❌');
+      showFeedback('Error', 'No se pudo actualizar el estado: ' + error.message, '');
       return;
     }
     
-    showFeedback('Éxito', `Estado cambiado a ${nuevoEstado}`, '✅');
+    showFeedback('Éxito', `Estado cambiado a ${nuevoEstado}`, '');
     await cargarDatosBase();
     renderMaquinas();
     cerrarModal('modalMaquina');
@@ -932,7 +932,7 @@ async function guardarMaquina() {
   }
   
   if (rolActual !== 'admin') {
-    showFeedback('Acceso denegado', 'Solo los administradores pueden guardar cambios en máquinas.', '🔒');
+    showFeedback('Acceso denegado', 'Solo los administradores pueden guardar cambios en máquinas.', '');
     return;
   }
   
@@ -941,13 +941,13 @@ async function guardarMaquina() {
   // Manejar tipo personalizado
   if (tipo === '__CREAR_NUEVO__') {
     if (rolActual !== 'admin') {
-      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '❌');
+      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '');
       return;
     }
     if (nuevoTipoPersonalizado) {
       tipo = nuevoTipoPersonalizado;
     } else {
-      showFeedback('Error', 'Debe especificar un nombre para el nuevo tipo.', '❌');
+      showFeedback('Error', 'Debe especificar un nombre para el nuevo tipo.', '');
       return;
     }
   }
@@ -960,7 +960,7 @@ async function guardarMaquina() {
     notas: document.getElementById('editNotas').value.trim() || null,
   };
   if (!datos.nombre) {
-    showFeedback('Error', 'El nombre de la máquina es obligatorio.', '❌');
+    showFeedback('Error', 'El nombre de la máquina es obligatorio.', '');
     return;
   }
   const res = await apiFetch(`/api/maquina/${id}`, { method: 'PUT', body: datos });
@@ -968,9 +968,9 @@ async function guardarMaquina() {
     cerrarModal('modalMaquina');
     await cargarDatosBase();
     renderMaquinas();
-    showFeedback('Máquina guardada', 'Los cambios se han guardado correctamente.', '✅');
+    showFeedback('Máquina guardada', 'Los cambios se han guardado correctamente.', '');
   } else {
-    showFeedback('Error al guardar', (res.error || 'No se pudieron guardar los cambios.'), '❌');
+    showFeedback('Error al guardar', (res.error || 'No se pudieron guardar los cambios.'), '');
   }
 }
 
@@ -1019,7 +1019,7 @@ async function handleTipoChange() {
   if (tipoSelect.value === '__CREAR_NUEVO__') {
     // Solo permitir a administradores crear nuevos tipos
     if (rolActual !== 'admin') {
-      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '❌');
+      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '');
       tipoSelect.value = 'Impresora FDM';
       return;
     }
@@ -1042,7 +1042,7 @@ async function handleTipoChange() {
 
 async function crearMaquina() {
   if (rolActual !== 'admin') {
-    showFeedback('Acceso denegado', 'Solo los administradores pueden crear máquinas.', '🔒');
+    showFeedback('Acceso denegado', 'Solo los administradores pueden crear máquinas.', '');
     return;
   }
   const nombre = document.getElementById('nuevoMaquinaNombre').value.trim();
@@ -1059,20 +1059,20 @@ async function crearMaquina() {
   console.log('DEBUG crearMaquina - rolActual:', rolActual, 'tipo:', tipo, 'nuevoTipoPersonalizado:', nuevoTipoPersonalizado);
 
   if (!nombre || !sala_id) {
-    msg.innerHTML = '<div class="alert alert-warning">⚠️ Nombre y Sala son obligatorios</div>';
+    msg.innerHTML = '<div class="alert alert-warning">Nombre y Sala son obligatorios</div>';
     return;
   }
 
   // Manejar tipo personalizado
   if (tipo === '__CREAR_NUEVO__') {
     if (rolActual !== 'admin') {
-      msg.innerHTML = '<div class="alert alert-danger">❌ Solo los administradores pueden crear nuevos tipos de máquina</div>';
+      msg.innerHTML = '<div class="alert alert-danger">Solo los administradores pueden crear nuevos tipos de máquina</div>';
       return;
     }
     if (nuevoTipoPersonalizado) {
       tipo = nuevoTipoPersonalizado;
     } else {
-      msg.innerHTML = '<div class="alert alert-warning">⚠️ Debe especificar un nombre para el nuevo tipo</div>';
+      msg.innerHTML = '<div class="alert alert-warning">Debe especificar un nombre para el nuevo tipo</div>';
       return;
     }
   }
@@ -1093,28 +1093,28 @@ async function crearMaquina() {
     await cargarDatosBase();
     renderMaquinas();
   } else {
-    msg.innerHTML = `<div class="alert alert-danger">❌ ${res.error}</div>`;
+    msg.innerHTML = `<div class="alert alert-danger">${res.error}</div>`;
   }
 }
 
 async function eliminarMaquina(id) {
   if (rolActual !== 'admin') {
-    showFeedback('Acceso denegado', 'Solo los administradores pueden eliminar máquinas.', '🔒');
+    showFeedback('Acceso denegado', 'Solo los administradores pueden eliminar máquinas.', '');
     return;
   }
   const ok = await customConfirm(
     'Eliminar máquina',
     '¿Estás seguro? Se eliminarán también todos sus registros de mantenimiento. Esta acción no se puede deshacer.',
-    '🗑️'
+    ''
   );
   if (!ok) return;
   const res = await apiFetch(`/api/maquina/${id}`, { method: 'DELETE' });
   if (res.ok) {
     await cargarDatosBase();
     renderMaquinas();
-    showFeedback('Máquina eliminada', 'La máquina y sus registros asociados han sido eliminados.', '✅');
+    showFeedback('Máquina eliminada', 'La máquina y sus registros asociados han sido eliminados.', '');
   } else {
-    showFeedback('Error al eliminar', res.error, '❌');
+    showFeedback('Error al eliminar', res.error, '');
   }
 }
 
@@ -1141,7 +1141,7 @@ function renderQRs() {
           <div class="maquina-nombre">${m.nombre}</div>
           <div class="maquina-tipo">${m.sala_nombre} · ${m.tipo}</div>
         </div>
-        <span style="font-size:32px">📱</span>
+        <span style="font-size:32px"></span>
       </div>
       <div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:13px">
         Haz clic para ver el código QR
@@ -1187,7 +1187,7 @@ function imprimirTodosLosQRs() {
     ? datosMaquinas.filter(m => String(m.sala_id) === String(salaFiltro))
     : datosMaquinas;
 
-  if (!lista.length) return showFeedback('Sin máquinas', 'No hay máquinas seleccionadas para imprimir.', '⚠️');
+  if (!lista.length) return showFeedback('Sin máquinas', 'No hay máquinas seleccionadas para imprimir.', '');
 
   const printWindow = window.open('', '_blank');
   let baseOrigin = serverHost;
@@ -1283,7 +1283,7 @@ function toggleMisReportes() {
   const btn = document.getElementById('btnMisReportesHist');
   if (btn) {
     btn.classList.toggle('active', filtroSoloMisReportes);
-    btn.textContent = filtroSoloMisReportes ? '✖️ Mostrar todos' : '👤 Solo mis reportes';
+    btn.textContent = filtroSoloMisReportes ? 'Mostrar todos' : 'Solo mis reportes';
   }
   cargarHistorial();
 }
@@ -1376,15 +1376,15 @@ function renderizarContenidoHistorial(data, tbody, empty) {
     let resBadge = '';
     if (isInc) {
       resBadge = resuelta
-        ? `<span class="estado-badge ok" style="margin-left:8px;font-size:10px">✅ Resuelta</span>`
-        : `<span class="estado-badge vencido" style="margin-left:8px;font-size:10px">🚨 Sin resolver</span>`;
+        ? `<span class="estado-badge ok" style="margin-left:8px;font-size:10px">Resuelta</span>`
+        : `<span class="estado-badge vencido" style="margin-left:8px;font-size:10px">Sin resolver</span>`;
     }
 
     return `
       <tr style="${isInc && !resuelta ? 'background: rgba(239, 68, 68, 0.03)' : ''}">
         <td data-label="Tipo">
           <span class="estado-badge ${isInc ? 'vencido' : 'ok'}" style="font-size:10px">
-            ${isInc ? '⚡ INCIDENCIA' : '🔧 MANT.'}
+            ${isInc ? 'INCIDENCIA' : 'MANT.'}
           </span>
         </td>
         <td data-label="Máquina">
@@ -1396,7 +1396,7 @@ function renderizarContenidoHistorial(data, tbody, empty) {
         <td data-label="Sala">${r.sala}</td>
         <td data-label="Usuario" style="max-width: 150px; white-space: normal; word-break: break-word;">
           <div style="font-weight:700">${r.operario}</div>
-          <div style="font-size:10px; color:var(--text-muted)">${r.rol === 'usuario' ? '👤 Usuario' : (r.rol === 'admin' ? '🛡️ Admin' : '🔧 Técnico')}</div>
+          <div style="font-size:10px; color:var(--text-muted)">${r.rol === 'usuario' ? 'Usuario' : (r.rol === 'admin' ? 'Admin' : 'Técnico')}</div>
         </td>
         <td data-label="Fecha" style="font-size:11px">${formatFechaHora(r.completado_en)}</td>
         <td data-label="Observ." style="font-size:11px;color:var(--text-muted)">
@@ -1434,7 +1434,7 @@ async function toggleResolucionIncidencia(id, nuevoEstado) {
       await renderIncidencias(filtroActual);
     }
   } else {
-    showFeedback('Error de estado', 'No se pudo actualizar el estado de la incidencia: ' + res.error, '❌');
+    showFeedback('Error de estado', 'No se pudo actualizar el estado de la incidencia: ' + res.error, '');
   }
 }
 
@@ -1463,16 +1463,15 @@ async function verDetalleSesion(id) {
     <div class="detail-container">
       <div class="detail-header-info" style="${isInc ? 'border-bottom: 2px solid var(--danger)' : ''}; margin-bottom: 20px;">
         <div class="detail-machine">
-          <div class="machine-icon" style="font-size:28px">${isInc ? '🚨' : '🛠️'}</div>
           <div>
             <div class="machine-name">${sesion.maquina}</div>
-            <div class="machine-sala">📍 ${sesion.sala}</div>
+            <div class="machine-sala">${sesion.sala}</div>
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <div class="estado-badge ${isInc ? 'vencido' : 'ok'}">${isInc ? 'Incidencia' : 'Mantenimiento'}</div>
-          ${isInc ? `<div class="estado-badge ${resuelta ? 'ok' : 'vencido'}">${resuelta ? '✅ Resuelta' : '🚨 Sin resolver'}</div>` : ''}
-          ${rolActual === 'admin' ? `<button class="btn btn-icon" style="background:transparent;border:none;color:var(--danger);padding:4px;font-size:16px;cursor:pointer;" onclick="eliminarIncidencia('${sesion.id}')" title="Eliminar registro">❌</button>` : ''}
+          ${isInc ? `<div class="estado-badge ${resuelta ? 'ok' : 'vencido'}">${resuelta ? 'Resuelta' : 'Sin resolver'}</div>` : ''}
+          ${rolActual === 'admin' ? `<button class="btn btn-icon" style="background:transparent;border:none;color:var(--danger);padding:4px;font-size:16px;cursor:pointer;" onclick="eliminarIncidencia('${sesion.id}')" title="Eliminar registro">Eliminar</button>` : ''}
         </div>
       </div>
 
@@ -1480,12 +1479,12 @@ async function verDetalleSesion(id) {
         <!-- Columna Izquierda: Información Principal -->
         <div>
           <div class="detail-stats-grid" style="margin-bottom: 16px;">
-            <div class="detail-stat"><div class="label">👤 ${sesion.rol === 'usuario' ? 'Reportado por' : (sesion.rol === 'admin' ? 'Administrador' : 'Técnico')}</div><div class="value">${sesion.operario}<span style="font-size:11px;color:var(--text-muted);margin-left:6px">(${sesion.rol || 'usuario'})</span></div></div>
-            <div class="detail-stat"><div class="label">📅 Fecha</div><div class="value">${formatFechaHora(sesion.completado_en)}</div></div>
+            <div class="detail-stat"><div class="label">${sesion.rol === 'usuario' ? 'Reportado por' : (sesion.rol === 'admin' ? 'Administrador' : 'Técnico')}</div><div class="value">${sesion.operario}<span style="font-size:11px;color:var(--text-muted);margin-left:6px">(${sesion.rol || 'usuario'})</span></div></div>
+            <div class="detail-stat"><div class="label">Fecha</div><div class="value">${formatFechaHora(sesion.completado_en)}</div></div>
           </div>
           
           <div class="detail-section" style="margin-bottom: 16px;">
-            <div class="section-label">${isInc ? '🚩 Informe de Fallo' : '📝 Observaciones'}</div>
+            <div class="section-label">${isInc ? 'Informe de Fallo' : 'Observaciones'}</div>
             <div class="detail-notes" style="font-size:13px; ${isInc ? 'background:rgba(239, 68, 68, 0.05); border-left:4px solid var(--danger)' : ''}">
               ${sesion.observaciones || 'Sin notas'}
             </div>
@@ -1493,7 +1492,7 @@ async function verDetalleSesion(id) {
 
           ${sesion.comentario_resolucion ? `
             <div class="detail-section" style="margin-bottom: 16px;">
-              <div class="section-label">✅ Solución / Resolución</div>
+              <div class="section-label">Solución / Resolución</div>
               <div class="detail-notes" style="font-size:13px; background:rgba(16, 185, 129, 0.05); border-left:4px solid var(--success); color:var(--success); font-weight:600">
                 ${sesion.comentario_resolucion}
               </div>
@@ -1502,8 +1501,8 @@ async function verDetalleSesion(id) {
 
           <div style="display:flex; gap:10px; margin-top: 12px">
             ${isInc && !resuelta ? `
-              <button class="btn btn-outline btn-sm flex-1" onclick="editarDescripcionIncidencia('${sesion.id}')">✏️ Editar Reporte</button>
-              <button class="btn btn-primary btn-sm flex-1" onclick="toggleResolucionIncidencia('${sesion.id}', true)">✅ Resolver</button>
+              <button class="btn btn-outline btn-sm flex-1" onclick="editarDescripcionIncidencia('${sesion.id}')">Editar Reporte</button>
+              <button class="btn btn-primary btn-sm flex-1" onclick="toggleResolucionIncidencia('${sesion.id}', true)">Resolver</button>
             ` : ''}
           </div>
         </div>
@@ -1512,14 +1511,14 @@ async function verDetalleSesion(id) {
         <div style="display: flex; flex-direction: column; gap: 16px;">
           ${sesion.fotos && sesion.fotos.length > 0 ? `
             <div>
-              <div class="section-label" style="margin-bottom: 8px">🖼️ Evidencias (${sesion.fotos.length})</div>
+              <div class="section-label" style="margin-bottom: 8px">Evidencias (${sesion.fotos.length})</div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 ${sesion.fotos.map(f => `<img src="${f}" onclick="abrirLightbox('${f}')" style="width:100%; height: 80px; object-fit: cover; border-radius:8px; cursor:zoom-in; border:1px solid var(--border); transition:transform .15s" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">`).join('')}
               </div>
             </div>
           ` : `
             <div style="text-align:center; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed var(--border)">
-              <div style="font-size:24px; opacity: 0.3; margin-bottom: 4px">📷</div>
+              <div style="font-size:24px; opacity: 0.3; margin-bottom: 4px"></div>
               <div style="font-size:11px; color: var(--text-muted)">Sin fotos adjuntas</div>
             </div>
           `}
@@ -1558,15 +1557,15 @@ async function verDetalleSesion(id) {
                 <b>${n.usuario_nombre || 'Técnico'}</b>
                 <span style="font-size:11px;color:var(--text-muted)">${fechaCreado}</span>
               </div>
-              ${esPrimera ? `<button onclick="iniciarEdicionSeguimiento('${n.id}', '${encodeURIComponent(n.nota)}')" style="background:transparent;border:none;color:var(--accent);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px" title="Editar nota">✏️</button>` : ''}
+              ${esPrimera ? `<button onclick="iniciarEdicionSeguimiento('${n.id}', '${encodeURIComponent(n.nota)}')" style="background:transparent;border:none;color:var(--accent);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px" title="Editar nota">Editar</button>` : ''}
             </div>
             <div class="timeline-content">
               <div class="timeline-text" id="seg-text-${n.id}">${n.nota}</div>
               <div id="seg-edit-${n.id}" style="display:none;margin-top:8px">
                 <textarea id="seg-input-${n.id}" class="form-control" rows="2" style="font-size:13px;margin-bottom:8px">${n.nota}</textarea>
                 <div style="display:flex;gap:8px">
-                  <button onclick="guardarEdicionSeguimiento('${n.id}')" style="padding:4px 12px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">💾 Guardar</button>
-                  <button onclick="cancelarEdicionSeguimiento('${n.id}')" style="padding:4px 12px;background:var(--bg-secondary);color:var(--text-muted);border:none;border-radius:6px;font-size:12px;cursor:pointer">❌ Cancelar</button>
+                  <button onclick="guardarEdicionSeguimiento('${n.id}')" style="padding:4px 12px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">Guardar</button>
+                  <button onclick="cancelarEdicionSeguimiento('${n.id}')" style="padding:4px 12px;background:var(--bg-secondary);color:var(--text-muted);border:none;border-radius:6px;font-size:12px;cursor:pointer">Cancelar</button>
                 </div>
               </div>
             </div>
@@ -1604,10 +1603,10 @@ async function guardarNuevaNota() {
     // Recargar el detalle para ver la nueva nota
     verDetalleSesion(id);
   } else {
-    showFeedback('Error al anotar', 'No se ha podido guardar la nota de seguimiento: ' + res.error, '❌');
+    showFeedback('Error al anotar', 'No se ha podido guardar la nota de seguimiento: ' + res.error, '');
   }
   btn.disabled = false;
-  btn.innerHTML = '<span>➕ Añadir Nota</span>';
+  btn.innerHTML = '<span>Añadir Nota</span>';
 }
 
 // ── Edición de Seguimientos ─────────────────────────────────────────────────
@@ -1640,7 +1639,7 @@ async function guardarEdicionSeguimiento(segId) {
     .eq('id', segId);
     
   if (error) {
-    showFeedback('Error', 'No se pudo editar la nota: ' + error.message, '❌');
+    showFeedback('Error', 'No se pudo editar la nota: ' + error.message, '');
     return;
   }
   
@@ -1663,36 +1662,36 @@ async function editarDescripcionIncidencia(id) {
   });
 
   if (res.ok) {
-    showFeedback('Reporte actualizado', 'La descripción del reporte se ha modificado correctamente.', '✅');
+    showFeedback('Reporte actualizado', 'La descripción del reporte se ha modificado correctamente.', '');
     // Recargar datos y refrescar vista
     await cargarDatosBase();
     verDetalleSesion(id);
   } else {
-    showFeedback('Error al editar', res.error, '❌');
+    showFeedback('Error al editar', res.error, '');
   }
 }
 
 async function eliminarIncidencia(id) {
   if (rolActual !== 'admin') {
-    showFeedback('Acceso denegado', 'Solo los administradores pueden eliminar registros.', '🔒');
+    showFeedback('Acceso denegado', 'Solo los administradores pueden eliminar registros.', '');
     return;
   }
   const ok = await customConfirm(
     'Eliminar registro',
     '¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.',
-    '🗑️'
+    ''
   );
   if (!ok) return;
 
   const res = await apiFetch(`/api/sesion/${id}`, { method: 'DELETE' });
   if (res.ok) {
     cerrarModal('modalDetalle');
-    showFeedback('Registro eliminado', 'La incidencia ha sido eliminada correctamente.', '✅');
+    showFeedback('Registro eliminado', 'La incidencia ha sido eliminada correctamente.', '');
     await cargarDatosBase();
     await cargarHistorial();
     await renderIncidencias();
   } else {
-    showFeedback('Error al eliminar', res.error, '❌');
+    showFeedback('Error al eliminar', res.error, '');
   }
 }
 
@@ -1710,7 +1709,7 @@ async function verHistorialMaquina(nombreMaquina) {
   tbody.innerHTML = filtrados.map(r => `
     <tr>
       <td data-label="Fecha">${formatFechaHora(r.completado_en)}</td>
-      <td data-label="Usuario"><div style="font-weight:600">${r.operario}</div><div style="font-size:10px;color:var(--text-muted)">${r.rol === 'usuario' ? '👤' : (r.rol === 'admin' ? '🛡️' : '🔧')} ${r.rol || 'usuario'}</div></td>
+      <td data-label="Usuario"><div style="font-weight:600">${r.operario}</div><div style="font-size:10px;color:var(--text-muted)">${r.rol || 'usuario'}</div></td>
       <td data-label="Tipo"><span class="estado-badge ${r.tipo === 'Incidencia' ? 'vencido' : 'ok'}">${r.tipo}</span></td>
       <td data-label="Nota">${truncate(r.observaciones || '', 20)}</td>
       <td><button class="btn btn-outline btn-sm" onclick="verDetalleSesion('${r.id}')">Detalles</button></td>
@@ -1731,9 +1730,9 @@ function exportarCSV() {
 
 // ── Usuarios / Administradores ────────────────────────────────────────────────
 const ROL_BADGES = {
-  admin: { label: '🛡️ Administrador', cls: 'azul' },
-  tecnico: { label: '🔧 Técnico', cls: 'verde' },
-  usuario: { label: '👤 Usuario', cls: '' },
+  admin: { label: 'Administrador', cls: 'azul' },
+  tecnico: { label: 'Técnico', cls: 'verde' },
+  usuario: { label: 'Usuario', cls: '' },
 };
 
 function toggleRolesHelp() {
@@ -1783,15 +1782,15 @@ async function renderUsuarios() {
       <tr>
         <td data-label="Nombre"><b>${u.nombre || '–'}</b><div style="font-size:11px;color:var(--text-muted)">${u.email}</div></td>
         <td data-label="Rol"><span class="estado-badge ${rol.cls}">${rol.label}</span></td>
-        <td data-label="Estado"><span class="estado-badge ok">✅ Activo</span></td>
+        <td data-label="Estado"><span class="estado-badge ok">Activo</span></td>
         <td data-label="Registro" style="font-size:11px">${fecha}</td>
         <td data-label="Acciones">
           ${esAdmin ? `
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              ${u.rol !== 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--accent);border-color:var(--accent)" onclick="cambiarRolUsuario('${u.id}','admin')">🛡️ Hacer Admin</button>` : ''}
-              ${u.rol === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="cambiarRolUsuario('${u.id}','usuario')">👤 Quitar Admin</button>` : ''}
-              ${u.rol !== 'tecnico' ? `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success)" onclick="cambiarRolUsuario('${u.id}','tecnico')">🔧 Hacer Técnico</button>` : ''}
-              ${session.type === 'superadmin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="eliminarUsuario('${u.id}')" title="Eliminar usuario permanentemente">🗑️ Eliminar</button>` : ''}
+              ${u.rol !== 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--accent);border-color:var(--accent)" onclick="cambiarRolUsuario('${u.id}','admin')">Hacer Admin</button>` : ''}
+              ${u.rol === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="cambiarRolUsuario('${u.id}','usuario')">Quitar Admin</button>` : ''}
+              ${u.rol !== 'tecnico' ? `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success)" onclick="cambiarRolUsuario('${u.id}','tecnico')">Hacer Técnico</button>` : ''}
+              ${session.type === 'superadmin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="eliminarUsuario('${u.id}')" title="Eliminar usuario permanentemente">Eliminar</button>` : ''}
             </div>
           ` : '<span style="color:var(--text-muted);font-size:12px">Solo los administradores pueden cambiar roles</span>'}
         </td>
@@ -1800,20 +1799,20 @@ async function renderUsuarios() {
 
   } catch (err) {
     console.error('Error cargando perfiles:', err);
-    container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--danger)">⚠️ Error al cargar usuarios: ${err.message}<br><br><small>Asegúrate de haber creado la tabla <code>perfiles</code> en Supabase.</small></td></tr>`;
+    container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--danger)">Error al cargar usuarios: ${err.message}<br><br><small>Asegúrate de haber creado la tabla <code>perfiles</code> en Supabase.</small></td></tr>`;
   }
 }
 
 async function eliminarUsuario(userId) {
   const session = window.sgiAdminSession || {};
   if (session.type !== 'superadmin') {
-    showFeedback('Acceso Denegado', 'Solo el administrador principal puede eliminar usuarios.', '🔒');
+    showFeedback('Acceso Denegado', 'Solo el administrador principal puede eliminar usuarios.', '');
     return;
   }
   const ok = await customConfirm(
     'Eliminar Usuario',
     '¿Estás seguro de que deseas eliminar este usuario? Su perfil y accesos se borrarán del sistema. Esta acción no se puede deshacer.',
-    '⚠️'
+    ''
   );
   if (!ok) return;
 
@@ -1829,10 +1828,10 @@ async function eliminarUsuario(userId) {
     if (error && error.code !== 'PGRST116') throw error;
     if (rpcError) console.warn("No se pudo eliminar de Auth, pero sí del perfil:", rpcError);
 
-    showFeedback('Usuario Eliminado', 'El perfil de usuario ha sido eliminado correctamente.', '✅');
+    showFeedback('Usuario Eliminado', 'El perfil de usuario ha sido eliminado correctamente.', '');
     renderUsuarios();
   } catch (err) {
-    showFeedback('Error', 'No se pudo eliminar el usuario: ' + err.message, '❌');
+    showFeedback('Error', 'No se pudo eliminar el usuario: ' + err.message, '');
   }
 }
 
@@ -1840,14 +1839,14 @@ async function cambiarRolUsuario(userId, nuevoRol) {
   const session = window.sgiAdminSession || {};
   // Allow both admin and superadmin to change roles
   if (session.type !== 'superadmin' && session.type !== 'admin') {
-    showFeedback('Acceso Denegado', 'Solo los administradores pueden gestionar roles de usuario.', '🔒');
+    showFeedback('Acceso Denegado', 'Solo los administradores pueden gestionar roles de usuario.', '');
     return;
   }
   const rolLabel = { admin: 'Administrador', tecnico: 'Técnico', usuario: 'Usuario' }[nuevoRol] || nuevoRol;
   const ok = await customConfirm(
     'Cambiar rol de usuario',
     `¿Confirmas el cambio de rol a "${rolLabel}"? El usuario recibirá los nuevos permisos de inmediato.`,
-    '🛡️'
+    ''
   );
   if (!ok) return;
 
@@ -1857,7 +1856,7 @@ async function cambiarRolUsuario(userId, nuevoRol) {
     if (error) throw error;
     renderUsuarios();
   } catch (err) {
-    showFeedback('Error de permisos', 'No se ha podido cambiar el rol: ' + err.message, '❌');
+    showFeedback('Error de permisos', 'No se ha podido cambiar el rol: ' + err.message, '');
   }
 }
 
@@ -2039,10 +2038,10 @@ async function apiFetch(url, options = {}) {
 
     return { ok: false, error: 'Endpoint not implemented' };
   } catch (err) {
-    console.error('🔴 Error apiFetch:', err);
+    console.error('Error apiFetch:', err);
     // Si es un error de columna faltante, dar una pista clara
     if (err.message && err.message.includes('maquina_nombre')) {
-      showFeedback('Error Crítico', "La base de datos no tiene la columna 'maquina_nombre'. Por favor, ejecuta el script SQL de reparación.", '🚨');
+      showFeedback('Error Critico', "La base de datos no tiene la columna 'maquina_nombre'. Por favor, ejecuta el script SQL de reparacion.", '');
     }
     return { ok: false, error: err.message };
   }
@@ -2059,7 +2058,7 @@ async function intentarLogin() {
   const password = (passwordInput?.value || '').trim();
 
   if (!username || !password) {
-    errorEl.innerHTML = '⚠️ Introduce usuario y contraseña.';
+    errorEl.innerHTML = 'Introduce usuario y contraseña.';
     return;
   }
 
@@ -2113,7 +2112,7 @@ async function intentarLogin() {
 
   } catch (err) {
     console.error('Login error:', err);
-    const msg = err.message?.includes('permisos') ? `❌ ${err.message}` : '❌ Credenciales incorrectas.';
+    const msg = err.message?.includes('permisos') ? `${err.message}` : 'Credenciales incorrectas.';
     errorEl.innerHTML = msg;
     card?.classList.add('shake');
     setTimeout(() => card?.classList.remove('shake'), 400);
@@ -2173,8 +2172,8 @@ function abrirLightbox(src) {
     return b;
   }
 
-  const btnZoomIn  = mkBtn('🔍+', 'Ampliar');
-  const btnZoomOut = mkBtn('🔍−', 'Reducir');
+  const btnZoomIn  = mkBtn('+', 'Ampliar');
+  const btnZoomOut = mkBtn('−', 'Reducir');
   const btnClose   = document.createElement('button');
   btnClose.innerHTML = '✕&nbsp;Cerrar';
   btnClose.style.cssText = 'background:#fff;border:none;color:#111;border-radius:8px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);margin-left:8px';
@@ -2308,7 +2307,7 @@ function iniciarTour() {
     steps: [
       {
         popover: {
-          title: '✨ Bienvenido',
+          title: 'Bienvenido',
           description: 'Recorrido rápido por el panel de administración del sistema.'
         },
         onHighlightStarted: () => navigateTo('dashboard')
@@ -2316,7 +2315,7 @@ function iniciarTour() {
       {
         element: '#kpiGrid',
         popover: {
-          title: '📊 Resumen General',
+          title: 'Resumen General',
           description: 'Aquí verás el estado actual del sistema en tiempo real.'
         },
         onHighlightStarted: () => navigateTo('dashboard')
@@ -2324,14 +2323,14 @@ function iniciarTour() {
       {
         element: '#nav-maquinas',
         popover: {
-          title: '🖨️ Máquinas',
+          title: 'Máquinas',
           description: 'Gestiona todo tu inventario de impresoras y su estado.'
         }
       },
       {
         element: '#gridQRs',
         popover: {
-          title: '📱 Códigos QR',
+          title: 'Códigos QR',
           description: 'Desde aquí generas los códigos para que los operarios escaneen con su móvil.'
         },
         onHighlightStarted: () => {
@@ -2345,7 +2344,7 @@ function iniciarTour() {
       {
         element: '#nav-historial',
         popover: {
-          title: '📋 Historial',
+          title: 'Historial',
           description: 'Accede a todos los registros de mantenimiento e incidencias pasadas.'
         },
         onHighlightStarted: () => navigateTo('historial')
@@ -2390,7 +2389,7 @@ function renderListaSalas() {
 
 async function editarSala(id, nuevoNombre) {
   if (rolActual !== 'admin') {
-    showFeedback('Acceso denegado', 'Solo los administradores pueden editar salas.', '🔒');
+    showFeedback('Acceso denegado', 'Solo los administradores pueden editar salas.', '');
     return;
   }
   if (!nuevoNombre.trim()) return;
@@ -2410,12 +2409,12 @@ async function editarSala(id, nuevoNombre) {
 
 async function crearSala() {
   if (rolActual !== 'admin') {
-    showFeedback('Acceso denegado', 'Solo los administradores pueden crear salas.', '🔒');
+    showFeedback('Acceso denegado', 'Solo los administradores pueden crear salas.', '');
     return;
   }
   const input = document.getElementById('nuevaSalaNombre');
   const nombre = input.value.trim();
-  if (!nombre) return showFeedback('Nombre requerido', "Debes escribir un nombre para la nueva sala.", '⚠️');
+  if (!nombre) return showFeedback('Nombre requerido', "Debes escribir un nombre para la nueva sala.", '');
 
   try {
     const { data, error } = await window.supabaseClient
@@ -2429,20 +2428,20 @@ async function crearSala() {
     await recargarTodo();
     renderListaSalas();
     poblarSelectsSalas();
-    showFeedback('Sala creada', 'La nueva sala se ha registrado correctamente en el sistema.', '✅');
+    showFeedback('Sala creada', 'La nueva sala se ha registrado correctamente en el sistema.', '');
   } catch (err) {
-    showFeedback('Error al crear', "No se ha podido registrar la sala en la base de datos.", '❌');
+    showFeedback('Error al crear', "No se ha podido registrar la sala en la base de datos.", '');
   }
 }
 
 async function borrarSala(id, nombre) {
   if (rolActual !== 'admin') {
-    showFeedback('Acceso denegado', 'Solo los administradores pueden eliminar salas.', '🔒');
+    showFeedback('Acceso denegado', 'Solo los administradores pueden eliminar salas.', '');
     return;
   }
   const maquinasEnSala = datosMaquinas.filter(m => m.sala_id === id);
   if (maquinasEnSala.length > 0) {
-    return showFeedback('Sala con Máquinas', `No puedes borrar la sala "${nombre}" porque tiene ${maquinasEnSala.length} máquinas asociadas.`, '⚠️');
+    return showFeedback('Sala con Máquinas', `No puedes borrar la sala "${nombre}" porque tiene ${maquinasEnSala.length} máquinas asociadas.`, '');
   }
 
   try {
@@ -2481,7 +2480,7 @@ function poblarSelectsSalas() {
 }
 
 // ── Helpers de UI (Nuevos) ───────────────────────────────────────────────────
-function customConfirm(titulo, msg, icon = '⚠️') {
+function customConfirm(titulo, msg, icon = '') {
   return new Promise((resolve) => {
     document.getElementById('confirmTitle').textContent = titulo;
     document.getElementById('confirmMsg').textContent = msg;
@@ -2522,7 +2521,7 @@ function customPrompt(titulo, label, defaultValue = '') {
   });
 }
 
-function showFeedback(titulo, msg, icon = '✅') {
+function showFeedback(titulo, msg, icon = '') {
   document.getElementById('feedbackTitle').textContent = titulo;
   document.getElementById('feedbackMsg').textContent = msg;
   document.getElementById('feedbackIcon').textContent = icon;

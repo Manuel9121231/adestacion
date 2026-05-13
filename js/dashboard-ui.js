@@ -23,28 +23,28 @@ const DASHBOARD_HTML = `
       <nav class="sidebar-nav">
         <div class="nav-section">
           <div class="nav-item active" id="nav-dashboard" onclick="navigateTo('dashboard')">
-            <span class="nav-icon">📊</span>
+            <span class="nav-icon"></span>
             <span>Panel General</span>
           </div>
           <div class="nav-item" id="nav-incidencias" onclick="navigateTo('incidencias')">
-            <span class="nav-icon">🚨</span>
+            <span class="nav-icon"></span>
             <span>Panel de Incidencias</span>
             <span class="nav-badge" id="badge-incidencias" style="display:none">0</span>
           </div>
           <div class="nav-item" id="nav-maquinas" onclick="navigateTo('maquinas')">
-            <span class="nav-icon">🖨️</span>
+            <span class="nav-icon"></span>
             <span>Máquinas</span>
           </div>
           <div class="nav-item" id="nav-historial" onclick="navigateTo('historial')">
-            <span class="nav-icon">📋</span>
+            <span class="nav-icon"></span>
             <span>Historial</span>
           </div>
           <div class="nav-item" id="nav-qrcodes" onclick="navigateTo('qrcodes')">
-            <span class="nav-icon">📱</span>
+            <span class="nav-icon"></span>
             <span>Códigos QR</span>
           </div>
           <div class="nav-item" id="nav-usuarios" onclick="navigateTo('usuarios')">
-            <span class="nav-icon">👥</span>
+            <span class="nav-icon"></span>
             <span>Usuarios</span>
           </div>
         </div>
@@ -52,9 +52,9 @@ const DASHBOARD_HTML = `
 
       <div class="sidebar-footer">
         <div style="margin-bottom:8px">v3.1</div>
-        <button class="btn btn-primary btn-sm btn-full" onclick="window.location.href='index.html'" style="margin-bottom:8px;font-size:11px;padding:6px">🏠 Volver al Inicio</button>
-        <button class="btn btn-outline btn-sm btn-full" onclick="window.location.href='seleccion.html'" style="margin-bottom:8px;font-size:11px;padding:6px">🖨️ Portal de Máquinas</button>
-        <button class="btn btn-outline btn-sm btn-full" onclick="cerrarSesionAdmin()" style="font-size:11px;padding:6px">🚪 Cerrar Sesión</button>
+        <button class="btn btn-primary btn-sm btn-full" onclick="window.location.href='index.html'" style="margin-bottom:8px;font-size:11px;padding:6px">Volver al Inicio</button>
+        <button class="btn btn-outline btn-sm btn-full" onclick="window.location.href='seleccion.html'" style="margin-bottom:8px;font-size:11px;padding:6px">Portal de Máquinas</button>
+        <button class="btn btn-outline btn-sm btn-full" onclick="cerrarSesionAdmin()" style="font-size:11px;padding:6px">Cerrar Sesión</button>
       </div>
     </aside>
     <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
@@ -72,10 +72,10 @@ const DASHBOARD_HTML = `
         </div>
         <div class="topbar-actions">
            <button class="btn btn-outline btn-sm" id="btnThemeToggle" onclick="toggleTheme()" style="border-radius:20px; padding: 6px 16px;">
-             🌙 Modo Oscuro
+             Modo Oscuro
            </button>
            <button class="btn btn-outline btn-sm" onclick="iniciarTour()" style="border-radius:20px; padding: 6px 16px;">
-             ✨ Guía Rápida
+             Guía Rápida
            </button>
         </div>
       </header>
@@ -85,7 +85,7 @@ const DASHBOARD_HTML = `
         <!-- ══════════ ACCESO RESTRINGIDO ══════════ -->
         <div class="section fade-in" id="section-restringido">
           <div class="restricted-screen">
-            <div class="icon">🔒</div>
+            <div class="icon"></div>
             <h2>Acceso Restringido</h2>
             <p>No tienes los permisos suficientes para ver esta sección. Esta función está limitada a Administradores.</p>
             <button class="btn btn-primary" onclick="navigateTo('dashboard')">← Volver al Panel</button>
@@ -97,19 +97,19 @@ const DASHBOARD_HTML = `
           <!-- KPI Cards en fila horizontal -->
           <div class="kpi-grid" id="kpiGrid" style="margin-bottom:16px;grid-template-columns:1fr 1fr 1fr">
             <div class="kpi-card rojo" style="border:2px solid var(--danger);animation:pulse-red 2s infinite">
-              <div class="kpi-icon">🚨</div>
+              <div class="kpi-icon"></div>
               <div class="kpi-value" id="kpi-sin-resolver" style="color:var(--danger)">–</div>
               <div class="kpi-label">Sin resolver</div>
               <button onclick="navigateTo('incidencias', null, 'pendientes')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--danger);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
             </div>
             <div class="kpi-card amarillo" style="border:2px solid var(--warning)">
-              <div class="kpi-icon">📝</div>
+              <div class="kpi-icon"></div>
               <div class="kpi-value" id="kpi-en-seguimiento-dash" style="color:var(--warning)">–</div>
               <div class="kpi-label">En seguimiento</div>
               <button onclick="navigateTo('incidencias', null, 'seguimiento')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--warning);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
             </div>
             <div class="kpi-card" style="border:2px solid var(--border)">
-              <div class="kpi-icon">🖨️</div>
+              <div class="kpi-icon"></div>
               <div style="display:flex;gap:12px;align-items:baseline">
                 <div>
                   <div class="kpi-value" id="kpi-maq-activas" style="color:var(--success);font-size:22px">–</div>
@@ -131,7 +131,7 @@ const DASHBOARD_HTML = `
             <!-- Izquierda: tabla incidencias ocupa 2 columnas -->
             <div class="table-wrap" style="min-height:320px;display:flex;flex-direction:column;grid-column:span 2">
               <div class="table-header">
-                <div class="table-title">🚨 Incidencias sin resolver</div>
+                <div class="table-title">Incidencias sin resolver</div>
                 <button class="btn btn-outline btn-sm" onclick="navigateTo('incidencias')">Ver todas →</button>
               </div>
               <div style="overflow-x:auto;flex:1">
@@ -148,13 +148,13 @@ const DASHBOARD_HTML = `
                   <tbody id="dashboardIncPendientes"></tbody>
                 </table>
               </div>
-              <div id="dashboardIncEmpty" style="display:none;padding:20px;text-align:center;color:var(--text-muted);font-size:13px">✅ No hay incidencias sin resolver</div>
+              <div id="dashboardIncEmpty" style="display:none;padding:20px;text-align:center;color:var(--text-muted);font-size:13px">No hay incidencias sin resolver</div>
             </div>
 
             <!-- Derecha: info máquinas ocupa 1 columna -->
             <div class="table-wrap" style="min-height:320px;display:flex;flex-direction:column">
               <div class="table-header">
-                <div class="table-title">🖨️ Máquinas inactivas</div>
+                <div class="table-title">Máquinas inactivas</div>
               </div>
               <div id="dashboardMaqInactivas" style="display:flex;flex-direction:column;gap:4px;padding:12px;flex:1"></div>
             </div>
@@ -162,7 +162,7 @@ const DASHBOARD_HTML = `
 
           <div class="table-wrap" style="margin-bottom:0">
             <div class="table-header">
-              <div class="table-title">📋 Últimos registros realizados</div>
+              <div class="table-title">Últimos registros realizados</div>
               <button class="btn btn-outline btn-sm" onclick="navigateTo('historial')">Ver todos →</button>
             </div>
             <div style="overflow-x:auto">
@@ -187,7 +187,7 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-maquinas">
           <div class="section-header">
             <div>
-              <div class="section-title">🖨️ Máquinas</div>
+              <div class="section-title">Máquinas</div>
               <div class="section-subtitle">Gestión y estado de todas las máquinas</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -201,7 +201,7 @@ const DASHBOARD_HTML = `
                 style="width:160px;padding:8px 12px;font-size:13px">
                 <option value="">Todas las salas</option>
               </select>
-              <button class="btn btn-outline" onclick="abrirModalGestionSalas()" id="btnGestionarSalas">🏠 Salas</button>
+              <button class="btn btn-outline" onclick="abrirModalGestionSalas()" id="btnGestionarSalas">Salas</button>
               <button class="btn btn-primary" onclick="abrirModalNuevaMaquina()" id="btnNuevaMaquina">+ Nueva máquina</button>
             </div>
           </div>
@@ -212,7 +212,7 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-incidencias">
           <div class="section-header">
             <div>
-              <div class="section-title">🚨 Centro de Incidencias</div>
+              <div class="section-title">Centro de Incidencias</div>
               <div class="section-subtitle">Gestión de fallos técnicos y reparaciones</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -222,27 +222,27 @@ const DASHBOARD_HTML = `
               <button class="btn btn-outline btn-sm" id="btn-inc-resueltas" onclick="renderIncidencias('resueltas')" style="border-color:var(--success);color:var(--success)" title="Ver incidencias resueltas">Ver Resueltas</button>
               <div style="width:1px;height:24px;background:var(--border);margin:0 2px"></div>
               <select id="select-inc-orden" onchange="cambiarOrdenInc(this.value)" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary);cursor:pointer">
-                <option value="fecha-desc">🗓️ Fecha (reciente)</option>
-                <option value="fecha-asc">🗓️ Fecha (antigua)</option>
-                <option value="tipo">📋 Por tipo</option>
-                <option value="maquina">🖥️ Por máquina</option>
+                <option value="fecha-desc">Fecha (reciente)</option>
+                <option value="fecha-asc">Fecha (antigua)</option>
+                <option value="tipo">Por tipo</option>
+                <option value="maquina">Por máquina</option>
               </select>
             </div>
           </div>
 
           <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
             <div class="kpi-card rojo" id="kpi-inc-pendientes-card">
-              <div class="kpi-icon">🚨</div>
+              <div class="kpi-icon"></div>
               <div class="kpi-value" id="kpi-inc-pendientes">0</div>
               <div class="kpi-label">Sin resolver</div>
             </div>
             <div class="kpi-card amarillo" id="kpi-inc-seguimiento-card">
-              <div class="kpi-icon">📝</div>
+              <div class="kpi-icon"></div>
               <div class="kpi-value" id="kpi-inc-seguimiento">0</div>
               <div class="kpi-label">En Seguimiento</div>
             </div>
             <div class="kpi-card verde" id="kpi-inc-resueltas-card">
-              <div class="kpi-icon">✅</div>
+              <div class="kpi-icon"></div>
               <div class="kpi-value" id="kpi-inc-resueltas">0</div>
               <div class="kpi-label">Resueltas</div>
             </div>
@@ -254,7 +254,7 @@ const DASHBOARD_HTML = `
             </div>
             
             <div id="incidenciasEmpty" class="empty-state" style="display:none">
-              <div class="icon">✨</div>
+              <div class="icon"></div>
               <p>No hay incidencias activas en este momento</p>
             </div>
           </div>
@@ -264,12 +264,12 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-historial">
           <div class="section-header">
             <div>
-              <div class="section-title">📋 Historial</div>
+              <div class="section-title">Historial</div>
               <div class="section-subtitle">Registro completo de todas las sesiones</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
-              <button class="btn btn-outline btn-sm" id="btnMisReportesHist" onclick="toggleMisReportes()">👤 Solo mis reportes</button>
-              <button class="btn btn-outline btn-sm" onclick="exportarCSV()">⬇️ Exportar CSV</button>
+              <button class="btn btn-outline btn-sm" id="btnMisReportesHist" onclick="toggleMisReportes()">Solo mis reportes</button>
+              <button class="btn btn-outline btn-sm" onclick="exportarCSV()">Exportar CSV</button>
             </div>
           </div>
 
@@ -278,8 +278,8 @@ const DASHBOARD_HTML = `
               <div class="filtro-item">
                 <select class="form-control" id="filtroTipoHistorial" onchange="setFiltroTipo(this.value)">
                   <option value="">Todos los tipos</option>
-                  <option value="Mantenimiento">🛠 Mantenimiento</option>
-                  <option value="Incidencia">⚡ Incidencia</option>
+                  <option value="Mantenimiento">Mantenimiento</option>
+                  <option value="Incidencia">Incidencia</option>
                 </select>
               </div>
               <div class="filtro-item">
@@ -293,7 +293,7 @@ const DASHBOARD_HTML = `
                 </select>
               </div>
               <div class="filtro-item">
-                <input type="text" id="filtroOperario" class="form-control" placeholder="🔍 Buscar..." oninput="cargarHistorial()" title="Busca por máquina, sala, operario u observaciones" style="min-width:140px;flex:1">
+                <input type="text" id="filtroOperario" class="form-control" placeholder="Buscar..." oninput="cargarHistorial()" title="Busca por máquina, sala, operario u observaciones" style="min-width:140px;flex:1">
               </div>
               <div class="filtro-item">
                 <input type="date" class="form-control" id="filtroDesde" onchange="cargarHistorial()">
@@ -320,7 +320,7 @@ const DASHBOARD_HTML = `
               </table>
             </div>
             <div id="historialEmpty" class="empty-state" style="display:none">
-              <div class="icon">📋</div>
+              <div class="icon"></div>
               <p>No se encontraron registros con esos filtros</p>
             </div>
           </div>
@@ -332,26 +332,26 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-usuarios">
           <div class="section-header">
             <div>
-              <div class="section-title">👥 Usuarios del Sistema</div>
+              <div class="section-title">Usuarios del Sistema</div>
               <div class="section-subtitle">Gestión de accesos y privilegios de usuario</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
               <div style="position:relative;display:inline-block">
-                <button class="btn btn-outline btn-sm" id="btnRolesHelp" onclick="toggleRolesHelp()" style="font-weight:700;padding:6px 12px">❓ Roles</button>
+                <button class="btn btn-outline btn-sm" id="btnRolesHelp" onclick="toggleRolesHelp()" style="font-weight:700;padding:6px 12px">Roles</button>
                 <div id="rolesHelpPopover" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:200;width:300px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.15);padding:18px 20px;font-size:13px;line-height:1.6">
                   <div style="font-weight:700;margin-bottom:12px;font-size:14px">Roles del sistema</div>
-                  <div style="margin-bottom:10px"><span style="background:rgba(239,68,68,0.1);color:#dc2626;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">👤 Usuario</span><br><span style="color:var(--text-secondary)">Solo puede registrar reportes desde el portal de operario. Sin acceso al panel.</span></div>
-                  <div style="margin-bottom:10px"><span style="background:rgba(16,163,74,0.1);color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">🔧 Técnico</span><br><span style="color:var(--text-secondary)">Accede al panel para ver máquinas, incidencias e historial. No puede editar máquinas ni gestionar usuarios.</span></div>
-                  <div><span style="background:rgba(79,142,247,0.1);color:#3b82f6;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">🛡️ Administrador</span><br><span style="color:var(--text-secondary)">Acceso completo: crear/editar máquinas, gestionar usuarios y todas las secciones.</span></div>
+                  <div style="margin-bottom:10px"><span style="background:rgba(239,68,68,0.1);color:#dc2626;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Usuario</span><br><span style="color:var(--text-secondary)">Solo puede registrar reportes desde el portal de operario. Sin acceso al panel.</span></div>
+                  <div style="margin-bottom:10px"><span style="background:rgba(16,163,74,0.1);color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Técnico</span><br><span style="color:var(--text-secondary)">Accede al panel para ver máquinas, incidencias e historial. No puede editar máquinas ni gestionar usuarios.</span></div>
+                  <div><span style="background:rgba(79,142,247,0.1);color:#3b82f6;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Administrador</span><br><span style="color:var(--text-secondary)">Acceso completo: crear/editar máquinas, gestionar usuarios y todas las secciones.</span></div>
                 </div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="renderUsuarios()">🔄 Actualizar</button>
+              <button class="btn btn-outline btn-sm" onclick="renderUsuarios()">Actualizar</button>
             </div>
           </div>
 
           <div class="table-wrap" style="margin-bottom:24px;background:rgba(79,142,247,0.05);border:1px solid rgba(79,142,247,0.2);border-radius:16px;padding:20px">
             <div style="display:flex;align-items:flex-start;gap:12px">
-              <span style="font-size:24px">ℹ️</span>
+              <span style="font-size:24px"></span>
               <div>
                 <div style="font-weight:700;margin-bottom:6px">Cómo funciona el sistema de usuarios</div>
                 <div style="font-size:13px;color:var(--text-muted);line-height:1.7">
@@ -386,23 +386,23 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-qrcodes">
           <div class="section-header">
             <div>
-              <div class="section-title">📱 Códigos QR</div>
+              <div class="section-title">Códigos QR</div>
               <div class="section-subtitle">QR individuales para cada máquina — escanear con el móvil del operario</div>
             </div>
             <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
-              <input type="text" id="buscarQR" class="form-control" placeholder="🔍 Buscar máquina…"
+              <input type="text" id="buscarQR" class="form-control" placeholder="Buscar máquina…"
                 oninput="filtrarQRs()" style="width:180px;padding:8px 12px;font-size:13px">
               <select class="form-control" id="filtroSalaQR" onchange="filtrarQRs()"
                 style="width:160px;padding:8px 12px;font-size:13px">
                 <option value="">Todas las salas</option>
               </select>
-              <button class="btn btn-primary" onclick="imprimirTodosLosQRs()">🖨️ Imprimir Todos los QRs</button>
+              <button class="btn btn-primary" onclick="imprimirTodosLosQRs()">Imprimir Todos los QRs</button>
             </div>
           </div>
 
           <div
             style="background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.3);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">
-            <span style="font-size:20px">ℹ️</span>
+            <span style="font-size:20px"></span>
             <div>
               <div style="font-weight:600;margin-bottom:4px">Instrucciones de uso</div>
               <div style="font-size:13px;color:var(--text-secondary)">
@@ -432,7 +432,7 @@ const DASHBOARD_HTML = `
       <div style="margin-bottom:8px; color:var(--text-muted); font-size:14px" id="qrSala">Sala</div>
       <div id="qrImgContainer" style="display:flex; justify-content:center; margin:20px 0; min-height:320px"></div>
       <a id="qrUrl" class="text-accent" style="word-break:break-all; font-size:11px; margin-bottom:20px; display:block" target="_blank">URL</a>
-      <button class="btn btn-primary btn-full" onclick="imprimirQR()">🖨️ Imprimir Etiqueta</button>
+      <button class="btn btn-primary btn-full" onclick="imprimirQR()">Imprimir Etiqueta</button>
       <button class="btn btn-outline" onclick="cerrarModal('modalQR')">Cerrar</button>
     </div>
   </div>
@@ -442,14 +442,14 @@ const DASHBOARD_HTML = `
     <div class="modal" style="max-width:560px">
       <div class="modal-header">
         <div style="display:flex;align-items:center;gap:10px">
-          <button class="btn btn-primary btn-sm" id="btnToggleEditarMaquina" onclick="toggleModoEdicionMaquina()" style="padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:all 0.2s ease;">✏️ Editar</button>
+          <button class="btn btn-primary btn-sm" id="btnToggleEditarMaquina" onclick="toggleModoEdicionMaquina()" style="padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:all 0.2s ease;">Editar</button>
           <div class="modal-title">Detalles de Máquina</div>
         </div>
         <button class="modal-close" onclick="cerrarModal('modalMaquina')">✕</button>
       </div>
       <div class="modal-body">
         <div id="msgTecnico" style="display:none;background:rgba(59,130,246,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--accent)">
-          🔧 Como técnico, solo puedes modificar el <strong>Estado operativo</strong> de la máquina (Activa/Inactiva).
+          Como técnico, solo puedes modificar el <strong>Estado operativo</strong> de la máquina (Activa/Inactiva).
         </div>
         <input type="hidden" id="editMaquinaId">
         <div class="grid-2">
@@ -497,7 +497,7 @@ const DASHBOARD_HTML = `
   <div class="overlay" id="modalNuevaMaquina">
     <div class="modal" style="max-width:560px">
       <div class="modal-header">
-        <div class="modal-title">➕ Nueva Máquina</div>
+        <div class="modal-title">Nueva Máquina</div>
         <button class="modal-close" onclick="cerrarModal('modalNuevaMaquina')">✕</button>
       </div>
       <div class="modal-body">
@@ -546,7 +546,7 @@ const DASHBOARD_HTML = `
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="cerrarModal('modalNuevaMaquina')">Cancelar</button>
-        <button class="btn btn-primary" onclick="crearMaquina()">🖨️ Crear máquina</button>
+        <button class="btn btn-primary" onclick="crearMaquina()">Crear máquina</button>
       </div>
     </div>
   </div>
@@ -565,7 +565,7 @@ const DASHBOARD_HTML = `
       <!-- Sección de Seguimiento (Solo para Incidencias) -->
       <div id="seccionSeguimiento" style="display:none; border-top:1px solid var(--border); padding-top:20px">
         <h3 style="font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px">
-          💬 Hilo de Seguimiento Técnico
+          Hilo de Seguimiento Técnico
         </h3>
         
         <div id="seguimientoTimeline" class="timeline-container" style="margin-bottom:20px; padding-right:10px">
@@ -577,7 +577,7 @@ const DASHBOARD_HTML = `
           <textarea id="nuevaNotaSeguimiento" class="form-control" rows="2" placeholder="Describe los avances, piezas pedidas, etc..." style="margin-bottom:10px; font-size:13px"></textarea>
           <div style="display:flex; justify-content:flex-end">
             <button class="btn btn-primary btn-sm" id="btnGuardarNota" onclick="guardarNuevaNota()">
-              <span>➕ Añadir Nota</span>
+              <span>Añadir Nota</span>
             </button>
           </div>
         </div>
@@ -625,7 +625,7 @@ const DASHBOARD_HTML = `
     <div class="modal" style="max-width:500px; width: 90%">
       <div class="modal-header">
         <div>
-          <div class="modal-title">🏠 Gestionar Salas</div>
+          <div class="modal-title">Gestionar Salas</div>
           <div style="font-size:12px;color:var(--text-muted)">Crea o elimina salas de trabajo</div>
         </div>
         <button class="modal-close" onclick="cerrarModal('modalGestionSalas')">✕</button>
@@ -680,7 +680,7 @@ const DASHBOARD_HTML = `
   <div class="overlay" id="modalFeedback">
     <div class="modal" style="max-width:350px; text-align:center; padding: 32px 24px">
       <div>
-        <div style="font-size:52px; margin-bottom:16px" id="feedbackIcon">✅</div>
+        <div style="font-size:52px; margin-bottom:16px" id="feedbackIcon"></div>
         <div class="modal-title" id="feedbackTitle" style="margin-bottom:12px; font-size:20px">Título</div>
         <p id="feedbackMsg" style="color:var(--text-muted); font-size:14px; margin-bottom:28px; line-height:1.5">Mensaje</p>
       </div>
@@ -694,7 +694,7 @@ const DASHBOARD_HTML = `
   <div class="overlay" id="modalConfirm">
     <div class="modal" style="max-width:400px; text-align:center; padding: 36px 28px">
       <div>
-        <div style="font-size:52px; margin-bottom:16px; line-height:1" id="confirmIcon">⚠️</div>
+        <div style="font-size:52px; margin-bottom:16px; line-height:1" id="confirmIcon"></div>
         <div class="modal-title" id="confirmTitle" style="margin-bottom:10px; font-size:18px">¿Estás seguro?</div>
         <p id="confirmMsg" style="color:var(--text-muted); font-size:14px; margin-bottom:28px; line-height:1.6">Esta acción no se puede deshacer.</p>
       </div>
