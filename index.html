@@ -941,7 +941,7 @@
         if (!client) throw new Error('No se pudo conectar al servidor.');
 
         const { error } = await client.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + '/reset-password.html'
+          redirectTo: window.location.origin + '/adestacion/reset-password.html'
         });
 
         if (error) throw error;
