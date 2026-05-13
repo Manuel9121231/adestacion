@@ -357,28 +357,7 @@ async function enviarChecklist() {
 }
 
 function reiniciar() {
-  sesionId = null;
-  selectedPhotos = [];
-  modoActual = 'Mantenimiento';
-
-  // Limpiar campos del formulario
-  const reportTxt = document.getElementById('reporteTextarea');
-  if (reportTxt) reportTxt.value = '';
-
-  // Resetear botón de envío
-  const btn = document.getElementById('btnEnviar');
-  if (btn) {
-    btn.disabled = true;
-    btn.className = 'btn-enviar bloqueado';
-    btn.textContent = '✏️ Rellena el reporte para continuar';
-  }
-
-  // Ocultar errores
-  const errDiv = document.getElementById('reporteError');
-  if (errDiv) errDiv.style.display = 'none';
-
-  cancelPhoto(); // Limpiar UI de foto
-  showScreen('portal');
+  window.location.href = 'seleccion.html';
 }
 
 async function handlePhotoUploads(base64Photos) {
