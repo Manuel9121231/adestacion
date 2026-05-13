@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rolLabel = { superadmin: 'Administrador', admin: 'Administrador', tecnico: 'Técnico' }[rolActual] || 'Usuario';
     const footerVersion = container?.querySelector('.sidebar-footer div');
     if (footerVersion) {
-      footerVersion.innerHTML = `👤 <strong>${adminName}</strong><br><span style="font-size:11px;opacity:0.7">${rolLabel}</span>`;
+      footerVersion.innerHTML = `👤 <strong>${adminName}</strong><br><span style="font-size:12px;opacity:1;color:var(--accent)">${rolLabel}</span>`;
     }
 
     // Ocultar navegación para técnicos (QR codes y usuarios)
