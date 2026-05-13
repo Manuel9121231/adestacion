@@ -34,6 +34,10 @@
     body.dark-mode .m-card.warn     { background: #2a2010; border-color: #78450a; }
     body.dark-mode .m-card.inactive { background: #1e1e1e; border-color: #3a3a3a; }
     body.dark-mode .m-card.down     { background: #2a1515; border-color: #7f1d1d; }
+    body.dark-mode .m-card::after        { color: #60a5fa; }
+    body.dark-mode .m-card.warn::after   { color: #fbbf24; }
+    body.dark-mode .m-card.inactive::after { color: #9ca3af; }
+    body.dark-mode .m-card.down::after   { color: #f87171; }
     body.dark-mode .badge-ok        { background: #052e16; color: #34d399; }
     body.dark-mode .badge-warn      { background: #2a1a00; color: #fbbf24; }
     body.dark-mode .badge-inactive  { background: #1f2937; color: #9ca3af; }
@@ -53,8 +57,9 @@
       color: var(--text);
       line-height: 1.5;
       padding-bottom: 40px;
+      overflow-y: scroll;
     }
-    body, body * { transition-duration: 0s !important; }
+    body.no-transition, body.no-transition * { transition-duration: 0s !important; }
 
     /* ══ HEADER ═══════════════════════════════════════════ */
     header {
@@ -314,9 +319,26 @@
       gap: 12px;
       transition: transform 0.2s, box-shadow 0.2s;
       position: relative;
+      overflow: hidden;
       box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.15);
       cursor: pointer;
     }
+    .m-card::after {
+      content: "→";
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: all 0.2s ease;
+      color: #2563eb;
+    }
+    .m-card.warn::after  { color: #d97706; }
+    .m-card.inactive::after { color: #6b7280; }
+    .m-card.down::after  { color: #dc2626; }
+    .m-card:hover::after { opacity: 1; transform: translateX(0); }
     .m-card.warn {
       background: #fffbeb;
       border-color: #fcd34d;
@@ -698,12 +720,9 @@
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    function fuzzyMatch(query, text) {
-      let qi = 0;
-      for (let i = 0; i < text.length && qi < query.length; i++) {
-        if (text[i] === query[qi]) qi++;
-      }
-      return qi === query.length;
+    function fuzzyMatch(q, text) {
+      const pattern = q.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+      return new RegExp(pattern, 'i').test(text);
     }
 
     function filterMachines() {
@@ -716,8 +735,9 @@
           bySala[salaName].push(m);
           return;
         }
-        const haystack = [(m.nombre||''), (m.codigo||''), salaName, (m.tipo||''), (m.notas||'')].join(' ').toLowerCase();
-        if (fuzzyMatch(q, haystack)) {
+        const fields = [(m.nombre||''), (m.codigo||''), salaName, (m.tipo||''), (m.notas||'')];
+        const match = fields.some(f => fuzzyMatch(q, f));
+        if (match) {
           if (!bySala[salaName]) bySala[salaName] = [];
           bySala[salaName].push(m);
         }

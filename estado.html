@@ -49,8 +49,9 @@
       color: var(--text);
       line-height: 1.5;
       padding-bottom: 40px;
+      overflow-y: scroll;
     }
-    body, body * { transition-duration: 0s !important; }
+    body.no-transition, body.no-transition * { transition-duration: 0s !important; }
 
     /* ══ HEADER ═══════════════════════════════════════════ */
     header {
@@ -625,12 +626,9 @@
     `;
   }
 
-  function fuzzyMatch(query, text) {
-    let qi = 0;
-    for (let i = 0; i < text.length && qi < query.length; i++) {
-      if (text[i] === query[qi]) qi++;
-    }
-    return qi === query.length;
+  function fuzzyMatch(q, text) {
+    const pattern = q.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+    return new RegExp(pattern, 'i').test(text);
   }
 
   function filterMachines() {
@@ -647,8 +645,8 @@
           hasVisible = true;
           return;
         }
-        const haystack = [card.dataset.nombre||'', card.dataset.tipo||'', card.dataset.badge||'', sec.dataset.sala||''].join(' ');
-        const visible = fuzzyMatch(q, haystack);
+        const fields = [card.dataset.nombre||'', card.dataset.tipo||'', card.dataset.badge||'', sec.dataset.sala||''];
+        const visible = fields.some(f => fuzzyMatch(q, f));
         card.style.display = visible ? 'flex' : 'none';
         if (visible) hasVisible = true;
       });

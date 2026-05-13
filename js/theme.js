@@ -1,15 +1,21 @@
 (function() {
   // Definir función global para cambiar tema
   window.toggleTheme = function() {
+    document.body.classList.add('no-transition');
     const isDark = document.body.classList.toggle('dark-mode');
     const newTheme = isDark ? 'dark' : 'light';
     localStorage.setItem('sgi_theme', newTheme);
 
-    // Actualizar texto del botón si existe
     const btn = document.getElementById('btnThemeToggle');
     if (btn) {
       btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
     }
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.body.classList.remove('no-transition');
+      });
+    });
   };
 
   // Inicializar tema inmediatamente (antes de DOMContentLoaded)
