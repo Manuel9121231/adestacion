@@ -367,26 +367,24 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* Responsive - Filtros según dispositivo */
+    .filtros-container-mobile { display: none !important; }
+    .filter-buttons-desktop { display: flex !important; }
+
+    @media screen and (max-width: 768px) {
+      .filtros-container-mobile { display: flex !important; }
+      .filter-buttons-desktop { display: none !important; }
+      .header-bottom { flex-direction: column; gap: 12px; padding: 12px 16px; }
+      .search-wrap { width: 100%; }
+    }
+
     @media (max-width: 600px) {
-      .layout {
-        flex-direction: column;
-        gap: 16px;
-      }
+      .layout { flex-direction: column; gap: 16px; }
       .sidebar {
-        position: static;
-        width: 100%;
-        max-height: none;
-        padding-right: 0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+        position: static; width: 100%; max-height: none; padding-right: 0;
+        display: flex; flex-wrap: wrap; gap: 8px;
       }
-      .sidebar-item {
-        flex: 1;
-        min-width: 120px;
-        text-align: center;
-        margin-bottom: 0;
-      }
+      .sidebar-item { flex: 1; min-width: 120px; text-align: center; margin-bottom: 0; }
       .machine-grid { grid-template-columns: 1fr; }
       .header-title h1 { font-size: 16px; }
     }
@@ -434,9 +432,37 @@
     </a>
   </div>
   <div class="search-container" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-    <div style="position:relative;flex:1;min-width:250px">
+    <div class="header-bottom">
+    <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o sala..." oninput="filterMachines()">
+    </div>
+    <!-- Filtros para Escritorio -->
+    <div class="filter-buttons-desktop" style="display:flex;gap:12px;margin-left:auto;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+        <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Estado</span>
+        <button id="btnEstado" onclick="toggleEstadoFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">Todas</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+        <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Máquinas</span>
+        <button id="btnIncidencia" onclick="cycleIncidenciaFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">Todas</button>
+      </div>
+      <button onclick="resetFilters()" class="btn-filter" style="padding:10px 16px;border-radius:10px;border:2px solid var(--border);background:linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:all 0.2s">Limpiar filtros</button>
+    </div>
+    <!-- Filtros para Móvil -->
+    <div class="filtros-container-mobile" style="width:100%;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="filtroEstadoMobile" onchange="onFiltroMobileChange()" style="flex:1;min-width:140px;padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--card-bg);color:var(--text);font-size:14px;cursor:pointer;">
+        <option value="todos">Estado: Todos</option>
+        <option value="activa">Activa</option>
+        <option value="inactiva">Inactiva</option>
+      </select>
+      <select id="filtroIncidenciaMobile" onchange="onFiltroMobileChange()" style="flex:1;min-width:140px;padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--card-bg);color:var(--text);font-size:14px;cursor:pointer;">
+        <option value="todos">Incidencias: Todas</option>
+        <option value="sin_resolver">Sin resolver</option>
+        <option value="en_seguimiento">En seguimiento</option>
+        <option value="sin_errores">Sin errores</option>
+      </select>
+      <button onclick="resetFilters()" style="padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--card-bg);color:var(--text);font-size:14px;cursor:pointer;">↺</button>
     </div>
   </div>
   <div id="filtroResumen" style="padding:8px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:none;max-width:1400px;margin:0 auto">
@@ -797,7 +823,17 @@
     applyFilters();
   }
 
+  function onFiltroMobileChange() {
+    filtroEstado = document.getElementById('filtroEstadoMobile').value;
+    filtroIncidencia = document.getElementById('filtroIncidenciaMobile').value;
+    filterMachines();
+  }
+
   function resetFilters() {
+    const mE = document.getElementById('filtroEstadoMobile');
+    const mI = document.getElementById('filtroIncidenciaMobile');
+    if (mE) mE.value = 'todos';
+    if (mI) mI.value = 'todos';
     filtroEstado = 'todos';
     filtroIncidencia = 'todos';
     document.getElementById('btnEstado').textContent = 'Todas';
