@@ -37,7 +37,7 @@ const DASHBOARD_HTML = `
           </div>
           <div class="nav-item" id="nav-historial" onclick="navigateTo('historial')">
             <span class="nav-icon">📋</span>
-            <span>Mantenimientos</span>
+            <span>Reportes</span>
           </div>
           <div class="nav-item" id="nav-qrcodes" onclick="navigateTo('qrcodes')">
             <span class="nav-icon">📱</span>
@@ -51,8 +51,9 @@ const DASHBOARD_HTML = `
       </nav>
 
       <div class="sidebar-footer">
-        <div style="margin-bottom:8px">v3.1 · Supabase Edition</div>
+        <div style="margin-bottom:8px">v3.1</div>
         <button class="btn btn-primary btn-sm btn-full" onclick="window.location.href='index.html'" style="margin-bottom:8px;font-size:11px;padding:6px">🏠 Volver al Inicio</button>
+        <button class="btn btn-outline btn-sm btn-full" onclick="window.location.href='seleccion.html'" style="margin-bottom:8px;font-size:11px;padding:6px">🖨️ Portal Operario</button>
         <button class="btn btn-outline btn-sm btn-full" onclick="cerrarSesionAdmin()" style="font-size:11px;padding:6px">🚪 Cerrar Sesión</button>
       </div>
     </aside>
@@ -93,39 +94,75 @@ const DASHBOARD_HTML = `
 
         <!-- ══════════ DASHBOARD ══════════ -->
         <div class="section active fade-in" id="section-dashboard">
-          <div class="kpi-grid" id="kpiGrid">
-            <div class="kpi-card azul">
-              <div class="kpi-icon">✅</div>
-              <div class="kpi-value" id="kpi-hoy">–</div>
-              <div class="kpi-label">Mantenimientos hoy</div>
-            </div>
-            <div class="kpi-card verde">
-              <div class="kpi-icon">📅</div>
-              <div class="kpi-value" id="kpi-semana">–</div>
-              <div class="kpi-label">Esta semana</div>
-            </div>
-            <div class="kpi-card rojo">
+          <!-- KPI Cards en fila horizontal -->
+          <div class="kpi-grid" id="kpiGrid" style="margin-bottom:16px;grid-template-columns:1fr 1fr 1fr">
+            <div class="kpi-card rojo" style="border:2px solid var(--danger);animation:pulse-red 2s infinite">
               <div class="kpi-icon">🚨</div>
-              <div class="kpi-value" id="kpi-sin-resolver">–</div>
+              <div class="kpi-value" id="kpi-sin-resolver" style="color:var(--danger)">–</div>
               <div class="kpi-label">Sin resolver</div>
+              <button onclick="navigateTo('incidencias')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--danger);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
             </div>
-
+            <div class="kpi-card amarillo" style="border:2px solid var(--warning)">
+              <div class="kpi-icon">📝</div>
+              <div class="kpi-value" id="kpi-en-seguimiento-dash" style="color:var(--warning)">–</div>
+              <div class="kpi-label">En seguimiento</div>
+              <button onclick="navigateTo('incidencias')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--warning);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
+            </div>
+            <div class="kpi-card" style="border:2px solid var(--border)">
+              <div class="kpi-icon">🖨️</div>
+              <div style="display:flex;gap:12px;align-items:baseline">
+                <div>
+                  <div class="kpi-value" id="kpi-maq-activas" style="color:var(--success);font-size:22px">–</div>
+                  <div style="font-size:10px;color:var(--text-muted)">Activas</div>
+                </div>
+                <div style="color:var(--text-muted)">/</div>
+                <div>
+                  <div class="kpi-value" id="kpi-maq-inactivas" style="color:var(--text-muted);font-size:22px">–</div>
+                  <div style="font-size:10px;color:var(--text-muted)">Inactivas</div>
+                </div>
+              </div>
+              <div class="kpi-label" style="margin-top:4px">Máquinas</div>
+              <button onclick="navigateTo('maquinas')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ver máquinas →</button>
+            </div>
           </div>
 
-          <div class="chart-grid">
-            <div class="chart-card">
-              <div class="chart-title">📈 Actividad últimos 30 días</div>
-              <div class="chart-bar-wrap" id="chartDias"></div>
+          <!-- Layout dividido: usa el mismo grid de 3 columnas para alineación perfecta -->
+          <div class="kpi-grid" style="margin-bottom:16px;grid-template-columns:1fr 1fr 1fr">
+            <!-- Izquierda: tabla incidencias ocupa 2 columnas -->
+            <div class="table-wrap" style="min-height:320px;display:flex;flex-direction:column;grid-column:span 2">
+              <div class="table-header">
+                <div class="table-title">🚨 Incidencias sin resolver</div>
+                <button class="btn btn-outline btn-sm" onclick="navigateTo('incidencias')">Ver todas →</button>
+              </div>
+              <div style="overflow-x:auto;flex:1">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Máquina</th>
+                      <th>Sala</th>
+                      <th>Operario</th>
+                      <th>Reportado</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="dashboardIncPendientes"></tbody>
+                </table>
+              </div>
+              <div id="dashboardIncEmpty" style="display:none;padding:20px;text-align:center;color:var(--text-muted);font-size:13px">✅ No hay incidencias sin resolver</div>
             </div>
-            <div class="chart-card">
-              <div class="chart-title">🖨️ Mantenimientos por máquina</div>
-              <div class="chart-bar-wrap" id="chartMaquinas"></div>
+
+            <!-- Derecha: info máquinas ocupa 1 columna -->
+            <div class="table-wrap" style="min-height:320px;display:flex;flex-direction:column">
+              <div class="table-header">
+                <div class="table-title">🖨️ Máquinas inactivas</div>
+              </div>
+              <div id="dashboardMaqInactivas" style="display:flex;flex-direction:column;gap:4px;padding:12px;flex:1"></div>
             </div>
           </div>
 
-          <div class="table-wrap">
+          <div class="table-wrap" style="margin-bottom:0">
             <div class="table-header">
-              <div class="table-title">📋 Últimos mantenimientos realizados</div>
+              <div class="table-title">📋 Últimos reportes realizados</div>
               <button class="btn btn-outline btn-sm" onclick="navigateTo('historial')">Ver todos →</button>
             </div>
             <div style="overflow-x:auto">
@@ -133,6 +170,7 @@ const DASHBOARD_HTML = `
                 <thead>
                   <tr>
                     <th>Máquina</th>
+                    <th>Tipo</th>
                     <th>Sala</th>
                     <th>Operario</th>
                     <th>Fecha y hora</th>
@@ -152,7 +190,13 @@ const DASHBOARD_HTML = `
               <div class="section-title">🖨️ Máquinas</div>
               <div class="section-subtitle">Gestión y estado de todas las máquinas</div>
             </div>
-            <div style="display:flex;gap:8px;align-items:center">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div style="position:relative;display:flex;align-items:center">
+                <svg style="position:absolute;left:10px;width:15px;height:15px;color:var(--text-muted);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="searchMaquinas" placeholder="Buscar máquina..." oninput="filtrarMaquinas()"
+                  style="padding:8px 12px 8px 32px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit;width:180px;outline:none"
+                  onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+              </div>
               <select class="form-control" id="filtroSalaMaquinas" onchange="filtrarMaquinas()"
                 style="width:160px;padding:8px 12px;font-size:13px">
                 <option value="">Todas las salas</option>
@@ -174,8 +218,8 @@ const DASHBOARD_HTML = `
             <div style="display:flex;gap:8px;align-items:center">
               <button class="btn btn-outline btn-sm active" id="btn-inc-todas" onclick="renderIncidencias('todas')">Todas</button>
               <button class="btn btn-outline btn-sm" id="btn-inc-pendientes" onclick="renderIncidencias('pendientes')" style="border-color:var(--danger);color:var(--danger)">Sin resolver</button>
-              <button class="btn btn-outline btn-sm" id="btn-inc-resueltas" onclick="renderIncidencias('resueltas')" style="border-color:var(--success);color:var(--success)">Resueltas</button>
               <button class="btn btn-outline btn-sm" id="btn-inc-seguimiento" onclick="toggleSeguimiento()" style="border-color:var(--warning);color:var(--warning)">En seguimiento</button>
+              <button class="btn btn-outline btn-sm" id="btn-inc-resueltas" onclick="renderIncidencias('resueltas')" style="border-color:var(--success);color:var(--success)" title="Ver incidencias resueltas">Ver Resueltas</button>
             </div>
           </div>
 

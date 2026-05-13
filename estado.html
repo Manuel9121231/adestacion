@@ -392,6 +392,15 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
+<script>
+  (function() {
+    const hasSession = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
+    if (!hasSession) document.addEventListener('DOMContentLoaded', () => {
+      const b = document.getElementById('ctaBanner');
+      if (b) b.style.display = 'block';
+    });
+  })();
+</script>
 </head>
 <body>
 <script src="js/theme.js"></script>
@@ -416,6 +425,13 @@
     <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre, sala o etiqueta..." oninput="filterMachines()">
   </div>
 </header>
+
+<!-- CTA banner: only shown when no session -->
+<div id="ctaBanner" style="display:none; background:linear-gradient(135deg,rgba(79,142,247,0.12),rgba(124,58,237,0.08)); border-bottom:1px solid rgba(79,142,247,0.2); padding:10px 20px; text-align:center; font-size:13px; color:var(--text-muted)">
+  🔒 Estás viendo el estado público.
+  <a href="index.html" style="color:var(--accent); font-weight:600; text-decoration:none; margin:0 4px">Inicia sesión</a>
+  para reportar incidencias o mantenimientos.
+</div>
 
 <main id="mainContent">
   <div id="loader">
@@ -626,13 +642,19 @@
     `;
   }
 
+  function normalize(s) { return s.toLowerCase().replace(/[\s\-_.]/g, ''); }
   function fuzzyMatch(q, text) {
     const pattern = q.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
     return new RegExp(pattern, 'i').test(text);
   }
+  function getCardState(card) {
+    if (card.classList.contains('inactive') || card.classList.contains('down')) return 'inactiva';
+    return 'activa';
+  }
 
   function filterMachines() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const normQ = normalize(q);
     const sections = document.querySelectorAll('.sala-section');
 
     sections.forEach(sec => {
@@ -640,13 +662,18 @@
       let hasVisible = false;
 
       cards.forEach(card => {
-        if (!q) {
-          card.style.display = 'flex';
-          hasVisible = true;
-          return;
-        }
-        const fields = [card.dataset.nombre||'', card.dataset.tipo||'', card.dataset.badge||'', sec.dataset.sala||''];
-        const visible = fields.some(f => fuzzyMatch(q, f));
+        if (!q) { card.style.display = 'flex'; hasVisible = true; return; }
+
+        const estado = getCardState(card);
+        const textFields = [card.dataset.nombre||'', card.dataset.tipo||'', sec.dataset.sala||''];
+        const badge = card.dataset.badge||'';
+
+        const visible =
+          estado.startsWith(q) ||
+          normalize(badge).startsWith(normQ) ||
+          textFields.some(f => normalize(f).includes(normQ)) ||
+          textFields.some(f => fuzzyMatch(q, f));
+
         card.style.display = visible ? 'flex' : 'none';
         if (visible) hasVisible = true;
       });

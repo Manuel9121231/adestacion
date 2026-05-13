@@ -265,7 +265,7 @@
     </div>
     <div class="user-actions">
       <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
-      <button class="user-btn" id="btnChangeAccount" onclick="window.location.href='registro.html'" style="display:none">Cambiar cuenta</button>
+      <button class="user-btn" id="btnChangeAccount" onclick="window.location.href='seleccion.html'" style="display:none">Cambiar máquina</button>
       <button class="user-btn logout" id="btnLogout" onclick="cerrarSesion()" style="display:none">Cerrar sesión</button>
     </div>
   </div>
@@ -286,7 +286,7 @@
       <p id="errorMsg" style="margin-bottom: 30px; opacity: 0.8; font-size: 1.1rem; line-height: 1.4;">
         No se especificó una máquina válida. Escanea el QR de nuevo o selecciona la impresora manualmente.
       </p>
-      <button class="btn-nuevo" onclick="window.location.href='index.html'" style="width: 100%; max-width: 300px; margin: 0 auto; display: block;">
+      <button class="btn-nuevo" onclick="window.location.href='seleccion.html'" style="width: 100%; max-width: 300px; margin: 0 auto; display: block;">
         📋 Seleccionar manualmente
       </button>
     </div>
@@ -301,7 +301,7 @@
           <p id="portalMaquinaSala" style="margin:0; opacity:0.6;">Elige una opción</p>
         </div>
         <div style="display:flex; gap:8px; flex-shrink: 0;">
-          <button onclick="window.location.href='index.html'" style="background:var(--card-bg); border:1px solid var(--border); color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; cursor:pointer; white-space: nowrap;">
+          <button onclick="window.location.href='seleccion.html'" style="background:var(--card-bg); border:1px solid var(--border); color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; cursor:pointer; white-space: nowrap;">
             🔄 Cambiar
           </button>
           <button onclick="window.location.href='dashboard.html'" style="background:rgba(79, 142, 247, 0.1); border:1px solid var(--accent-maint); color:var(--accent-maint); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:700; cursor:pointer; white-space: nowrap;">
@@ -340,7 +340,7 @@
         <div class="header-sub" id="checkSalaNombre">–</div>
       </div>
       <div style="display:flex; gap:8px; flex-shrink: 0;">
-        <button onclick="window.location.href='index.html'" style="background:var(--card-bg); border:1px solid var(--border); color:var(--text-white); padding:6px 10px; border-radius:8px; font-size:10px; cursor:pointer; white-space: nowrap;">
+        <button onclick="window.location.href='seleccion.html'" style="background:var(--card-bg); border:1px solid var(--border); color:var(--text-white); padding:6px 10px; border-radius:8px; font-size:10px; cursor:pointer; white-space: nowrap;">
           🔄 Cambiar
         </button>
         <button onclick="window.location.href='dashboard.html'" style="background:rgba(79, 142, 247, 0.1); border:1px solid var(--accent-maint); color:var(--accent-maint); padding:6px 10px; border-radius:8px; font-size:10px; font-weight:700; cursor:pointer; white-space: nowrap;">
@@ -457,6 +457,13 @@
   </div>
 
 <script>
+  // ── Session guard ──────────────────────────────────────────────────────────
+  (function checkSession() {
+    const user  = localStorage.getItem('sgi_user_session');
+    const admin = localStorage.getItem('sgi_admin_session');
+    if (!user && !admin) window.location.replace('index.html');
+  })();
+
   // Update user panel
   function updateUserPanel() {
     try {
