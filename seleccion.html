@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f8fafc;
+      --bg: #eef2f7;
       --card-bg: #ffffff;
       --text: #1e293b;
       --text-muted: #64748b;
@@ -17,9 +17,38 @@
       --err: #ef4444;
       --warn: #f59e0b;
       --inactive: #6b7280;
-      --border: #e2e8f0;
+      --border: #cbd5e1;
       --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     }
+
+    body.dark-mode {
+      --bg: #0f0f1a;
+      --card-bg: #1a1a2e;
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+      --accent: #4f8ef7;
+      --border: rgba(255,255,255,0.08);
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+    }
+    body.dark-mode .m-card          { background: #1e2a3a; border-color: #2d4a6e; }
+    body.dark-mode .m-card.warn     { background: #2a2010; border-color: #78450a; }
+    body.dark-mode .m-card.inactive { background: #1e1e1e; border-color: #3a3a3a; }
+    body.dark-mode .m-card.down     { background: #2a1515; border-color: #7f1d1d; }
+    body.dark-mode .m-card::after        { color: #60a5fa; }
+    body.dark-mode .m-card.warn::after   { color: #fbbf24; }
+    body.dark-mode .m-card.inactive::after { color: #9ca3af; }
+    body.dark-mode .m-card.down::after   { color: #f87171; }
+    body.dark-mode .badge-ok        { background: #052e16; color: #34d399; }
+    body.dark-mode .badge-warn      { background: #2a1a00; color: #fbbf24; }
+    body.dark-mode .badge-inactive  { background: #1f2937; color: #9ca3af; }
+    body.dark-mode .badge-err       { background: #2a0a0a; color: #f87171; }
+    body.dark-mode .m-details       { border-top-color: rgba(255,255,255,0.08); }
+    body.dark-mode .sidebar-item    { background: #1a1a2e; border-color: rgba(255,255,255,0.08); }
+    body.dark-mode .sidebar-item:hover { background: #1e2a3a; border-color: #4f8ef7; }
+    body.dark-mode .account-dropdown { background: #1a1a2e; border-color: rgba(255,255,255,0.1); }
+    body.dark-mode .account-dropdown-item { color: var(--text); }
+    body.dark-mode .account-dropdown-item:hover { background: #252540; }
+    body.dark-mode .account-dropdown-item.danger:hover { background: #2a0a0a; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -28,12 +57,14 @@
       color: var(--text);
       line-height: 1.5;
       padding-bottom: 40px;
+      overflow-y: scroll;
     }
+    body.no-transition, body.no-transition * { transition-duration: 0s !important; }
 
     /* ══ HEADER ═══════════════════════════════════════════ */
     header {
-      background: #1e3a8a;
-      border-bottom: 1px solid #1e40af;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
       padding: 16px 20px;
       position: sticky;
       top: 0;
@@ -54,18 +85,32 @@
       width: 40px;
       height: 40px;
       border-radius: 10px;
-      color: #bfdbfe;
+      color: var(--text);
       text-decoration: none;
       transition: all 0.2s;
-      background: rgba(255,255,255,0.1);
+      background: var(--bg);
+      border: 1px solid var(--border);
     }
-    .back-btn:hover { color: #ffffff; background: rgba(255,255,255,0.2); }
-    .header-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: #ffffff; }
-    .header-title p { font-size: 13px; color: #bfdbfe; }
+    .back-btn:hover { color: var(--accent); background: var(--bg); }
+    .theme-toggle {
+      padding: 7px 14px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+    .header-title h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+    .header-title p { font-size: 13px; color: var(--text-muted); }
     .header-user {
       flex: 1;
       font-size: 13px;
-      color: #bfdbfe;
+      color: var(--text-muted);
       white-space: nowrap;
       display: flex;
       align-items: center;
@@ -73,7 +118,7 @@
       gap: 4px;
     }
     .header-user strong {
-      color: #ffffff;
+      color: var(--text);
       font-weight: 700;
     }
     .account-btn {
@@ -86,9 +131,9 @@
       align-items: center;
       gap: 6px;
       padding: 7px 14px;
-      background: rgba(255,255,255,0.15);
-      color: #ffffff;
-      border: none;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
       border-radius: 10px;
       font-size: 13px;
       font-weight: 600;
@@ -96,17 +141,17 @@
       transition: all 0.2s;
       font-family: inherit;
     }
-    .account-btn-trigger:hover { background: rgba(255,255,255,0.25); }
+    .account-btn-trigger:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); }
     .account-btn-trigger svg { width: 16px; height: 16px; }
     .account-dropdown {
       display: none;
       position: absolute;
       top: calc(100% + 8px);
       right: 0;
-      background: #ffffff;
+      background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      box-shadow: var(--shadow);
       min-width: 180px;
       overflow: hidden;
       z-index: 200;
@@ -132,6 +177,49 @@
     .account-dropdown-item.danger { color: var(--err); }
     .account-dropdown-item.danger:hover { background: #fef2f2; }
     .account-dropdown-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    /* ── Mis Reportes Modal ──────────────────── */
+    .mis-reportes-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 2000;
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .mis-reportes-overlay.open { display: flex; }
+    .mis-reportes-modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border, rgba(0,0,0,0.08));
+      border-radius: 20px;
+      width: 100%; max-width: 560px; max-height: 80vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .mis-reportes-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border, rgba(0,0,0,0.08));
+      flex-shrink: 0;
+    }
+    .mis-reportes-header h2 { font-size: 17px; font-weight: 700; color: var(--text); }
+    .mis-reportes-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 22px; line-height: 1; padding: 4px;
+      transition: color 0.15s;
+    }
+    .mis-reportes-close:hover { color: var(--text); }
+    .mis-reportes-body { overflow-y: auto; padding: 16px 24px 24px; flex: 1; }
+    .reporte-item { padding: 14px 0; border-bottom: 1px solid var(--border, rgba(0,0,0,0.08)); }
+    .reporte-item:last-child { border-bottom: none; }
+    .reporte-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .reporte-item-maquina { font-size: 14px; font-weight: 600; color: var(--text); }
+    .reporte-badge { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+    .reporte-badge.mantenimiento { background: rgba(16,163,74,0.12); color: #16a34a; }
+    .reporte-badge.incidencia { background: rgba(239,68,68,0.12); color: #dc2626; }
+    .reporte-item-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .reporte-item-notas { font-size: 13px; color: var(--text); opacity: 0.85; }
+    .mis-reportes-empty, .mis-reportes-loading { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 14px; }
     .header-bottom {
       display: flex;
       align-items: center;
@@ -147,26 +235,26 @@
       width: 100%;
       padding: 12px 16px 12px 44px;
       border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.1);
-      color: white;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
       font-size: 14px;
       outline: none;
       transition: all 0.2s;
     }
     .search-input::placeholder {
-      color: rgba(255,255,255,0.5);
+      color: var(--text-muted);
     }
     .search-input:focus {
-      background: rgba(255,255,255,0.15);
-      border-color: rgba(255,255,255,0.3);
+      background: var(--card-bg);
+      border-color: var(--accent);
     }
     .search-icon {
       position: absolute;
       left: 14px;
       top: 50%;
       transform: translateY(-50%);
-      color: rgba(255,255,255,0.6);
+      color: var(--text-muted);
       width: 20px;
       height: 20px;
     }
@@ -203,7 +291,8 @@
       font-size: 14px;
       color: var(--text);
       background: var(--card-bg);
-      border: 1px solid var(--border);
+      border: 2px solid var(--border);
+      box-shadow: var(--shadow);
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -273,9 +362,26 @@
       gap: 12px;
       transition: transform 0.2s, box-shadow 0.2s;
       position: relative;
+      overflow: hidden;
       box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.15);
       cursor: pointer;
     }
+    .m-card::after {
+      content: "→";
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      font-size: 18px;
+      font-weight: 900;
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: all 0.2s ease;
+      color: #2563eb;
+    }
+    .m-card.warn::after  { color: #d97706; }
+    .m-card.inactive::after { color: #6b7280; }
+    .m-card.down::after  { color: #dc2626; }
+    .m-card:hover::after { opacity: 1; transform: translateX(0); }
     .m-card.warn {
       background: #fffbeb;
       border-color: #fcd34d;
@@ -398,12 +504,17 @@
       }
       .machine-grid { grid-template-columns: 1fr; }
       .header-title h1 { font-size: 16px; }
+      .header-top { flex-wrap: wrap; gap: 6px; }
+      #headerUser { order: 3; width: 100%; justify-content: flex-start; font-size: 12px; }
+      #headerUser span:first-child { display: none; }
+      .theme-toggle { font-size: 11px; padding: 5px 8px; }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
 </head>
 <body>
+<script src="js/theme.js"></script>
 
 <header>
   <div class="header-top">
@@ -414,9 +525,12 @@
       <h1>Seleccionar Equipo</h1>
       <p id="statsLabel">Cargando disponibilidad...</p>
     </div>
-    <div class="header-user" id="headerUser" style="display:none">
-      <span>Sesión iniciada como:</span><strong id="headerUserName"></strong><span>·</span><span>Rol:</span><strong id="headerUserRole"></strong>
+    <div class="header-user" id="headerUser" style="display:none;align-items:center;gap:8px">
+      <span style="font-size:13px;color:var(--text-muted)">Sesión iniciada como:</span>
+      <strong id="headerUserName" style="font-size:14px;font-weight:600"></strong>
+      <span id="headerUserRole" style="font-size:12px;background:var(--bg-secondary,rgba(0,0,0,0.08));padding:4px 10px;border-radius:12px;font-weight:500"></span>
     </div>
+    <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">🌙 Modo Oscuro</button>
     <div class="account-btn" id="accountBtn">
       <button class="account-btn-trigger" onclick="toggleAccountMenu()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -424,9 +538,9 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="account-dropdown" id="accountDropdown">
-        <button class="account-dropdown-item" onclick="cambiarCuenta()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Cambiar cuenta
+        <button class="account-dropdown-item" onclick="abrirMisReportes()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Mis Reportes
         </button>
         <button class="account-dropdown-item danger" onclick="cerrarSesion()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -438,10 +552,37 @@
   <div class="header-bottom">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre, sala o etiqueta..." oninput="filterMachines()">
+      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o sala..." oninput="filterMachines()">
+    </div>
+    <div class="filter-buttons" style="display:flex;gap:12px;margin-left:auto;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+        <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Estado</span>
+        <button id="btnEstado" onclick="toggleEstadoFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">⚡ Todas</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+        <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Máquinas</span>
+        <button id="btnIncidencia" onclick="cycleIncidenciaFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">🚨 Todas</button>
+      </div>
+      <button onclick="resetFilters()" class="btn-filter" style="padding:10px 16px;border-radius:10px;border:2px solid var(--border);background:linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:all 0.2s">✨ Limpiar filtros</button>
     </div>
   </div>
+  <div id="filtroResumen" style="padding:8px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:none">
+    <span id="filtroTexto"></span> • <span id="resultadoCount" style="font-weight:600;color:var(--text-primary)"></span> equipos
+  </div>
 </header>
+
+<!-- Mis Reportes Modal -->
+<div class="mis-reportes-overlay" id="misReportesOverlay" onclick="cerrarMisReportes(event)">
+  <div class="mis-reportes-modal">
+    <div class="mis-reportes-header">
+      <h2>📋 Mis Reportes</h2>
+      <button class="mis-reportes-close" onclick="cerrarMisReportesBtn()">×</button>
+    </div>
+    <div class="mis-reportes-body" id="misReportesBody">
+      <div class="mis-reportes-loading">Cargando...</div>
+    </div>
+  </div>
+</div>
 
 <main id="mainContent">
   <div id="loader">
@@ -459,7 +600,7 @@
     (function checkSession() {
       const user  = localStorage.getItem('sgi_user_session');
       const admin = localStorage.getItem('sgi_admin_session');
-      if (!user && !admin) window.location.replace('registro.html');
+      if (!user && !admin) window.location.replace('index.html');
     })();
 
     let allData = {};
@@ -471,9 +612,10 @@
         if (!window.supabaseClient) { setTimeout(loadStatus, 500); return; }
         const c = window.supabaseClient;
 
+        // 1. Cargar máquinas y obtener IDs de incidencias abiertas
         const [mRes, iRes] = await Promise.all([
           c.from('equipos').select('id,nombre,codigo,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
-          c.from('registros').select('maquina_id').eq('tipo','Incidencia').eq('resuelta',false)
+          c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta',false)
         ]);
 
         if (mRes.error) throw mRes.error;
@@ -481,6 +623,36 @@
         rawMachines = mRes.data || [];
         const incidencias = iRes.data || [];
         const downIds = new Set(incidencias.map(i => i.maquina_id));
+        
+        // Mapa de maquina_id -> datos de incidencia (incluyendo en_seguimiento)
+        const incidenciaPorMaquina = {};
+        // Mapa de incidencia_id -> maquina_id para buscar seguimientos
+        const incidenciaToMaquina = {};
+        incidencias.forEach(inc => {
+          incidenciaPorMaquina[inc.maquina_id] = inc;
+          incidenciaToMaquina[inc.id] = inc.maquina_id;
+        });
+
+        // 2. Cargar últimos seguimientos de esas incidencias
+        let seguimientosPorMaquina = {};
+        if (incidencias.length > 0) {
+          const incIds = incidencias.map(i => i.id);
+          const { data: segRes, error: segError } = await c
+            .from('seguimientos')
+            .select('incidencia_id,nota,timestamp')
+            .in('incidencia_id', incIds)
+            .order('timestamp', { ascending: false });
+            
+          if (!segError && segRes) {
+            // Agrupar por máquina y tomar el más reciente
+            segRes.forEach(s => {
+              const maqId = incidenciaToMaquina[s.incidencia_id];
+              if (maqId && !seguimientosPorMaquina[maqId]) {
+                seguimientosPorMaquina[maqId] = s.nota;
+              }
+            });
+          }
+        }
 
         const bySala = {};
         rawMachines.forEach(m => {
@@ -496,10 +668,16 @@
           if (incidencia) statusParts.push('Incidencia');
           const motivo = statusParts.join(' + ');
 
+          // Determinar estado de seguimiento
+          const incData = incidenciaPorMaquina[m.id];
+          const enSeguimiento = incData && incData.en_seguimiento;
+          
           m.down = down;
           m.motivo = motivo;
           m.inactiva = inactiva;
           m.incidencia = incidencia;
+          m.enSeguimiento = enSeguimiento;
+          m.ultimoSeguimiento = seguimientosPorMaquina[m.id] || '';
           bySala[salaName].push(m);
         });
 
@@ -524,6 +702,8 @@
       const sortedSalas = Object.keys(data).sort();
 
       if (sortedSalas.length === 0) {
+        layoutContainer.style.display = 'none';
+        loader.style.display = 'block';
         loader.innerHTML = `<div class="empty-state">No se encontraron equipos.</div>`;
         return;
       }
@@ -609,31 +789,62 @@
     function machineHTML(m) {
       let statusClass, badgeClass, cardClass, badgeText;
 
+      // Lógica de colores según el panel de administración:
+      // - Gris: Inactiva + Incidencia
+      // - Amarillo: Activa + Incidencia en seguimiento  
+      // - Rojo: Activa + Incidencia sin resolver
+      // - Verde: Activa sin incidencia
       if (!m.inactiva && !m.incidencia) {
+        // Activa sin incidencia - verde
         statusClass = 'status-ok';
         badgeClass  = 'badge-ok';
         badgeText   = 'Activa';
         cardClass   = 'm-card';
-      } else if (!m.inactiva && m.incidencia) {
+      } else if (!m.inactiva && m.incidencia && m.enSeguimiento) {
+        // Activa + en seguimiento - amarillo
         statusClass = 'status-warn';
         badgeClass  = 'badge-warn';
-        badgeText   = 'Activa';
+        badgeText   = 'En Seguimiento';
         cardClass   = 'm-card warn';
-      } else if (m.inactiva && !m.incidencia) {
-        statusClass = 'status-inactive';
-        badgeClass  = 'badge-inactive';
-        badgeText   = m.motivo;
-        cardClass   = 'm-card inactive';
-      } else {
+      } else if (!m.inactiva && m.incidencia && !m.enSeguimiento) {
+        // Activa + sin resolver - rojo
         statusClass = 'status-err';
         badgeClass  = 'badge-err';
-        badgeText   = m.estado || 'Inactiva';
+        badgeText   = 'Sin Resolver';
         cardClass   = 'm-card down';
+      } else if (m.inactiva && m.incidencia) {
+        // Inactiva + incidencia - gris
+        statusClass = 'status-inactive';
+        badgeClass  = 'badge-inactive';
+        badgeText   = 'Incidencia';
+        cardClass   = 'm-card inactive';
+      } else {
+        // Inactiva sin incidencia - gris
+        statusClass = 'status-inactive';
+        badgeClass  = 'badge-inactive';
+        badgeText   = m.estado || 'Inactiva';
+        cardClass   = 'm-card inactive';
       }
 
       let detailsHTML = '';
-      if (m.incidencia) detailsHTML += `<span class="m-badge ${m.inactiva ? 'badge-err' : 'badge-warn'}" style="align-self:flex-start">Incidencia</span>`;
-      if (m.notas) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
+      if (m.incidencia) {
+        // Color del badge según estado: gris=inactiva, amarillo=seguimiento, rojo=sin resolver
+        let badgeTipo = 'err'; // Por defecto rojo (sin resolver)
+        let badgeTexto = 'Incidencia';
+        if (m.inactiva) {
+          badgeTipo = 'inactive';
+          badgeTexto = 'Incidencia (Inactiva)';
+        } else if (m.enSeguimiento) {
+          badgeTipo = 'warn';
+          badgeTexto = 'En Seguimiento';
+        }
+        
+        detailsHTML += `<span class="m-badge badge-${badgeTipo}" style="align-self:flex-start">${badgeTexto}</span>`;
+        if (m.ultimoSeguimiento) {
+          detailsHTML += `<span class="m-nota" style="font-style:italic;color:var(--accent);font-size:11px">📝 ${esc(m.ultimoSeguimiento.substring(0, 40))}${m.ultimoSeguimiento.length > 40 ? '...' : ''}</span>`;
+        }
+      }
+      if (m.notas && !m.incidencia) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
 
       return `
         <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}" onclick="window.location.href='operario.html?maquinaId=${m.id}'">
@@ -655,25 +866,138 @@
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    function filterMachines() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
-      const bySala = {};
-      rawMachines.forEach(m => {
-        const salaName = m.salas?.nombre || 'Sin Sala';
-        const match = (m.nombre||'').toLowerCase().includes(q) ||
-                     (m.codigo||'').toLowerCase().includes(q) ||
-                     salaName.toLowerCase().includes(q) ||
-                     (m.notas||'').toLowerCase().includes(q);
-        if (match) {
-          if (!bySala[salaName]) bySala[salaName] = [];
-          bySala[salaName].push(m);
-        }
-      });
-      renderData(bySala);
+    function normalize(s) { return s.toLowerCase().replace(/[\s\-_.]/g, ''); }
+    function fuzzyMatch(q, text) {
+      const pattern = q.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+      return new RegExp(pattern, 'i').test(text);
+    }
+    function getMachineState(m) { return m.inactiva ? 'inactiva' : 'activa'; }
+
+    // Filtros
+    let filtroEstado = 'todos'; // 'todos', 'activa', 'inactiva'
+    let filtroIncidencia = 'todos'; // 'todos', 'sin_errores', 'sin_resolver', 'en_seguimiento'
+
+    function toggleEstadoFilter() {
+      const btn = document.getElementById('btnEstado');
+      if (filtroEstado === 'todos') {
+        filtroEstado = 'activa';
+        btn.textContent = '⚡ Activa';
+        btn.style.borderColor = 'var(--success)';
+        btn.style.background = 'rgba(16, 185, 129, 0.1)';
+      } else if (filtroEstado === 'activa') {
+        filtroEstado = 'inactiva';
+        btn.textContent = '⛔ Inactiva';
+        btn.style.borderColor = 'var(--danger)';
+        btn.style.background = 'rgba(239, 68, 68, 0.1)';
+      } else {
+        filtroEstado = 'todos';
+        btn.textContent = '⚡ Todas';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.background = 'var(--card-bg)';
+      }
+      applyFilters();
     }
 
-    function toggleAccountMenu() {
-      document.getElementById('accountDropdown').classList.toggle('open');
+    function cycleIncidenciaFilter() {
+      const btn = document.getElementById('btnIncidencia');
+      if (filtroIncidencia === 'todos') {
+        filtroIncidencia = 'sin_resolver';
+        btn.textContent = '🚨 Sin resolver';
+        btn.style.borderColor = 'var(--danger)';
+        btn.style.background = 'rgba(239, 68, 68, 0.1)';
+      } else if (filtroIncidencia === 'sin_resolver') {
+        filtroIncidencia = 'en_seguimiento';
+        btn.textContent = '⏳ En seguimiento';
+        btn.style.borderColor = 'var(--warning)';
+        btn.style.background = 'rgba(245, 158, 11, 0.1)';
+      } else if (filtroIncidencia === 'en_seguimiento') {
+        filtroIncidencia = 'sin_errores';
+        btn.textContent = '✅ Sin errores';
+        btn.style.borderColor = 'var(--success)';
+        btn.style.background = 'rgba(16, 185, 129, 0.1)';
+      } else {
+        filtroIncidencia = 'todos';
+        btn.textContent = '🚨 Todas';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.background = 'var(--card-bg)';
+      }
+      applyFilters();
+    }
+
+    function resetFilters() {
+      filtroEstado = 'todos';
+      filtroIncidencia = 'todos';
+      document.getElementById('btnEstado').textContent = '⚡ Todas';
+      document.getElementById('btnEstado').style.borderColor = 'var(--border)';
+      document.getElementById('btnEstado').style.background = 'var(--card-bg)';
+      document.getElementById('btnIncidencia').textContent = '🚨 Todas';
+      document.getElementById('btnIncidencia').style.borderColor = 'var(--border)';
+      document.getElementById('btnIncidencia').style.background = 'var(--card-bg)';
+      document.getElementById('searchInput').value = '';
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      const normQ = normalize(q);
+
+      const results = {};
+      let count = 0;
+      rawMachines.forEach(m => {
+        const salaName = m.salas?.nombre || 'Sin Sala';
+        
+        // Filtro de búsqueda texto - solo nombre y sala
+        if (q) {
+          const textFields = [(m.nombre||''), salaName];
+          const matchSearch = textFields.some(f => normalize(f).includes(normQ)) ||
+                             textFields.some(f => fuzzyMatch(q, f));
+          if (!matchSearch) return;
+        }
+
+        // Filtro de estado (activa/inactiva)
+        if (filtroEstado === 'activa' && m.inactiva) return;
+        if (filtroEstado === 'inactiva' && !m.inactiva) return;
+
+        // Filtro de incidencia
+        if (filtroIncidencia === 'sin_errores' && m.incidencia) return;
+        if (filtroIncidencia === 'sin_resolver' && (!m.incidencia || m.enSeguimiento)) return;
+        if (filtroIncidencia === 'en_seguimiento' && (!m.incidencia || !m.enSeguimiento)) return;
+
+        if (!results[salaName]) results[salaName] = [];
+        results[salaName].push(m);
+        count++;
+      });
+
+      // Mostrar resumen de filtros
+      const resumenEl = document.getElementById('filtroResumen');
+      const filtroTextoEl = document.getElementById('filtroTexto');
+      const countEl = document.getElementById('resultadoCount');
+      
+      const partes = [];
+      if (filtroEstado !== 'todos') partes.push(filtroEstado === 'activa' ? '⚡ Activas' : '⛔ Inactivas');
+      if (filtroIncidencia !== 'todos') {
+        const incText = {
+          'sin_errores': '✅ Sin incidencias',
+          'sin_resolver': '🚨 Sin resolver',
+          'en_seguimiento': '📝 En seguimiento'
+        }[filtroIncidencia];
+        partes.push(incText);
+      }
+      if (q) partes.push(`🔍 "${q}"`);
+      
+      if (partes.length > 0) {
+        filtroTextoEl.textContent = partes.join(' + ');
+        countEl.textContent = count;
+        resumenEl.style.display = 'block';
+      } else {
+        resumenEl.style.display = 'none';
+      }
+
+      renderData(results);
+    }
+
+    function filterMachines() {
+      applyFilters();
     }
 
     function cerrarSesion() {
@@ -682,8 +1006,65 @@
       window.location.href = 'index.html';
     }
 
+    function toggleAccountMenu() {
+      document.getElementById('accountDropdown').classList.toggle('open');
+    }
+
+    async function abrirMisReportes() {
+      document.getElementById('accountDropdown').classList.remove('open');
+      const overlay = document.getElementById('misReportesOverlay');
+      const body = document.getElementById('misReportesBody');
+      overlay.classList.add('open');
+      body.innerHTML = '<div class="mis-reportes-loading">⏳ Cargando reportes...</div>';
+      try {
+        const sessionStr = localStorage.getItem('sgi_user_session');
+        if (!sessionStr) { body.innerHTML = '<div class="mis-reportes-empty">No hay sesión de usuario activa.</div>'; return; }
+        const session = JSON.parse(sessionStr);
+        const userId = session.userId;
+        const client = window.supabaseClient;
+        if (!client) throw new Error('Sin conexión al servidor.');
+        const { data: reportes, error } = await client
+          .from('registros')
+          .select('id, maquina_nombre, sala_nombre, tipo, notas, timestamp, resuelta')
+          .eq('usuario_id', userId)
+          .order('timestamp', { ascending: false })
+          .limit(50);
+        if (error) throw error;
+        if (!reportes || reportes.length === 0) {
+          body.innerHTML = '<div class="mis-reportes-empty">🗂️ Aún no tienes reportes enviados.</div>';
+          return;
+        }
+        body.innerHTML = reportes.map(r => {
+          const fecha = new Date(r.timestamp).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const badgeClass = r.tipo === 'Incidencia' ? 'incidencia' : 'mantenimiento';
+          const estadoStr = r.tipo === 'Incidencia' ? (r.resuelta ? ' · ✅ Resuelta' : ' · 🔴 Abierta') : '';
+          return `
+            <div class="reporte-item">
+              <div class="reporte-item-top">
+                <span class="reporte-item-maquina">${r.maquina_nombre || 'Máquina desconocida'}</span>
+                <span class="reporte-badge ${badgeClass}">${r.tipo}</span>
+              </div>
+              <div class="reporte-item-meta">${r.sala_nombre || ''} · ${fecha}${estadoStr}</div>
+              ${r.notas ? `<div class="reporte-item-notas">${r.notas}</div>` : ''}
+            </div>`;
+        }).join('');
+      } catch (err) {
+        body.innerHTML = `<div class="mis-reportes-empty">❌ Error al cargar reportes: ${err.message}</div>`;
+      }
+    }
+
+    function cerrarMisReportes(e) {
+      if (e.target === document.getElementById('misReportesOverlay')) {
+        document.getElementById('misReportesOverlay').classList.remove('open');
+      }
+    }
+
+    function cerrarMisReportesBtn() {
+      document.getElementById('misReportesOverlay').classList.remove('open');
+    }
+
     function cambiarCuenta() {
-      window.location.href = 'registro.html';
+      window.location.href = 'index.html';
     }
 
     document.addEventListener('click', function(e) {
@@ -706,8 +1087,9 @@
 
         if (adminStr && !userStr) {
           const s = JSON.parse(adminStr);
-          nameEl.textContent = s.username || 'Administrador';
-          roleEl.textContent = 'Admin';
+          const roleLabelsAdmin = { superadmin: 'Administrador', admin: 'Administrador', tecnico: 'Técnico' };
+          nameEl.textContent = s.username || s.nombre || 'Administrador';
+          roleEl.textContent = roleLabelsAdmin[s.type] || 'Administrador';
           el.style.display = 'flex';
         } else if (userStr) {
           const s = JSON.parse(userStr);
@@ -718,5 +1100,6 @@
       } catch(e) {}
     })();
   </script>
+  <script src="js/theme.js"></script>
 </body>
 </html>

@@ -111,14 +111,25 @@
         placeholder="Usuario o email" autocomplete="username">
       <input type="password" id="adminPinInput" class="login-field"
         placeholder="Contraseña" autocomplete="current-password"
-        onkeydown="if(event.key==='Enter') intentarLogin()">
+        onkeydown="if(event.key==='Enter') intentarLogin(); capsLockCheck(event,'capsAdmin')"
+        onkeyup="capsLockCheck(event,'capsAdmin')"
+        onblur="document.getElementById('capsAdmin').style.display='none'">
+      <div id="capsAdmin" style="display:none;margin-top:5px;font-size:12px;color:#f59e0b">⚠️ Bloq Mayús activado</div>
       <button class="btn-login" id="btnLoginAdmin" onclick="intentarLogin()">🔓 Entrar al Panel</button>
       <div id="loginError" class="login-error"></div>
       <div class="login-link">
-        ¿Eres técnico o usuario? <a href="registro.html">Portal de usuarios →</a>
+        <a href="index.html">Ir a inicio →</a>
       </div>
     </div>
   </div>
+
+  <script>
+    function capsLockCheck(e, id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.style.display = e.getModifierState('CapsLock') ? 'block' : 'none';
+    }
+  </script>
 
   <!-- El contenido se inyecta dinámicamente aquí por seguridad -->
   <div id="dashboardContent"></div>

@@ -32,12 +32,15 @@ async function cargarRolUsuario() {
     console.log('DEBUG - admin_session:', adminSessionStr);
     if (adminSessionStr) {
       const adminSession = JSON.parse(adminSessionStr);
-      // Si es sesión de admin, asignar rol 'admin'
-      if (adminSession.username || adminSession.nombre) {
+      if (adminSession.type === 'superadmin') {
         rolActual = 'admin';
-        console.log('DEBUG - Rol asignado: admin');
-        return;
+      } else if (adminSession.type) {
+        rolActual = adminSession.type; // 'admin' o 'tecnico'
+      } else if (adminSession.username || adminSession.nombre) {
+        rolActual = 'admin';
       }
+      console.log('DEBUG - Rol asignado desde admin_session:', rolActual);
+      return;
     }
 
     // Si no hay sesión admin, verificar sesión de usuario normal
@@ -99,18 +102,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       container.innerHTML = DASHBOARD_HTML;
     }
 
-    // Mostrar nombre del admin en sidebar footer
+    // Mostrar nombre y rol en sidebar footer
     const adminName = getNombreAdmin();
+    const rolLabel = { superadmin: 'Administrador', admin: 'Administrador', tecnico: 'Técnico' }[rolActual] || 'Usuario';
     const footerVersion = container?.querySelector('.sidebar-footer div');
     if (footerVersion) {
-      footerVersion.textContent = `👤 ${adminName}`;
+      footerVersion.innerHTML = `👤 <strong>${adminName}</strong><br><span style="font-size:12px;opacity:1;color:var(--accent)">${rolLabel}</span>`;
     }
 
-    // Ocultar navegación para técnicos (QR codes y usuarios)
+    // Ocultar solo usuarios para técnicos
     if (rolActual === 'tecnico') {
-      const navQr = document.getElementById('nav-qrcodes');
       const navUsuarios = document.getElementById('nav-usuarios');
-      if (navQr) navQr.style.display = 'none';
       if (navUsuarios) navUsuarios.style.display = 'none';
     }
 
@@ -122,23 +124,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // Restaurar sección guardada al refrescar (si existe)
+    // Restaurar sección guardada al refrescar (si existe y el rol tiene permiso)
     const savedSection = localStorage.getItem('sgi_admin_section');
-    if (savedSection && savedSection !== 'dashboard') {
+    const seccionesRestringidasTecnico = ['usuarios'];
+    const seccionesSoloPanel = ['usuarios', 'qrcodes'];
+    let puedeRestaurar = !!savedSection && savedSection !== 'dashboard';
+    if (puedeRestaurar) {
+      if (rolActual === 'tecnico' && seccionesRestringidasTecnico.includes(savedSection)) puedeRestaurar = false;
+      else if (rolActual !== 'admin' && rolActual !== 'tecnico' && seccionesSoloPanel.includes(savedSection)) puedeRestaurar = false;
+    }
+    if (puedeRestaurar) {
       navigateTo(savedSection);
+    } else if (savedSection && savedSection !== 'dashboard') {
+      localStorage.removeItem('sgi_admin_section');
     }
 
     const grid = document.getElementById('gridMaquinas');
     if (grid) grid.innerHTML = skeletonMaquinas();
     const tbody = document.getElementById('dashboardUltimos');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted)"><span class="spinner" style="display:inline-block;margin-right:8px"></span>Conectando con Supabase...</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted)"><span class="spinner" style="display:inline-block;margin-right:8px"></span>Conectando con la base de datos...</td></tr>';
 
     // Cargar TODO en una sola llamada
     await cargarDatosBase();
 
     // Auto-sincronización cada 2 minutos
     setInterval(() => {
-      console.log('Sincronización automática con Supabase...');
       recargarTodo();
     }, 120000);
   } catch (err) {
@@ -184,7 +194,7 @@ async function cargarDatosBase() {
   }
 
   // Actualizar la vista actual ahora que los datos están listos
-  renderActualSection();
+  await renderActualSection();
 
   // Poblar selects de salas
   ['filtroSalaMaquinas', 'filtroSala', 'filtroSalaQR', 'nuevoMaquinaSala'].forEach(id => {
@@ -231,45 +241,95 @@ async function cargarDatosBase() {
 }
 
 // ── Incidencias ─────────────────────────────────────────────────────────────
-let filtroSeguimientoActivo = false;
+let filtroIncActual = 'todas';
+let ordenIncActual = 'fecha-desc';
 
-function toggleSeguimiento() {
-  filtroSeguimientoActivo = !filtroSeguimientoActivo;
-  const btn = document.getElementById('btn-inc-seguimiento');
-  if (btn) btn.classList.toggle('active', filtroSeguimientoActivo);
-  
-  const filtroActual = document.querySelector('.btn-outline.btn-sm.active[id^="btn-inc-"]:not(#btn-inc-seguimiento)')?.id.replace('btn-inc-', '') || 'todas';
-  renderIncidencias(filtroActual);
+async function cambiarOrdenInc(orden) {
+  ordenIncActual = orden;
+  await renderIncidencias(filtroIncActual);
 }
 
-function renderIncidencias(filtro = 'todas') {
+async function toggleSeguimiento() {
+  await renderIncidencias('seguimiento');
+}
+
+async function renderIncidencias(filtro = 'todas') {
+  filtroIncActual = filtro;
   const grid = document.getElementById('gridTicketsIncidencias');
   const empty = document.getElementById('incidenciasEmpty');
   if (!grid) return;
 
-  // Actualizar estados de botones de filtro (excluyendo el de seguimiento que se maneja aparte)
+  // Actualizar todos los botones
   ['todas', 'pendientes', 'resueltas'].forEach(f => {
     const btn = document.getElementById(`btn-inc-${f}`);
-    if (btn) btn.classList.toggle('active', f === filtro);
+    if (btn) {
+      btn.classList.toggle('active', f === filtro);
+      btn.style.opacity = (f === 'resueltas' && filtro !== 'resueltas') ? '0.5' : '1';
+    }
   });
+  const btnSeg = document.getElementById('btn-inc-seguimiento');
+  if (btnSeg) btnSeg.classList.toggle('active', filtro === 'seguimiento');
 
   let lista = datosHistorial.filter(r => r.tipo === 'Incidencia');
 
-  // Cálculo de KPIs locales para el panel
+  // Cálculo de KPIs
   const totalPendientes = lista.filter(r => !r.resuelta && !r.en_seguimiento).length;
-  const totalResueltas = lista.filter(r => r.resuelta).length;
+  const totalResueltas  = lista.filter(r => r.resuelta).length;
   const totalSeguimiento = lista.filter(r => !r.resuelta && r.en_seguimiento).length;
 
   if (document.getElementById('kpi-inc-pendientes')) document.getElementById('kpi-inc-pendientes').textContent = totalPendientes;
-  if (document.getElementById('kpi-inc-resueltas')) document.getElementById('kpi-inc-resueltas').textContent = totalResueltas;
+  if (document.getElementById('kpi-inc-resueltas'))  document.getElementById('kpi-inc-resueltas').textContent  = totalResueltas;
   if (document.getElementById('kpi-inc-seguimiento')) document.getElementById('kpi-inc-seguimiento').textContent = totalSeguimiento;
 
-  if (filtro === 'pendientes') lista = lista.filter(r => !r.resuelta);
-  if (filtro === 'resueltas') lista = lista.filter(r => r.resuelta);
-  
-  // Filtro por botón "En seguimiento"
-  if (filtroSeguimientoActivo) {
+  if (filtro === 'resueltas') {
+    lista = lista.filter(r => r.resuelta);
+  } else if (filtro === 'pendientes') {
+    lista = lista.filter(r => !r.resuelta && !r.en_seguimiento);
+  } else if (filtro === 'seguimiento') {
     lista = lista.filter(r => !r.resuelta && r.en_seguimiento);
+  } else {
+    // 'todas' — activas sin resueltas
+    lista = lista.filter(r => !r.resuelta);
+  }
+
+  // Cargar últimas notas de seguimiento para incidencias en seguimiento
+  const incSeguimiento = lista.filter(r => !r.resuelta && r.en_seguimiento);
+  let ultimasNotas = {};
+  
+  if (incSeguimiento.length > 0 && window.supabaseClient) {
+    try {
+      const ids = incSeguimiento.map(r => r.id);
+      const { data: seguimientos, error } = await window.supabaseClient
+        .from('seguimientos')
+        .select('incidencia_id, nota, timestamp')
+        .in('incidencia_id', ids)
+        .order('timestamp', { ascending: false });
+        
+      if (!error && seguimientos) {
+        // Tomar solo la última nota de cada incidencia
+        seguimientos.forEach(s => {
+          if (!ultimasNotas[s.incidencia_id]) {
+            ultimasNotas[s.incidencia_id] = s.nota;
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Error cargando seguimientos:', e);
+    }
+  }
+
+  // Ordenar según criterio seleccionado
+  const ordenSelect = document.getElementById('select-inc-orden');
+  if (ordenSelect) ordenSelect.value = ordenIncActual;
+  if (ordenIncActual === 'fecha-desc') {
+    lista.sort((a, b) => new Date(b.completado_en) - new Date(a.completado_en));
+  } else if (ordenIncActual === 'fecha-asc') {
+    lista.sort((a, b) => new Date(a.completado_en) - new Date(b.completado_en));
+  } else if (ordenIncActual === 'tipo') {
+    const prioridad = r => r.resuelta ? 2 : (r.en_seguimiento ? 1 : 0);
+    lista.sort((a, b) => prioridad(a) - prioridad(b));
+  } else if (ordenIncActual === 'maquina') {
+    lista.sort((a, b) => (a.maquina || '').localeCompare(b.maquina || ''));
   }
 
   if (!lista.length) {
@@ -302,11 +362,11 @@ function renderIncidencias(filtro = 'todas') {
           <div class="ticket-sala">📍 ${r.sala}</div>
           <div class="ticket-desc">${truncate(r.observaciones || 'Sin descripción detallada', 120)}</div>
           <div class="ticket-date">🗓️ Reportado: ${formatFechaHora(r.completado_en)}</div>
-          <div class="ticket-date">👷 Operario: ${r.operario}</div>
+          <div class="ticket-date">👤 ${r.rol === 'usuario' ? 'Usuario' : (r.rol === 'admin' ? 'Admin' : 'Técnico')}: ${r.operario}</div>
           
           ${esSeguimiento ? `
             <div class="ticket-last-note">
-              Última nota: Revisión técnica en curso...
+              📝 ${ultimasNotas[r.id] ? truncate(ultimasNotas[r.id], 80) : 'En seguimiento - sin notas aún'}
             </div>
           ` : ''}
         </div>
@@ -326,21 +386,28 @@ const sectionTitles = {
   dashboard: ['Panel General', 'Resumen del sistema'],
   maquinas: ['Máquinas', 'Estado y gestión de todas las máquinas'],
   incidencias: ['Centro de Incidencias', 'Gestión de fallos técnicos y reparaciones'],
-  historial: ['Historial', 'Registro de mantenimientos e incidencias'],
+  historial: ['Historial', 'Registro completo de mantenimientos e incidencias'],
   qrcodes: ['Códigos QR', 'QR individuales para el operario móvil'],
   usuarios: ['Usuarios del Sistema', 'Gestión de accesos y privilegios de usuario']
 };
 
-function navigateTo(section) {
+async function navigateTo(section, machineId = null, incFilter = null) {
   // Verificación de roles (solo admin puede ver gestión de usuarios y QR codes)
   // Técnicos pueden ver todo excepto usuarios y qrcodes
-  const rutasRestringidasParaTecnico = ['usuarios', 'qrcodes'];
+  const rutasRestringidasParaTecnico = ['usuarios'];
   let idToShow = section;
 
   if (rolActual === 'tecnico' && rutasRestringidasParaTecnico.includes(section)) {
     idToShow = 'restringido';
   } else if (rolActual !== 'admin' && rolActual !== 'tecnico' && (section === 'usuarios' || section === 'qrcodes')) {
     idToShow = 'restringido';
+  }
+
+  // Guardar máquina seleccionada si se proporciona
+  if (machineId) {
+    localStorage.setItem('sgi_selected_machine', machineId);
+  } else if (section === 'maquinas') {
+    localStorage.removeItem('sgi_selected_machine');
   }
 
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -353,6 +420,8 @@ function navigateTo(section) {
   } else {
     document.getElementById('topbarTitle').textContent = 'Acceso Denegado';
     document.getElementById('topbarSubtitle').textContent = 'Sección restringida por permisos';
+    // No persistir secciones a las que no se tiene acceso
+    localStorage.removeItem('sgi_admin_section');
     return;
   }
 
@@ -365,18 +434,18 @@ function navigateTo(section) {
 
   // Cargar datos bajo demanda
   if (section === 'maquinas') renderMaquinas();
-  if (section === 'incidencias') renderIncidencias();
+  if (section === 'incidencias') await renderIncidencias(incFilter || filtroIncActual);
   if (section === 'historial') { cargarHistorial(); poblarFiltroMaquinasHistorial(); }
   if (section === 'usuarios') renderUsuarios();
   if (section === 'qrcodes') renderQRs();
 }
 
-function renderActualSection() {
+async function renderActualSection() {
   const activeSection = document.querySelector('.section.active');
   if (!activeSection) return;
   const id = activeSection.id.replace('section-', '');
   if (id === 'maquinas') renderMaquinas();
-  if (id === 'incidencias') renderIncidencias();
+  if (id === 'incidencias') await renderIncidencias();
   if (id === 'historial') cargarHistorial();
   if (id === 'usuarios') renderUsuarios();
   if (id === 'qrcodes') renderQRs();
@@ -412,22 +481,59 @@ function actualizarVistaDashboard(stats, historial) {
   const kpiProx = document.getElementById('kpi-proximos');
   if (kpiProx) kpiProx.textContent = d.proximos;
 
-  // KPI Sin resolver - contar incidencias no resueltas y no en seguimiento
+  // KPI Sin resolver y En seguimiento
   const sinResolver = (historial || []).filter(r => r.tipo === 'Incidencia' && !r.resuelta && !r.en_seguimiento).length;
+  const enSeguimiento = (historial || []).filter(r => r.tipo === 'Incidencia' && !r.resuelta && r.en_seguimiento).length;
   const kpiSinResolver = document.getElementById('kpi-sin-resolver');
   if (kpiSinResolver) kpiSinResolver.textContent = sinResolver;
+  const kpiSeg = document.getElementById('kpi-en-seguimiento-dash');
+  if (kpiSeg) kpiSeg.textContent = enSeguimiento;
 
-  // Gráfica de días
-  renderBarChart('chartDias', (d.porDia || []).slice(-14).map(r => ({
-    label: formatFechaDia(r.dia), value: r.total
-  })));
+  // KPI Máquinas
+  const maqActivas = datosMaquinas.filter(m => m.estado === 'activa').length;
+  const listaMaqInactivas = datosMaquinas.filter(m => m.estado === 'inactiva');
+  const kpiMaqAct = document.getElementById('kpi-maq-activas');
+  if (kpiMaqAct) kpiMaqAct.textContent = maqActivas;
+  const kpiMaqInact = document.getElementById('kpi-maq-inactivas');
+  if (kpiMaqInact) kpiMaqInact.textContent = listaMaqInactivas.length;
+  if (kpiMaqInact) kpiMaqInact.style.color = 'var(--text-muted)';
+  const maqInactivasEl = document.getElementById('dashboardMaqInactivas');
+  if (maqInactivasEl) {
+    maqInactivasEl.innerHTML = listaMaqInactivas.length
+      ? listaMaqInactivas.map(m => `
+          <div onclick="navigateTo('maquinas', '${m.id}')" style="cursor:pointer;padding:5px 8px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.nombre} · ${m.sala_nombre}">
+            🖨️ ${m.nombre} · ${m.sala_nombre}
+          </div>`).join('')
+      : `<div style="font-size:11px;color:var(--success);text-align:center;padding:4px">✅ Todas operativas</div>`;
+  }
 
-  // Gráfica de máquinas
-  const maqData = (d.porMaquina || []).map(r => ({ label: r.nombre, value: r.total_sesiones }));
-  renderBarChart('chartMaquinas', maqData.slice(0, 12));
+  // Mini-lista incidencias sin resolver
+  const incPendientes = (historial || []).filter(r => r.tipo === 'Incidencia' && !r.resuelta);
+  renderIncPendientesDashboard(incPendientes.slice(0, 5));
 
-  // Últimos mantenimientos
+  // Últimos reportes
   if (historial) renderUltimosMantenimientos(historial.slice(0, 8));
+}
+
+function renderIncPendientesDashboard(lista) {
+  const tbody = document.getElementById('dashboardIncPendientes');
+  const empty = document.getElementById('dashboardIncEmpty');
+  if (!tbody) return;
+  if (!lista.length) {
+    tbody.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  tbody.innerHTML = lista.map(r => `
+    <tr onclick="verDetalleSesion('${r.id}')" style="cursor:pointer">
+      <td><span style="font-weight:600;color:var(--danger)">🚨 ${r.maquina}</span></td>
+      <td><span class="text-muted">${r.sala}</span></td>
+      <td>${r.operario}</td>
+      <td>${formatFechaHora(r.completado_en)}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="event.stopPropagation();verDetalleSesion('${r.id}')">Gestionar</button></td>
+    </tr>
+  `).join('');
 }
 
 function renderBarChart(containerId, items) {
@@ -451,16 +557,16 @@ function renderBarChart(containerId, items) {
 function renderUltimosMantenimientos(registros) {
   const tbody = document.getElementById('dashboardUltimos');
   if (!registros.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px">Sin mantenimientos aún</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">Sin reportes aún</td></tr>';
     return;
   }
   tbody.innerHTML = registros.map(r => {
     const isIncidencia = r.tipo === 'Incidencia';
     const resuelta = r.resuelta || false;
-    const rowStyle = (isIncidencia && !resuelta) ? 'color: var(--danger); font-weight: 600;' : '';
-    const icon = isIncidencia ? (resuelta ? '✅' : '🚨') : '🛠️';
+    const tipoBadge = isIncidencia
+      ? `<span class="estado-badge ${resuelta ? 'ok' : 'vencido'}" style="font-size:10px">🚨 Incidencia</span>`
+      : `<span class="estado-badge ok" style="font-size:10px;background:rgba(79,142,247,0.15);color:var(--accent)">🛠️ Mantenimiento</span>`;
 
-    // Buscar estado actual de la máquina para mostrarlo también en la tabla
     const maq = datosMaquinas.find(m => m.id === r.maquina_id);
     const maquinaEstado = maq ? maq.estado : 'activa';
     const maqStatusClass = maquinaEstado === 'activa' ? 'ok' : (maquinaEstado === 'inactiva' ? 'gris' : 'naranja');
@@ -468,11 +574,12 @@ function renderUltimosMantenimientos(registros) {
     return `
       <tr onclick="verDetalleSesion('${r.id}')" style="cursor:pointer">
         <td data-label="Máquina">
-          <div style="display:flex; flex-direction:column; gap:2px">
-            <span style="${rowStyle}">${icon} ${r.maquina}</span>
-            <span class="estado-badge ${maqStatusClass}" style="font-size:8px; padding:0 4px; width:fit-content">${maquinaEstado || 'activa'}</span>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span style="${isIncidencia && !resuelta ? 'color:var(--danger);font-weight:600' : ''}">${r.maquina}</span>
+            <span class="estado-badge ${maqStatusClass}" style="font-size:8px;padding:0 4px;width:fit-content">${maquinaEstado || 'activa'}</span>
           </div>
         </td>
+        <td data-label="Tipo">${tipoBadge}</td>
         <td data-label="Sala"><span class="text-muted">${r.sala}</span></td>
         <td data-label="Operario">${r.operario}</td>
         <td data-label="Fecha y hora">${formatFechaHora(r.completado_en)}</td>
@@ -481,11 +588,7 @@ function renderUltimosMantenimientos(registros) {
             <span class="estado-badge ${isIncidencia ? (resuelta ? 'ok' : 'vencido') : 'ok'}" style="font-size:10px">
               ${isIncidencia ? (resuelta ? 'Resuelta' : 'Sin resolver') : 'Completado'}
             </span>
-            ${r.tiene_fotos ? `
-              <div style="position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                <img src="${r.fotos[0]}" style="width:24px;height:24px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
-              </div>
-            ` : ''}
+            ${r.tiene_fotos ? `<img src="${r.fotos[0]}" style="width:24px;height:24px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : ''}
           </div>
         </td>
       </tr>
@@ -496,6 +599,7 @@ function renderUltimosMantenimientos(registros) {
 // ── Máquinas ──────────────────────────────────────────────────────────────────
 function renderMaquinas() {
   const salaFiltro = document.getElementById('filtroSalaMaquinas') ? document.getElementById('filtroSalaMaquinas').value : '';
+  const searchQ = (document.getElementById('searchMaquinas')?.value || '').toLowerCase().trim();
   const grid = document.getElementById('gridMaquinas');
 
   if (isCargando && !datosMaquinas.length) {
@@ -503,9 +607,38 @@ function renderMaquinas() {
     return;
   }
 
-  const lista = salaFiltro
+  function normalize(s) { return s.toLowerCase().replace(/[\s\-_.]/g, ''); }
+  function strictMatch(q, text) {
+    return normalize(text).includes(q) || text.toLowerCase().includes(searchQ);
+  }
+  function fuzzyMatch(q, text) {
+    const pattern = q.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+    return new RegExp(pattern, 'i').test(text);
+  }
+
+  const normQ = normalize(searchQ);
+  let lista = salaFiltro
     ? datosMaquinas.filter(m => String(m.sala_id) === String(salaFiltro))
     : datosMaquinas;
+  if (searchQ) {
+    // Try strict first
+    let filtered = lista.filter(m =>
+      strictMatch(normQ, m.nombre || '') ||
+      strictMatch(normQ, m.tipo || '') ||
+      strictMatch(normQ, m.sala_nombre || '') ||
+      strictMatch(normQ, m.etiqueta || '')
+    );
+    // Fallback to fuzzy if strict gives no results
+    if (!filtered.length) {
+      filtered = lista.filter(m =>
+        fuzzyMatch(searchQ, m.nombre || '') ||
+        fuzzyMatch(searchQ, m.tipo || '') ||
+        fuzzyMatch(searchQ, m.sala_nombre || '') ||
+        fuzzyMatch(searchQ, m.etiqueta || '')
+      );
+    }
+    lista = filtered;
+  }
 
   if (!lista.length) {
     grid.innerHTML = '<div class="empty-state"><div class="icon">🖨️</div><p>No hay máquinas registradas</p></div>';
@@ -517,12 +650,16 @@ function renderMaquinas() {
       ? `Último: ${formatFechaHora(m.ultimo_mantenimiento)}`
       : 'Sin mantenimiento registrado';
 
+    const selectedId = localStorage.getItem('sgi_selected_machine');
+    const isSelected = selectedId === String(m.id);
+    const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : '';
+
     return `
-        <div class="maquina-card fade-in" 
-             draggable="true" 
+        <div class="maquina-card fade-in"
+             draggable="true"
              ondragstart="handleDragStart(event, '${m.id}')"
-             onclick="verDetalleMaquina('${m.id}')" 
-             style="cursor:grab" title="Haz clic para ver detalles">
+             onclick="verDetalleMaquina('${m.id}')"
+             style="cursor:grab;${highlightStyle}" title="Haz clic para ver detalles">
         <div class="maquina-header">
           <div>
             <div class="maquina-nombre">${m.nombre}</div>
@@ -552,7 +689,7 @@ function renderMaquinas() {
            ondragover="handleDragOver(event)" 
            ondragleave="handleDragLeave(event)"
            ondrop="handleDrop(event, '${idSala}')"
-           style="margin-bottom:32px; padding:16px; border-radius:16px; transition: all 0.3s; border: 2px dashed transparent; background: ${color}">
+           style="margin-bottom:32px; padding:16px; border-radius:16px; border: 2px dashed transparent; background: ${color}">
         <div class="espacio-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
           <span style="font-size:22px">${icono}</span>
           <div>
@@ -568,7 +705,7 @@ function renderMaquinas() {
   }
 
   let htmlResult = '';
-  const commonBg = 'var(--bg-card)';
+  const commonBg = 'var(--bg-secondary)';
   const iconos = [''];
   datosSalas.forEach((sala, index) => {
     if (salaFiltro && String(sala.id) !== String(salaFiltro)) return;
@@ -585,6 +722,20 @@ function renderMaquinas() {
   }
 
   grid.innerHTML = htmlResult;
+
+  // Scroll hacia la máquina seleccionada si existe
+  const selectedId = localStorage.getItem('sgi_selected_machine');
+  if (selectedId) {
+    setTimeout(() => {
+      const selectedCard = document.querySelector(`[onclick*="verDetalleMaquina('${selectedId}')"]`);
+      if (selectedCard) {
+        selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  }
+
+  // Limpiar máquina seleccionada después de mostrar el resaltado
+  localStorage.removeItem('sgi_selected_machine');
 }
 
 // ── Lógica Drag & Drop ──────────────────────────────────────────────────────
@@ -659,7 +810,12 @@ async function verDetalleMaquina(id) {
   tipoSelect.onchange = handleTipoChangeEdit;
 
   // Por defecto, abrir en modo lectura
-  setModoEdicionMaquina(false);
+  // Si es técnico, abrir en modo edición limitada (solo estado)
+  if (rolActual === 'tecnico') {
+    setModoEdicionMaquina(true, true); // true = modo técnico (solo estado editable)
+  } else {
+    setModoEdicionMaquina(false);
+  }
 
   abrirModal('modalMaquina');
 }
@@ -692,29 +848,54 @@ async function handleTipoChangeEdit() {
   }
 }
 
-function setModoEdicionMaquina(editando) {
+function setModoEdicionMaquina(editando, soloEstado = false) {
   const inputs = ['editNombre', 'editTipo', 'editModelo', 'editEstado', 'editNotas'];
   inputs.forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.readOnly = !editando;
-    if (el && el.tagName === 'SELECT') el.disabled = !editando;
+    if (!el) return;
+    
+    // Si es modo técnico (soloEstado=true), solo permitir editar el estado
+    const esEstado = (id === 'editEstado');
+    const puedeEditar = soloEstado ? esEstado : editando;
+    
+    el.readOnly = !puedeEditar;
+    if (el.tagName === 'SELECT') el.disabled = !puedeEditar;
+    el.style.opacity = puedeEditar ? '' : '0.65';
+    el.style.cursor = puedeEditar ? '' : 'default';
   });
+
+  // Bloquear interacción completa del body del modal en modo lectura (solo si no es técnico)
+  const modalBody = document.querySelector('#modalMaquina .modal-body');
+  if (modalBody && !soloEstado) {
+    modalBody.style.pointerEvents = editando ? '' : 'none';
+    modalBody.style.userSelect = editando ? '' : 'none';
+  }
   
   const btnToggle = document.getElementById('btnToggleEditarMaquina');
   if (btnToggle) {
-    if (editando) {
+    if (editando && !soloEstado) {
       btnToggle.innerHTML = '❌ Cancelar';
       btnToggle.className = 'btn btn-outline btn-sm';
       btnToggle.style.cssText = 'padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; transition:all 0.2s ease; border-color:var(--danger); color:var(--danger);';
+    } else if (soloEstado) {
+      // Ocultar botón de edición para técnicos
+      btnToggle.style.display = 'none';
     } else {
       btnToggle.innerHTML = '✏️ Editar';
       btnToggle.className = 'btn btn-primary btn-sm';
       btnToggle.style.cssText = 'padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:all 0.2s ease;';
+      btnToggle.style.display = 'block';
     }
   }
   
   const btnGuardar = document.getElementById('btnGuardarMaquina');
   if (btnGuardar) btnGuardar.style.display = editando ? 'block' : 'none';
+  
+  // Mostrar mensaje informativo para técnicos
+  const msgTecnico = document.getElementById('msgTecnico');
+  if (msgTecnico) {
+    msgTecnico.style.display = soloEstado ? 'block' : 'none';
+  }
 }
 
 function toggleModoEdicionMaquina() {
@@ -728,11 +909,33 @@ async function editarMaquina(id) {
 }
 
 async function guardarMaquina() {
+  const id = document.getElementById('editMaquinaId').value;
+  
+  // Si es técnico, solo permitir cambiar el estado
+  if (rolActual === 'tecnico') {
+    const nuevoEstado = document.getElementById('editEstado').value;
+    const { error } = await supabaseClient
+      .from('equipos')
+      .update({ estado: nuevoEstado })
+      .eq('id', id);
+      
+    if (error) {
+      showFeedback('Error', 'No se pudo actualizar el estado: ' + error.message, '❌');
+      return;
+    }
+    
+    showFeedback('Éxito', `Estado cambiado a ${nuevoEstado}`, '✅');
+    await cargarDatosBase();
+    renderMaquinas();
+    cerrarModal('modalMaquina');
+    return;
+  }
+  
   if (rolActual !== 'admin') {
     showFeedback('Acceso denegado', 'Solo los administradores pueden guardar cambios en máquinas.', '🔒');
     return;
   }
-  const id = document.getElementById('editMaquinaId').value;
+  
   let tipo = document.getElementById('editTipo').value;
 
   // Manejar tipo personalizado
@@ -917,10 +1120,13 @@ async function eliminarMaquina(id) {
 
 // ── QR Codes ──────────────────────────────────────────────────────────────────
 function renderQRs() {
-  const salaFiltro = document.getElementById('filtroSalaQR').value;
-  const lista = salaFiltro
-    ? datosMaquinas.filter(m => String(m.sala_id) === String(salaFiltro))
-    : datosMaquinas;
+  const salaFiltro = document.getElementById('filtroSalaQR')?.value || '';
+  const buscar = (document.getElementById('buscarQR')?.value || '').toLowerCase().trim();
+  const lista = datosMaquinas.filter(m => {
+    const salaMach = !salaFiltro || String(m.sala_id) === String(salaFiltro);
+    const textMatch = !buscar || (m.nombre || '').toLowerCase().includes(buscar) || (m.sala_nombre || '').toLowerCase().includes(buscar);
+    return salaMach && textMatch;
+  });
 
   const grid = document.getElementById('gridQRs');
   if (isCargando && !datosMaquinas.length) {
@@ -1064,45 +1270,99 @@ async function poblarFiltroMaquinasHistorial() {
   });
 }
 
-async function cargarHistorial() {
-  const params = new URLSearchParams();
-  const sala = document.getElementById('filtroSala')?.value;
-  const maquina = document.getElementById('filtroMaquina')?.value;
-  const operario = document.getElementById('filtroOperario')?.value.trim();
-  const desde = document.getElementById('filtroDesde')?.value;
-  const hasta = document.getElementById('filtroHasta')?.value;
+let filtroTipoHistorial = '';
+let filtroSoloMisReportes = false;
 
-  if (sala) params.append('sala_id', sala);
-  if (maquina) params.append('maquina_id', maquina);
-  if (operario) params.append('operario_nombre', operario);
-  if (desde) params.append('desde', desde);
-  if (hasta) params.append('hasta', hasta);
+function setFiltroTipo(tipo) {
+  filtroTipoHistorial = tipo;
+  cargarHistorial();
+}
+
+function toggleMisReportes() {
+  filtroSoloMisReportes = !filtroSoloMisReportes;
+  const btn = document.getElementById('btnMisReportesHist');
+  if (btn) {
+    btn.classList.toggle('active', filtroSoloMisReportes);
+    btn.textContent = filtroSoloMisReportes ? '✖️ Mostrar todos' : '👤 Solo mis reportes';
+  }
+  cargarHistorial();
+}
+
+function getUsuarioActualId() {
+  try {
+    const s = JSON.parse(localStorage.getItem('sgi_admin_session') || '{}');
+    return s.userId || null;
+  } catch { return null; }
+}
+function getUsuarioActualEmail() {
+  try {
+    const s = JSON.parse(localStorage.getItem('sgi_admin_session') || '{}');
+    return (s.email || '').toLowerCase();
+  } catch { return ''; }
+}
+
+async function cargarHistorial() {
+  const salaId  = document.getElementById('filtroSala')?.value;
+  const maqId   = document.getElementById('filtroMaquina')?.value;
+  const buscar  = (document.getElementById('filtroOperario')?.value || '').trim().toLowerCase();
+  const desde   = document.getElementById('filtroDesde')?.value;
+  const hasta   = document.getElementById('filtroHasta')?.value;
 
   const tbody = document.getElementById('tablaHistorial');
   const empty = document.getElementById('historialEmpty');
-  const hasFilters = sala || maquina || operario || desde || hasta;
 
-  if (!hasFilters && datosHistorial.length > 0) {
-    const mantenimientos = datosHistorial.filter(r => r.tipo === 'Mantenimiento');
-    renderizarContenidoHistorial(mantenimientos, tbody, empty);
-    return;
+  // Ensure we have data
+  let source = datosHistorial;
+  if (!source.length) {
+    if (tbody) tbody.innerHTML = skeletonTabla(8);
+    const res = await apiFetch('/api/historial?');
+    if (!res.ok) {
+      if (tbody) tbody.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+      return;
+    }
+    source = res.data;
   }
 
-  if (tbody) tbody.innerHTML = skeletonTabla(8);
-  const res = await apiFetch('/api/historial?' + params.toString());
+  // Filtro "solo mis reportes"
+  const miId = filtroSoloMisReportes ? getUsuarioActualId() : null;
+  const miEmail = filtroSoloMisReportes ? getUsuarioActualEmail() : '';
 
-  if (!res.ok || !res.data.length) {
+  // All filtering client-side
+  let base = source.filter(r => {
+    if (filtroSoloMisReportes) {
+      const matchId = miId && r.usuario_id && String(r.usuario_id) === String(miId);
+      const matchEmail = miEmail && (r.operario_email || '').toLowerCase() === miEmail;
+      if (!matchId && !matchEmail) return false;
+    }
+    if (filtroTipoHistorial && r.tipo !== filtroTipoHistorial) return false;
+    if (salaId && String(r.sala_id) !== String(salaId) && (datosSalas.find(s => s.id == salaId)?.nombre !== r.sala)) return false;
+    if (maqId  && String(r.maquina_id) !== String(maqId) && (datosMaquinas.find(m => m.id == maqId)?.nombre !== r.maquina)) return false;
+    if (desde) {
+      const d = new Date(r.completado_en || r.iniciado_en);
+      if (d < new Date(desde)) return false;
+    }
+    if (hasta) {
+      const d = new Date(r.completado_en || r.iniciado_en);
+      if (d > new Date(hasta + 'T23:59:59')) return false;
+    }
+    if (buscar) {
+      const hayMatch =
+        (r.maquina       || '').toLowerCase().includes(buscar) ||
+        (r.sala          || '').toLowerCase().includes(buscar) ||
+        (r.operario      || '').toLowerCase().includes(buscar) ||
+        (r.observaciones || '').toLowerCase().includes(buscar);
+      if (!hayMatch) return false;
+    }
+    return true;
+  });
+
+  if (!base.length) {
     if (tbody) tbody.innerHTML = '';
     if (empty) empty.style.display = 'block';
     return;
   }
-  const mantenimientosRes = res.data.filter(r => r.tipo === 'Mantenimiento');
-  if (mantenimientosRes.length === 0) {
-    if (tbody) tbody.innerHTML = '';
-    if (empty) empty.style.display = 'block';
-    return;
-  }
-  renderizarContenidoHistorial(mantenimientosRes, tbody, empty);
+  renderizarContenidoHistorial(base, tbody, empty);
 }
 
 function renderizarContenidoHistorial(data, tbody, empty) {
@@ -1134,9 +1394,9 @@ function renderizarContenidoHistorial(data, tbody, empty) {
           </div>
         </td>
         <td data-label="Sala">${r.sala}</td>
-        <td data-label="Operario" style="max-width: 150px; white-space: normal; word-break: break-word;">
+        <td data-label="Usuario" style="max-width: 150px; white-space: normal; word-break: break-word;">
           <div style="font-weight:700">${r.operario}</div>
-          <div style="font-size:10px; color:var(--text-muted)">${r.operario_email || '–'}</div>
+          <div style="font-size:10px; color:var(--text-muted)">${r.rol === 'usuario' ? '👤 Usuario' : (r.rol === 'admin' ? '🛡️ Admin' : '🔧 Técnico')}</div>
         </td>
         <td data-label="Fecha" style="font-size:11px">${formatFechaHora(r.completado_en)}</td>
         <td data-label="Observ." style="font-size:11px;color:var(--text-muted)">
@@ -1171,7 +1431,7 @@ async function toggleResolucionIncidencia(id, nuevoEstado) {
     if (document.getElementById('section-historial').classList.contains('active')) await cargarHistorial();
     if (document.getElementById('section-incidencias').classList.contains('active')) {
       const filtroActual = document.querySelector('.btn-outline.btn-sm.active[id^="btn-inc-"]')?.id.replace('btn-inc-', '') || 'todas';
-      renderIncidencias(filtroActual);
+      await renderIncidencias(filtroActual);
     }
   } else {
     showFeedback('Error de estado', 'No se pudo actualizar el estado de la incidencia: ' + res.error, '❌');
@@ -1220,7 +1480,7 @@ async function verDetalleSesion(id) {
         <!-- Columna Izquierda: Información Principal -->
         <div>
           <div class="detail-stats-grid" style="margin-bottom: 16px;">
-            <div class="detail-stat"><div class="label">👷 Operario</div><div class="value">${sesion.operario}</div></div>
+            <div class="detail-stat"><div class="label">👤 ${sesion.rol === 'usuario' ? 'Reportado por' : (sesion.rol === 'admin' ? 'Administrador' : 'Técnico')}</div><div class="value">${sesion.operario}<span style="font-size:11px;color:var(--text-muted);margin-left:6px">(${sesion.rol || 'usuario'})</span></div></div>
             <div class="detail-stat"><div class="label">📅 Fecha</div><div class="value">${formatFechaHora(sesion.completado_en)}</div></div>
           </div>
           
@@ -1254,7 +1514,7 @@ async function verDetalleSesion(id) {
             <div>
               <div class="section-label" style="margin-bottom: 8px">🖼️ Evidencias (${sesion.fotos.length})</div>
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                ${sesion.fotos.map(f => `<img src="${f}" onclick="window.open('${f}')" style="width:100%; height: 80px; object-fit: cover; border-radius:8px; cursor:zoom-in; border:1px solid var(--border)" loading="lazy">`).join('')}
+                ${sesion.fotos.map(f => `<img src="${f}" onclick="abrirLightbox('${f}')" style="width:100%; height: 80px; object-fit: cover; border-radius:8px; cursor:zoom-in; border:1px solid var(--border); transition:transform .15s" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'" loading="lazy">`).join('')}
               </div>
             </div>
           ` : `
@@ -1287,17 +1547,31 @@ async function verDetalleSesion(id) {
         timeline.innerHTML = '<div style="text-align:center;padding:10px;opacity:0.5;font-size:12px">No hay notas registradas aún.</div>';
       } else {
         timeline.classList.add('timeline-compact');
-        timeline.innerHTML = notas.map(n => `
-          <div class="timeline-item">
-            <div class="timeline-meta">
-              <b>${n.usuario_nombre || 'Técnico'}</b>
-              <span>${formatFechaHora(n.timestamp)}</span>
+        timeline.innerHTML = notas.map((n, index) => {
+          const fechaCreado = formatFechaHora(n.timestamp);
+          const esPrimera = index === notas.length - 1; // La más reciente
+          
+          return `
+          <div class="timeline-item" id="seg-item-${n.id}">
+            <div class="timeline-meta" style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <b>${n.usuario_nombre || 'Técnico'}</b>
+                <span style="font-size:11px;color:var(--text-muted)">${fechaCreado}</span>
+              </div>
+              ${esPrimera ? `<button onclick="iniciarEdicionSeguimiento('${n.id}', '${encodeURIComponent(n.nota)}')" style="background:transparent;border:none;color:var(--accent);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px" title="Editar nota">✏️</button>` : ''}
             </div>
             <div class="timeline-content">
-              <div class="timeline-text">${n.nota}</div>
+              <div class="timeline-text" id="seg-text-${n.id}">${n.nota}</div>
+              <div id="seg-edit-${n.id}" style="display:none;margin-top:8px">
+                <textarea id="seg-input-${n.id}" class="form-control" rows="2" style="font-size:13px;margin-bottom:8px">${n.nota}</textarea>
+                <div style="display:flex;gap:8px">
+                  <button onclick="guardarEdicionSeguimiento('${n.id}')" style="padding:4px 12px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">💾 Guardar</button>
+                  <button onclick="cancelarEdicionSeguimiento('${n.id}')" style="padding:4px 12px;background:var(--bg-secondary);color:var(--text-muted);border:none;border-radius:6px;font-size:12px;cursor:pointer">❌ Cancelar</button>
+                </div>
+              </div>
             </div>
           </div>
-        `).join('');
+        `}).join('');
         // Hacer scroll al final
         timeline.scrollTop = timeline.scrollHeight;
       }
@@ -1334,6 +1608,44 @@ async function guardarNuevaNota() {
   }
   btn.disabled = false;
   btn.innerHTML = '<span>➕ Añadir Nota</span>';
+}
+
+// ── Edición de Seguimientos ─────────────────────────────────────────────────
+function iniciarEdicionSeguimiento(segId, notaEncoded) {
+  const nota = decodeURIComponent(notaEncoded);
+  document.getElementById(`seg-text-${segId}`).style.display = 'none';
+  document.getElementById(`seg-edit-${segId}`).style.display = 'block';
+  document.getElementById(`seg-input-${segId}`).focus();
+}
+
+function cancelarEdicionSeguimiento(segId) {
+  document.getElementById(`seg-text-${segId}`).style.display = 'block';
+  document.getElementById(`seg-edit-${segId}`).style.display = 'none';
+}
+
+async function guardarEdicionSeguimiento(segId) {
+  const nuevaNota = document.getElementById(`seg-input-${segId}`).value.trim();
+  if (!nuevaNota) {
+    alert('La nota no puede estar vacía');
+    return;
+  }
+  
+  const incidenciaId = window.currentIncidenciaId;
+  
+  // Usar Supabase directamente - solo actualizar nota (sin editado_en)
+  const client = window.supabaseClient;
+  const { error } = await client
+    .from('seguimientos')
+    .update({ nota: nuevaNota })
+    .eq('id', segId);
+    
+  if (error) {
+    showFeedback('Error', 'No se pudo editar la nota: ' + error.message, '❌');
+    return;
+  }
+  
+  // Recargar el detalle
+  verDetalleSesion(incidenciaId);
 }
 
 async function editarDescripcionIncidencia(id) {
@@ -1377,8 +1689,8 @@ async function eliminarIncidencia(id) {
     cerrarModal('modalDetalle');
     showFeedback('Registro eliminado', 'La incidencia ha sido eliminada correctamente.', '✅');
     await cargarDatosBase();
-    cargarHistorial();
-    renderIncidencias();
+    await cargarHistorial();
+    await renderIncidencias();
   } else {
     showFeedback('Error al eliminar', res.error, '❌');
   }
@@ -1398,7 +1710,7 @@ async function verHistorialMaquina(nombreMaquina) {
   tbody.innerHTML = filtrados.map(r => `
     <tr>
       <td data-label="Fecha">${formatFechaHora(r.completado_en)}</td>
-      <td data-label="Operario">${r.operario}</td>
+      <td data-label="Usuario"><div style="font-weight:600">${r.operario}</div><div style="font-size:10px;color:var(--text-muted)">${r.rol === 'usuario' ? '👤' : (r.rol === 'admin' ? '🛡️' : '🔧')} ${r.rol || 'usuario'}</div></td>
       <td data-label="Tipo"><span class="estado-badge ${r.tipo === 'Incidencia' ? 'vencido' : 'ok'}">${r.tipo}</span></td>
       <td data-label="Nota">${truncate(r.observaciones || '', 20)}</td>
       <td><button class="btn btn-outline btn-sm" onclick="verDetalleSesion('${r.id}')">Detalles</button></td>
@@ -1423,6 +1735,23 @@ const ROL_BADGES = {
   tecnico: { label: '🔧 Técnico', cls: 'verde' },
   usuario: { label: '👤 Usuario', cls: '' },
 };
+
+function toggleRolesHelp() {
+  const pop = document.getElementById('rolesHelpPopover');
+  if (!pop) return;
+  const visible = pop.style.display !== 'none';
+  pop.style.display = visible ? 'none' : 'block';
+  if (!visible) {
+    setTimeout(() => {
+      document.addEventListener('click', function handler(e) {
+        if (!pop.contains(e.target) && e.target.id !== 'btnRolesHelp') {
+          pop.style.display = 'none';
+        }
+        document.removeEventListener('click', handler);
+      });
+    }, 0);
+  }
+}
 
 async function renderUsuarios() {
   const container = document.getElementById('tablaUsuarios');
@@ -1594,6 +1923,7 @@ async function apiFetch(url, options = {}) {
             maquina: r.maquina_nombre || 'Desconocida',
             sala: r.sala_nombre || 'Sin sala',
             operario: r.operario_nombre || 'Anónimo',
+            rol: r.usuario_rol || 'usuario',
             iniciado_en: r.timestamp,
             completado_en: r.timestamp,
             observaciones: r.notas || '',
@@ -1637,7 +1967,7 @@ async function apiFetch(url, options = {}) {
       if (searchParams.get('hasta')) query = query.lte('timestamp', searchParams.get('hasta') + 'T23:59:59');
       const { data, error } = await query.order('timestamp', { ascending: false });
       if (error) throw error;
-      return { ok: true, data: (data || []).map(r => ({ id: r.id, maquina: r.maquina_nombre, sala: r.sala_nombre, operario: r.operario_nombre, iniciado_en: r.timestamp, completado_en: r.timestamp, observaciones: r.notas || '', tipo: r.tipo, resuelta: r.resuelta || false, fotos: r.photos || [], tiene_fotos: (r.photos && r.photos.length > 0) })) };
+      return { ok: true, data: (data || []).map(r => ({ id: r.id, maquina: r.maquina_nombre, sala: r.sala_nombre, operario: r.operario_nombre, operario_email: r.operario_email, usuario_id: r.usuario_id, iniciado_en: r.timestamp, completado_en: r.timestamp, observaciones: r.notas || '', tipo: r.tipo, resuelta: r.resuelta || false, en_seguimiento: r.en_seguimiento || false, fotos: r.photos || [], tiene_fotos: (r.photos && r.photos.length > 0) })) };
     }
 
     if (url.includes('/api/sesion/') && method === 'DELETE') {
@@ -1661,7 +1991,7 @@ async function apiFetch(url, options = {}) {
       const id = url.split('/')[3];
       const { data: reg, error } = await client.from('registros').select('*').eq('id', id).single();
       if (error) throw error;
-      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.maquina_nombre, sala: reg.sala_nombre, operario: reg.operario_nombre, iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
+      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.maquina_nombre, sala: reg.sala_nombre, operario: reg.operario_nombre, rol: reg.usuario_rol || 'usuario', iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
     }
 
     if (url.includes('/api/incidencia/') && url.includes('/seguimientos')) {
@@ -1773,7 +2103,7 @@ async function intentarLogin() {
     }
 
     localStorage.setItem('sgi_admin_session', JSON.stringify({
-      type: 'admin',
+      type: rol,
       userId: data.user.id,
       email: data.user.email,
       nombre: perfil?.nombre || data.user.email
@@ -1799,6 +2129,166 @@ function cerrarSesionAdmin() {
 }
 function abrirModal(id) { document.getElementById(id)?.classList.add('open'); }
 function cerrarModal(id) { document.getElementById(id)?.classList.remove('open'); }
+function abrirLightbox(src) {
+  const existing = document.getElementById('lightbox-overlay');
+  if (existing) existing.remove();
+
+  // Outer overlay (never scrolls)
+  const lb = document.createElement('div');
+  lb.id = 'lightbox-overlay';
+  lb.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;cursor:default';
+
+  // Inner scrollable viewport (only this scrolls)
+  const viewport = document.createElement('div');
+  viewport.id = 'lightbox-viewport';
+  viewport.style.cssText = 'flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;box-sizing:border-box';
+
+  // Inject wider scrollbar style scoped to this viewport
+  const scrollStyle = document.createElement('style');
+  scrollStyle.id = 'lightbox-scrollbar-style';
+  scrollStyle.textContent = `
+    #lightbox-viewport::-webkit-scrollbar { width: 12px; height: 12px; }
+    #lightbox-viewport::-webkit-scrollbar-track { background: rgba(255,255,255,0.08); border-radius: 6px; }
+    #lightbox-viewport::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.45); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+    #lightbox-viewport::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.7); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+    #lightbox-viewport { scrollbar-width: auto; scrollbar-color: rgba(255,255,255,0.45) rgba(255,255,255,0.08); }
+  `;
+  document.head.appendChild(scrollStyle);
+
+  const img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'display:block;max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in';
+
+  viewport.appendChild(img);
+
+  // Bottom bar with controls
+  const bar = document.createElement('div');
+  bar.style.cssText = 'flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(0,0,0,0.7);padding:10px 16px';
+
+  function mkBtn(html, title) {
+    const b = document.createElement('button');
+    b.innerHTML = html;
+    b.title = title;
+    b.style.cssText = 'background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:8px;padding:6px 14px;font-size:18px;cursor:pointer;line-height:1';
+    return b;
+  }
+
+  const btnZoomIn  = mkBtn('🔍+', 'Ampliar');
+  const btnZoomOut = mkBtn('🔍−', 'Reducir');
+  const btnClose   = document.createElement('button');
+  btnClose.innerHTML = '✕&nbsp;Cerrar';
+  btnClose.style.cssText = 'background:#fff;border:none;color:#111;border-radius:8px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3);margin-left:8px';
+
+  bar.appendChild(btnZoomOut);
+  bar.appendChild(btnZoomIn);
+  bar.appendChild(btnClose);
+
+  lb.appendChild(viewport);
+  lb.appendChild(bar);
+  document.body.appendChild(lb);
+
+  let scale = 1;
+  const FIT = 1; // we'll set to fitScale after load
+
+  function fitScale() {
+    return Math.min(1,
+      viewport.clientWidth  / img.naturalWidth,
+      viewport.clientHeight / img.naturalHeight
+    );
+  }
+
+  function applyZoom(newScale, focalX, focalY) {
+    const oldScale = scale;
+    scale = Math.max(fitScale() * 0.9, Math.min(8, newScale));
+    const w = Math.round(img.naturalWidth  * scale);
+    const h = Math.round(img.naturalHeight * scale);
+
+    if (scale <= fitScale() * 1.01) {
+      // Fit mode: centered, no scroll
+      viewport.style.overflow       = 'hidden';
+      viewport.style.alignItems     = 'center';
+      viewport.style.justifyContent = 'center';
+      img.style.width     = '';
+      img.style.height    = '';
+      img.style.maxWidth  = '100%';
+      img.style.maxHeight = '100%';
+      img.style.margin    = '';
+      img.style.cursor    = 'zoom-in';
+    } else {
+      // Zoomed mode: scrollable
+      const wasZoomed = oldScale > fitScale() * 1.01;
+
+      // Capture focal ratio BEFORE resize
+      let ratioX = 0.5, ratioY = 0.5;
+      if (wasZoomed && focalX !== undefined) {
+        // focal is in viewport client coords
+        const cx = focalX - viewport.getBoundingClientRect().left;
+        const cy = focalY - viewport.getBoundingClientRect().top;
+        const totalW = img.naturalWidth  * oldScale;
+        const totalH = img.naturalHeight * oldScale;
+        const marginX = Math.max(0, (viewport.clientWidth  - totalW) / 2);
+        const marginY = Math.max(0, (viewport.clientHeight - totalH) / 2);
+        ratioX = (viewport.scrollLeft + cx - marginX) / totalW;
+        ratioY = (viewport.scrollTop  + cy - marginY) / totalH;
+      } else if (!wasZoomed) {
+        // Coming from fit: keep center
+        ratioX = 0.5; ratioY = 0.5;
+      } else {
+        // No focal: keep current center of viewport
+        const totalW = img.naturalWidth  * oldScale;
+        const totalH = img.naturalHeight * oldScale;
+        const marginX = Math.max(0, (viewport.clientWidth  - totalW) / 2);
+        const marginY = Math.max(0, (viewport.clientHeight - totalH) / 2);
+        ratioX = (viewport.scrollLeft + viewport.clientWidth  / 2 - marginX) / totalW;
+        ratioY = (viewport.scrollTop  + viewport.clientHeight / 2 - marginY) / totalH;
+      }
+
+      viewport.style.overflow       = 'auto';
+      viewport.style.alignItems     = 'flex-start';
+      viewport.style.justifyContent = 'flex-start';
+      img.style.maxWidth  = 'none';
+      img.style.maxHeight = 'none';
+      img.style.width     = w + 'px';
+      img.style.height    = h + 'px';
+      img.style.margin    = '0 auto';
+      img.style.cursor    = 'zoom-out';
+
+      requestAnimationFrame(() => {
+        const newMarginX = Math.max(0, (viewport.clientWidth  - w) / 2);
+        const newMarginY = Math.max(0, (viewport.clientHeight - h) / 2);
+        const cx = focalX !== undefined ? focalX - viewport.getBoundingClientRect().left : viewport.clientWidth  / 2;
+        const cy = focalY !== undefined ? focalY - viewport.getBoundingClientRect().top  : viewport.clientHeight / 2;
+        viewport.scrollLeft = newMarginX + ratioX * w - cx;
+        viewport.scrollTop  = newMarginY + ratioY * h - cy;
+      });
+    }
+  }
+
+  img.addEventListener('load', () => applyZoom(fitScale()), { once: true });
+  if (img.complete && img.naturalWidth) applyZoom(fitScale());
+
+  // Click image: toggle fit ↔ 100%
+  img.addEventListener('click', e => {
+    e.stopPropagation();
+    applyZoom(scale <= fitScale() * 1.01 ? 1 : fitScale(), e.clientX, e.clientY);
+  });
+
+  btnZoomIn.addEventListener('click',  e => { e.stopPropagation(); applyZoom(scale * 1.5); });
+  btnZoomOut.addEventListener('click', e => { e.stopPropagation(); applyZoom(scale / 1.5); });
+  btnClose.addEventListener('click', closeLb);
+
+  lb.addEventListener('click', e => { if (e.target === lb || e.target === viewport) closeLb(); });
+
+  function escHandler(e) { if (e.key === 'Escape') closeLb(); }
+  document.addEventListener('keydown', escHandler);
+
+  function closeLb() {
+    lb.remove();
+    document.getElementById('lightbox-scrollbar-style')?.remove();
+    document.removeEventListener('keydown', escHandler);
+  }
+}
+
 function formatFechaHora(str) { if (!str) return '–'; const d = new Date(str); return d.toLocaleDateString('es-ES') + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }); }
 
 function formatFechaDia(str) { if (!str) return '–'; const [y, m, d] = str.split('-'); return `${d}/${m}`; }
