@@ -1746,6 +1746,35 @@ function exportarCSV() {
 }
 
 // ── Usuarios / Administradores ────────────────────────────────────────────────
+let filtroRolUsuarios = 'todos'; // Filtro actual: 'todos', 'admin', 'tecnico', 'usuario'
+
+function filtrarUsuarios(rol) {
+  filtroRolUsuarios = rol;
+  
+  // Actualizar estilos de los botones
+  const botones = {
+    'todos': 'btnFiltroTodos',
+    'admin': 'btnFiltroAdmin',
+    'tecnico': 'btnFiltroTecnico',
+    'usuario': 'btnFiltroUsuario'
+  };
+  
+  Object.keys(botones).forEach(key => {
+    const btn = document.getElementById(botones[key]);
+    if (btn) {
+      if (key === rol) {
+        // Botón activo
+        btn.style.cssText = 'background:var(--accent);color:white;padding:8px 16px;border-radius:20px;border:none;cursor:pointer;font-weight:600;font-size:13px;';
+      } else {
+        // Botón inactivo
+        btn.style.cssText = 'padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-primary);cursor:pointer;font-weight:600;font-size:13px;';
+      }
+    }
+  });
+  
+  renderUsuarios();
+}
+
 const ROL_BADGES = {
   admin: { label: 'Administrador', cls: 'azul' },
   tecnico: { label: 'Técnico', cls: 'verde' },
@@ -1796,10 +1825,21 @@ async function renderUsuarios() {
       return ordenA - ordenB;
     });
 
+    // Aplicar filtro por rol si no es 'todos'
+    let perfilesFiltrados = perfiles;
+    if (filtroRolUsuarios !== 'todos') {
+      perfilesFiltrados = perfiles.filter(u => u.rol === filtroRolUsuarios);
+    }
+
+    if (!perfilesFiltrados.length) {
+      container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No hay usuarios con el rol "${filtroRolUsuarios}"</td></tr>`;
+      return;
+    }
+
     const session = window.sgiAdminSession || {};
     const esAdmin = session.type === 'superadmin' || session.type === 'admin';
 
-    container.innerHTML = perfiles.map(u => {
+    container.innerHTML = perfilesFiltrados.map(u => {
       const rol = ROL_BADGES[u.rol] || { label: u.rol || 'usuario', cls: '' };
       const fecha = u.creado_en ? new Date(u.creado_en).toLocaleDateString('es-ES') : '–';
       return `
