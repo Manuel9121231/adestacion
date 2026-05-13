@@ -364,10 +364,12 @@
         position: relative;
         z-index: 1;
       ">
-        <div class="reporte-label">🔑 IDENTIFICACIÓN (AUTO-ALTA)</div>
+        <div class="reporte-label">USUARIO IDENTIFICADO</div>
         <div style="display:grid; grid-template-columns: 1fr; gap:12px; margin-top: 12px;">
-          <input type="text" id="userNameInput" class="reporte-textarea" style="height: 48px; font-size: 15px;" placeholder="Tu Nombre Completo">
-          <input type="email" id="userEmailInput" class="reporte-textarea" style="height: 48px; font-size: 15px;" placeholder="Email (Clave Única)">
+          <input type="text" id="userNameInput" class="reporte-textarea" style="height: 48px; font-size: 15px;" placeholder="Tu Nombre Completo" readonly>
+          <div id="userInfoDisplay" style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; font-size: 14px; color: var(--text-secondary);">
+            Cargando usuario...
+          </div>
         </div>
       </div>
 
@@ -547,6 +549,56 @@
     try {
       const sessionStr = localStorage.getItem('sgi_user_session');
       const adminSessionStr = localStorage.getItem('sgi_admin_session');
+      const reporteTextarea = document.getElementById('reporteTextarea');
+
+    // Guardar sesión del operario
+    let currentUser = null;
+
+    // Función para cargar usuario desde sesión
+    function cargarUsuarioSesion() {
+      try {
+        const sessionStr = localStorage.getItem('sgi_user_session');
+        const adminSessionStr = localStorage.getItem('sgi_admin_session');
+        
+        // Si no hay sesión, redirigir a login
+        if (!sessionStr && !adminSessionStr) {
+          window.location.href = 'index.html';
+          return false;
+        }
+        
+        // Usar sesión de usuario o admin
+        let session = null;
+        if (sessionStr) {
+          session = JSON.parse(sessionStr);
+        } else if (adminSessionStr) {
+          session = JSON.parse(adminSessionStr);
+        }
+        
+        if (session) {
+          currentUser = {
+            id: session.userId,
+            nombre: session.nombre || session.username || 'Usuario',
+            email: session.email || ''
+          };
+          
+          // Actualizar UI
+          const nameInput = document.getElementById('userNameInput');
+          const infoDisplay = document.getElementById('userInfoDisplay');
+          
+          if (nameInput) nameInput.value = currentUser.nombre;
+          if (infoDisplay) {
+            infoDisplay.innerHTML = `<strong>${currentUser.nombre}</strong><br><span style="font-size: 12px; opacity: 0.7;">ID: ${currentUser.id}</span>`;
+          }
+          
+          return true;
+        }
+      } catch (err) {
+        console.error('Error cargando sesión:', err);
+        window.location.href = 'index.html';
+        return false;
+      }
+    }
+
       const userNameEl = document.getElementById('userName');
       const userRoleEl = document.getElementById('userRole');
       const btnChangeAccount = document.getElementById('btnChangeAccount');
@@ -597,7 +649,10 @@
     window.location.href = 'index.html';
   }
 
-  document.addEventListener('DOMContentLoaded', updateUserPanel);
+  document.addEventListener('DOMContentLoaded', () => {
+    updateUserPanel();
+    cargarUsuarioSesion();
+  });
 </script>
 <script src="js/checklist.js?v=3"></script>
 </body>

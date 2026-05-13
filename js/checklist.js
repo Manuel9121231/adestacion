@@ -284,20 +284,45 @@ function cancelPhoto() {
   renderPhotoPreviews();
 }
 
+// Obtener usuario actual desde la sesión
+function getCurrentUser() {
+  try {
+    const sessionStr = localStorage.getItem('sgi_user_session');
+    const adminSessionStr = localStorage.getItem('sgi_admin_session');
+    
+    if (!sessionStr && !adminSessionStr) {
+      return null;
+    }
+    
+    let session = null;
+    if (sessionStr) {
+      session = JSON.parse(sessionStr);
+    } else if (adminSessionStr) {
+      session = JSON.parse(adminSessionStr);
+    }
+    
+    return {
+      id: session.userId || session.id || null,
+      nombre: session.nombre || session.username || 'Usuario',
+      email: session.email || ''
+    };
+  } catch (err) {
+    console.error('Error obteniendo usuario de sesión:', err);
+    return null;
+  }
+}
+
 async function enviarChecklist() {
-  const nombreUser = document.getElementById('userNameInput').value.trim();
-  const emailUser = document.getElementById('userEmailInput').value.trim().toLowerCase();
+  const currentUser = getCurrentUser();
+  
+  if (!currentUser || !currentUser.id) {
+    alert("Debes iniciar sesión para enviar un reporte.");
+    window.location.href = 'index.html';
+    return;
+  }
+  
+  const nombreUser = currentUser.nombre;
   const reporte = document.getElementById('reporteTextarea').value.trim();
-
-  if (!nombreUser || !emailUser) {
-    alert("Por favor, introduce tu nombre y email para identificarte (Clave Única).");
-    return;
-  }
-
-  if (!emailUser.includes('@')) {
-    alert("Introduce un email válido.");
-    return;
-  }
 
   if (reporte.length < 1) {
     document.getElementById('reporteError').style.display = 'block';
@@ -306,39 +331,14 @@ async function enviarChecklist() {
 
   const btn = document.getElementById('btnEnviar');
   btn.disabled = true;
-  btn.textContent = '⏳ Verificando Identidad...';
-
-  // --- AUTO-ALTA DE USUARIO ---
-  const client = window.supabaseClient;
-  const { data: userExists } = await client
-    .from('usuarios')
-    .select('id')
-    .eq('email', emailUser)
-    .single();
-
-  let userId;
-  if (!userExists) {
-    console.log("Nuevo usuario detectado. Realizando Auto-alta...");
-    const { data: newUser } = await client.from('usuarios').insert({
-      nombre: nombreUser,
-      email: emailUser,
-      rol: 'usuario',
-      activo: true
-    }).select('id').single();
-    userId = newUser.id;
-  } else {
-    userId = userExists.id;
-  }
-
   btn.textContent = '⏳ Enviando reporte...';
 
   const res = await apiFetch(`/api/sesion/${sesionId}/completar`, {
     method: 'POST',
     body: {
       observaciones: reporte,
-      usuario_id: userId,
+      usuario_id: currentUser.id,
       nombre_usuario: nombreUser,
-      email_usuario: emailUser,
       fotos: selectedPhotos
     },
   });
@@ -351,7 +351,7 @@ async function enviarChecklist() {
   } else {
     btn.disabled = false;
     btn.className = 'btn-enviar activo';
-    btn.textContent = '⚠️ Error al enviar. Reintentar';
+    btn.textContent = 'Error al enviar. Reintentar';
     alert('Error: ' + (res.error || 'No se pudo enviar el informe'));
   }
 }
