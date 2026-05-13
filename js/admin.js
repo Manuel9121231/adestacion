@@ -231,6 +231,12 @@ async function cargarDatosBase() {
 
 // ── Incidencias ─────────────────────────────────────────────────────────────
 let filtroIncActual = 'todas';
+let ordenIncActual = 'fecha-desc';
+
+function cambiarOrdenInc(orden) {
+  ordenIncActual = orden;
+  renderIncidencias(filtroIncActual);
+}
 
 function toggleSeguimiento() {
   renderIncidencias('seguimiento');
@@ -273,6 +279,20 @@ function renderIncidencias(filtro = 'todas') {
   } else {
     // 'todas' — activas sin resueltas
     lista = lista.filter(r => !r.resuelta);
+  }
+
+  // Ordenar según criterio seleccionado
+  const ordenSelect = document.getElementById('select-inc-orden');
+  if (ordenSelect) ordenSelect.value = ordenIncActual;
+  if (ordenIncActual === 'fecha-desc') {
+    lista.sort((a, b) => new Date(b.completado_en) - new Date(a.completado_en));
+  } else if (ordenIncActual === 'fecha-asc') {
+    lista.sort((a, b) => new Date(a.completado_en) - new Date(b.completado_en));
+  } else if (ordenIncActual === 'tipo') {
+    const prioridad = r => r.resuelta ? 2 : (r.en_seguimiento ? 1 : 0);
+    lista.sort((a, b) => prioridad(a) - prioridad(b));
+  } else if (ordenIncActual === 'maquina') {
+    lista.sort((a, b) => (a.maquina || '').localeCompare(b.maquina || ''));
   }
 
   if (!lista.length) {
