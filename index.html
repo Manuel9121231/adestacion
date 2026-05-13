@@ -625,7 +625,14 @@
         if (navOperario) navOperario.style.display = 'flex';
         if (navAdmin) navAdmin.style.display = 'flex';
         const badge = document.getElementById('navAdminBadge');
-        if (badge) { badge.style.display = 'block'; badge.textContent = '🔒 Acceso limitado'; }
+        if (badge) badge.style.display = 'none';
+        const adminCard = document.getElementById('navAdmin');
+        if (adminCard) {
+          const h2 = adminCard.querySelector('h2');
+          const p  = adminCard.querySelector('p');
+          if (h2) h2.textContent = 'Panel Técnico';
+          if (p)  p.textContent  = 'Consulta máquinas, incidencias e historial.';
+        }
       } else if (rol === 'admin') {
         if (navOperario) navOperario.style.display = 'flex';
         if (navAdmin) navAdmin.style.display = 'flex';

@@ -102,11 +102,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       container.innerHTML = DASHBOARD_HTML;
     }
 
-    // Mostrar nombre del admin en sidebar footer
+    // Mostrar nombre y rol en sidebar footer
     const adminName = getNombreAdmin();
+    const rolLabel = { superadmin: 'Administrador', admin: 'Administrador', tecnico: 'Técnico' }[rolActual] || 'Usuario';
     const footerVersion = container?.querySelector('.sidebar-footer div');
     if (footerVersion) {
-      footerVersion.textContent = `👤 ${adminName}`;
+      footerVersion.innerHTML = `👤 <strong>${adminName}</strong><br><span style="font-size:11px;opacity:0.7">${rolLabel}</span>`;
     }
 
     // Ocultar navegación para técnicos (QR codes y usuarios)
