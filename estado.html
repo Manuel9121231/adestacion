@@ -395,9 +395,16 @@
 <script>
   (function() {
     const hasSession = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
-    if (!hasSession) document.addEventListener('DOMContentLoaded', () => {
-      const b = document.getElementById('ctaBanner');
-      if (b) b.style.display = 'block';
+    document.addEventListener('DOMContentLoaded', () => {
+      const ctaBanner = document.getElementById('ctaBanner');
+      const loggedInBanner = document.getElementById('loggedInBanner');
+      if (hasSession) {
+        if (ctaBanner) ctaBanner.style.display = 'none';
+        if (loggedInBanner) loggedInBanner.style.display = 'flex';
+      } else {
+        if (ctaBanner) ctaBanner.style.display = 'block';
+        if (loggedInBanner) loggedInBanner.style.display = 'none';
+      }
     });
   })();
 </script>
@@ -420,17 +427,39 @@
       <span>Modo TV</span>
     </a>
   </div>
-  <div class="search-container">
-    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-    <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre, sala o etiqueta..." oninput="filterMachines()">
+  <div class="search-container" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <div style="position:relative;flex:1;min-width:250px">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o sala..." oninput="filterMachines()">
+    </div>
+    <div class="filter-buttons" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+        <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Estado</span>
+        <button id="btnEstado" onclick="toggleEstadoFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">⚡ Todas</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;background:linear-gradient(135deg, var(--bg-secondary) 0%, var(--card-bg) 100%);padding:6px 10px;border-radius:12px;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+        <span style="font-size:12px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Máquinas</span>
+        <button id="btnIncidencia" onclick="cycleIncidenciaFilter()" class="btn-filter" style="padding:8px 14px;border-radius:8px;border:2px solid var(--border);background:var(--card-bg);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;white-space:nowrap;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:all 0.2s">🚨 Todas</button>
+      </div>
+      <button onclick="resetFilters()" class="btn-filter" style="padding:10px 16px;border-radius:10px;border:2px solid var(--border);background:linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);color:var(--text-primary);font-size:13px;cursor:pointer;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.08);transition:all 0.2s">✨ Limpiar filtros</button>
+    </div>
+  </div>
+  <div id="filtroResumen" style="padding:8px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:none;max-width:1400px;margin:0 auto">
+    <span id="filtroTexto"></span> • <span id="resultadoCount" style="font-weight:600;color:var(--text-primary)"></span> equipos
   </div>
 </header>
 
-<!-- CTA banner: only shown when no session -->
+<!-- CTA banner: shown when no session -->
 <div id="ctaBanner" style="display:none; background:linear-gradient(135deg,rgba(79,142,247,0.12),rgba(124,58,237,0.08)); border-bottom:1px solid rgba(79,142,247,0.2); padding:10px 20px; text-align:center; font-size:13px; color:var(--text-muted)">
   🔒 Estás viendo el estado público.
   <a href="index.html" style="color:var(--accent); font-weight:600; text-decoration:none; margin:0 4px">Inicia sesión</a>
   para reportar incidencias o mantenimientos.
+</div>
+
+<!-- Warning banner: only shown when logged in -->
+<div id="loggedInBanner" style="display:none; background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(251,191,36,0.08)); border-bottom:1px solid rgba(245,158,11,0.3); padding:12px 20px; text-align:center; font-size:13px; color:var(--text-muted); display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap">
+  <span>ℹ️ Esta página solo muestra el estado. Para ver detalles de máquinas y gestionar incidencias, usa el portal de selección.</span>
+  <a href="seleccion.html" style="background:var(--accent); color:white; padding:6px 14px; border-radius:6px; font-weight:600; text-decoration:none; font-size:12px; white-space:nowrap">👉 Ir a Selección de Equipo</a>
 </div>
 
 <main id="mainContent">
@@ -454,13 +483,21 @@
       if (!window.supabaseClient) { setTimeout(loadStatus, 500); return; }
       const c = window.supabaseClient;
 
+      // 1. Cargar máquinas y obtener IDs de incidencias abiertas con en_seguimiento
       const [mRes, iRes] = await Promise.all([
         c.from('equipos').select('id,nombre,codigo,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
-        c.from('registros').select('maquina_id').eq('tipo','Incidencia').eq('resuelta',false)
+        c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta',false)
       ]);
 
       if (mRes.error) throw mRes.error;
-      const enRep = new Set((iRes.data||[]).map(i => i.maquina_id));
+      const incidencias = iRes.data || [];
+      const enRep = new Set(incidencias.map(i => i.maquina_id));
+      
+      // Mapa de maquina_id -> datos de incidencia (incluyendo en_seguimiento)
+      const incidenciaPorMaquina = {};
+      incidencias.forEach(inc => {
+        incidenciaPorMaquina[inc.maquina_id] = inc;
+      });
       
       let totOk = 0, totErr = 0;
       const bySala = {};
@@ -473,6 +510,10 @@
         const inactiva = (m.estado||'').toLowerCase().trim() !== 'activa';
         const incidencia = enRep.has(m.id);
         const down = inactiva || incidencia;
+
+        // Determinar estado de seguimiento
+        const incData = incidenciaPorMaquina[m.id];
+        const enSeguimiento = incData && incData.en_seguimiento;
 
         // Build status text: always show operational status + incident if applicable
         let statusParts = [m.estado || 'Activa'];
@@ -490,6 +531,7 @@
           motivo,
           inactiva,
           incidencia,
+          enSeguimiento,
         };
 
         bySala[sala].push(entry);
@@ -601,31 +643,59 @@
   function machineHTML(m) {
     let statusClass, badgeClass, cardClass, badgeText;
 
+    // Lógica de colores según el panel de administración:
+    // - Gris: Inactiva + Incidencia
+    // - Amarillo: Activa + Incidencia en seguimiento  
+    // - Rojo: Activa + Incidencia sin resolver
+    // - Verde: Activa sin incidencia
     if (!m.inactiva && !m.incidencia) {
+      // Activa sin incidencia - verde
       statusClass = 'status-ok';
       badgeClass  = 'badge-ok';
       badgeText   = 'Activa';
       cardClass   = 'm-card';
-    } else if (!m.inactiva && m.incidencia) {
+    } else if (!m.inactiva && m.incidencia && m.enSeguimiento) {
+      // Activa + en seguimiento - amarillo
       statusClass = 'status-warn';
       badgeClass  = 'badge-warn';
-      badgeText   = 'Activa';
+      badgeText   = 'En Seguimiento';
       cardClass   = 'm-card warn';
-    } else if (m.inactiva && !m.incidencia) {
-      statusClass = 'status-inactive';
-      badgeClass  = 'badge-inactive';
-      badgeText   = m.motivo;
-      cardClass   = 'm-card inactive';
-    } else {
+    } else if (!m.inactiva && m.incidencia && !m.enSeguimiento) {
+      // Activa + sin resolver - rojo
       statusClass = 'status-err';
       badgeClass  = 'badge-err';
-      badgeText   = m.estado || 'Inactiva';
+      badgeText   = 'Sin Resolver';
       cardClass   = 'm-card down';
+    } else if (m.inactiva && m.incidencia) {
+      // Inactiva + incidencia - gris
+      statusClass = 'status-inactive';
+      badgeClass  = 'badge-inactive';
+      badgeText   = 'Incidencia';
+      cardClass   = 'm-card inactive';
+    } else {
+      // Inactiva sin incidencia - gris
+      statusClass = 'status-inactive';
+      badgeClass  = 'badge-inactive';
+      badgeText   = m.estado || 'Inactiva';
+      cardClass   = 'm-card inactive';
     }
 
     let detailsHTML = '';
-    if (m.incidencia) detailsHTML += `<span class="m-badge ${m.inactiva ? 'badge-err' : 'badge-warn'}" style="align-self:flex-start">Incidencia</span>`;
-    if (m.notas) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
+    if (m.incidencia) {
+      // Color del badge según estado: gris=inactiva, amarillo=seguimiento, rojo=sin resolver
+      let badgeTipo = 'err'; // Por defecto rojo (sin resolver)
+      let badgeTexto = 'Incidencia';
+      if (m.inactiva) {
+        badgeTipo = 'inactive';
+        badgeTexto = 'Incidencia (Inactiva)';
+      } else if (m.enSeguimiento) {
+        badgeTipo = 'warn';
+        badgeTexto = 'En Seguimiento';
+      }
+      
+      detailsHTML += `<span class="m-badge badge-${badgeTipo}" style="align-self:flex-start">${badgeTexto}</span>`;
+    }
+    if (m.notas && !m.incidencia) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
 
     return `
       <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}" data-tipo="${(m.tipo||'').toLowerCase()}">
@@ -652,34 +722,139 @@
     return 'activa';
   }
 
-  function filterMachines() {
+  // Filtros
+  let filtroEstado = 'todos'; // 'todos', 'activa', 'inactiva'
+  let filtroIncidencia = 'todos'; // 'todos', 'sin_errores', 'sin_resolver', 'en_seguimiento'
+
+  function toggleEstadoFilter() {
+    const btn = document.getElementById('btnEstado');
+    if (filtroEstado === 'todos') {
+      filtroEstado = 'activa';
+      btn.textContent = '⚡ Activa';
+      btn.style.borderColor = 'var(--success)';
+      btn.style.background = 'rgba(16, 185, 129, 0.1)';
+    } else if (filtroEstado === 'activa') {
+      filtroEstado = 'inactiva';
+      btn.textContent = '⛔ Inactiva';
+      btn.style.borderColor = 'var(--danger)';
+      btn.style.background = 'rgba(239, 68, 68, 0.1)';
+    } else {
+      filtroEstado = 'todos';
+      btn.textContent = '⚡ Todas';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.background = 'var(--card-bg)';
+    }
+    applyFilters();
+  }
+
+  function cycleIncidenciaFilter() {
+    const btn = document.getElementById('btnIncidencia');
+    if (filtroIncidencia === 'todos') {
+      filtroIncidencia = 'sin_resolver';
+      btn.textContent = '🚨 Sin resolver';
+      btn.style.borderColor = 'var(--danger)';
+      btn.style.background = 'rgba(239, 68, 68, 0.1)';
+    } else if (filtroIncidencia === 'sin_resolver') {
+      filtroIncidencia = 'en_seguimiento';
+      btn.textContent = '⏳ En seguimiento';
+      btn.style.borderColor = 'var(--warning)';
+      btn.style.background = 'rgba(245, 158, 11, 0.1)';
+    } else if (filtroIncidencia === 'en_seguimiento') {
+      filtroIncidencia = 'sin_errores';
+      btn.textContent = '✅ Sin errores';
+      btn.style.borderColor = 'var(--success)';
+      btn.style.background = 'rgba(16, 185, 129, 0.1)';
+    } else {
+      filtroIncidencia = 'todos';
+      btn.textContent = '🚨 Todas';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.background = 'var(--card-bg)';
+    }
+    applyFilters();
+  }
+
+  function resetFilters() {
+    filtroEstado = 'todos';
+    filtroIncidencia = 'todos';
+    document.getElementById('btnEstado').textContent = '⚡ Todas';
+    document.getElementById('btnEstado').style.borderColor = 'var(--border)';
+    document.getElementById('btnEstado').style.background = 'var(--card-bg)';
+    document.getElementById('btnIncidencia').textContent = '🚨 Todas';
+    document.getElementById('btnIncidencia').style.borderColor = 'var(--border)';
+    document.getElementById('btnIncidencia').style.background = 'var(--card-bg)';
+    document.getElementById('searchInput').value = '';
+    applyFilters();
+  }
+
+  function applyFilters() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
     const normQ = normalize(q);
     const sections = document.querySelectorAll('.sala-section');
+    let totalCount = 0;
 
     sections.forEach(sec => {
       const cards = sec.querySelectorAll('.m-card');
       let hasVisible = false;
 
       cards.forEach(card => {
-        if (!q) { card.style.display = 'flex'; hasVisible = true; return; }
-
         const estado = getCardState(card);
-        const textFields = [card.dataset.nombre||'', card.dataset.tipo||'', sec.dataset.sala||''];
-        const badge = card.dataset.badge||'';
+        const textFields = [card.dataset.nombre||'', sec.dataset.sala||''];
+        const badge = card.dataset.badge?.toLowerCase() || '';
 
-        const visible =
-          estado.startsWith(q) ||
-          normalize(badge).startsWith(normQ) ||
-          textFields.some(f => normalize(f).includes(normQ)) ||
-          textFields.some(f => fuzzyMatch(q, f));
+        // Filtro de texto
+        let textMatch = true;
+        if (q) {
+          textMatch = textFields.some(f => normalize(f).includes(normQ)) ||
+                      textFields.some(f => fuzzyMatch(q, f));
+        }
 
+        // Filtro de estado
+        let estadoMatch = true;
+        if (filtroEstado === 'activa' && estado !== 'activa') estadoMatch = false;
+        if (filtroEstado === 'inactiva' && estado !== 'inactiva') estadoMatch = false;
+
+        // Filtro de incidencia
+        let incidenciaMatch = true;
+        if (filtroIncidencia === 'sin_errores' && badge.includes('incidencia')) incidenciaMatch = false;
+        if (filtroIncidencia === 'sin_resolver' && !badge.includes('sin resolver')) incidenciaMatch = false;
+        if (filtroIncidencia === 'en_seguimiento' && !badge.includes('seguimiento')) incidenciaMatch = false;
+
+        const visible = textMatch && estadoMatch && incidenciaMatch;
         card.style.display = visible ? 'flex' : 'none';
-        if (visible) hasVisible = true;
+        if (visible) { hasVisible = true; totalCount++; }
       });
 
       sec.style.display = hasVisible ? 'block' : 'none';
     });
+
+    // Mostrar resumen
+    const resumenEl = document.getElementById('filtroResumen');
+    const filtroTextoEl = document.getElementById('filtroTexto');
+    const countEl = document.getElementById('resultadoCount');
+
+    const partes = [];
+    if (filtroEstado !== 'todos') partes.push(filtroEstado === 'activa' ? '⚡ Activas' : '⛔ Inactivas');
+    if (filtroIncidencia !== 'todos') {
+      const incText = {
+        'sin_errores': '✅ Sin incidencias',
+        'sin_resolver': '🚨 Sin resolver',
+        'en_seguimiento': '⏳ En seguimiento'
+      }[filtroIncidencia];
+      partes.push(incText);
+    }
+    if (q) partes.push(`🔍 "${q}"`);
+
+    if (partes.length > 0) {
+      filtroTextoEl.textContent = partes.join(' + ');
+      countEl.textContent = totalCount;
+      resumenEl.style.display = 'block';
+    } else {
+      resumenEl.style.display = 'none';
+    }
+  }
+
+  function filterMachines() {
+    applyFilters();
   }
 
   function esc(s) {

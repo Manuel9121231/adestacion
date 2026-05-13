@@ -448,6 +448,9 @@ const DASHBOARD_HTML = `
         <button class="modal-close" onclick="cerrarModal('modalMaquina')">✕</button>
       </div>
       <div class="modal-body">
+        <div id="msgTecnico" style="display:none;background:rgba(59,130,246,0.1);border:1px solid var(--accent);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--accent)">
+          🔧 Como técnico, solo puedes modificar el <strong>Estado operativo</strong> de la máquina (Activa/Inactiva).
+        </div>
         <input type="hidden" id="editMaquinaId">
         <div class="grid-2">
           <div class="form-group">

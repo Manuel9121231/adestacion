@@ -194,7 +194,7 @@ async function cargarDatosBase() {
   }
 
   // Actualizar la vista actual ahora que los datos están listos
-  renderActualSection();
+  await renderActualSection();
 
   // Poblar selects de salas
   ['filtroSalaMaquinas', 'filtroSala', 'filtroSalaQR', 'nuevoMaquinaSala'].forEach(id => {
@@ -244,16 +244,16 @@ async function cargarDatosBase() {
 let filtroIncActual = 'todas';
 let ordenIncActual = 'fecha-desc';
 
-function cambiarOrdenInc(orden) {
+async function cambiarOrdenInc(orden) {
   ordenIncActual = orden;
-  renderIncidencias(filtroIncActual);
+  await renderIncidencias(filtroIncActual);
 }
 
-function toggleSeguimiento() {
-  renderIncidencias('seguimiento');
+async function toggleSeguimiento() {
+  await renderIncidencias('seguimiento');
 }
 
-function renderIncidencias(filtro = 'todas') {
+async function renderIncidencias(filtro = 'todas') {
   filtroIncActual = filtro;
   const grid = document.getElementById('gridTicketsIncidencias');
   const empty = document.getElementById('incidenciasEmpty');
@@ -290,6 +290,32 @@ function renderIncidencias(filtro = 'todas') {
   } else {
     // 'todas' — activas sin resueltas
     lista = lista.filter(r => !r.resuelta);
+  }
+
+  // Cargar últimas notas de seguimiento para incidencias en seguimiento
+  const incSeguimiento = lista.filter(r => !r.resuelta && r.en_seguimiento);
+  let ultimasNotas = {};
+  
+  if (incSeguimiento.length > 0 && window.supabaseClient) {
+    try {
+      const ids = incSeguimiento.map(r => r.id);
+      const { data: seguimientos, error } = await window.supabaseClient
+        .from('seguimientos')
+        .select('incidencia_id, nota, timestamp')
+        .in('incidencia_id', ids)
+        .order('timestamp', { ascending: false });
+        
+      if (!error && seguimientos) {
+        // Tomar solo la última nota de cada incidencia
+        seguimientos.forEach(s => {
+          if (!ultimasNotas[s.incidencia_id]) {
+            ultimasNotas[s.incidencia_id] = s.nota;
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Error cargando seguimientos:', e);
+    }
   }
 
   // Ordenar según criterio seleccionado
@@ -336,11 +362,11 @@ function renderIncidencias(filtro = 'todas') {
           <div class="ticket-sala">📍 ${r.sala}</div>
           <div class="ticket-desc">${truncate(r.observaciones || 'Sin descripción detallada', 120)}</div>
           <div class="ticket-date">🗓️ Reportado: ${formatFechaHora(r.completado_en)}</div>
-          <div class="ticket-date">👷 Operario: ${r.operario}</div>
+          <div class="ticket-date">👤 ${r.rol === 'usuario' ? 'Usuario' : (r.rol === 'admin' ? 'Admin' : 'Técnico')}: ${r.operario}</div>
           
           ${esSeguimiento ? `
             <div class="ticket-last-note">
-              Última nota: Revisión técnica en curso...
+              📝 ${ultimasNotas[r.id] ? truncate(ultimasNotas[r.id], 80) : 'En seguimiento - sin notas aún'}
             </div>
           ` : ''}
         </div>
@@ -365,7 +391,7 @@ const sectionTitles = {
   usuarios: ['Usuarios del Sistema', 'Gestión de accesos y privilegios de usuario']
 };
 
-function navigateTo(section, machineId = null, incFilter = null) {
+async function navigateTo(section, machineId = null, incFilter = null) {
   // Verificación de roles (solo admin puede ver gestión de usuarios y QR codes)
   // Técnicos pueden ver todo excepto usuarios y qrcodes
   const rutasRestringidasParaTecnico = ['usuarios'];
@@ -408,18 +434,18 @@ function navigateTo(section, machineId = null, incFilter = null) {
 
   // Cargar datos bajo demanda
   if (section === 'maquinas') renderMaquinas();
-  if (section === 'incidencias') renderIncidencias(incFilter || filtroIncActual);
+  if (section === 'incidencias') await renderIncidencias(incFilter || filtroIncActual);
   if (section === 'historial') { cargarHistorial(); poblarFiltroMaquinasHistorial(); }
   if (section === 'usuarios') renderUsuarios();
   if (section === 'qrcodes') renderQRs();
 }
 
-function renderActualSection() {
+async function renderActualSection() {
   const activeSection = document.querySelector('.section.active');
   if (!activeSection) return;
   const id = activeSection.id.replace('section-', '');
   if (id === 'maquinas') renderMaquinas();
-  if (id === 'incidencias') renderIncidencias();
+  if (id === 'incidencias') await renderIncidencias();
   if (id === 'historial') cargarHistorial();
   if (id === 'usuarios') renderUsuarios();
   if (id === 'qrcodes') renderQRs();
@@ -784,7 +810,12 @@ async function verDetalleMaquina(id) {
   tipoSelect.onchange = handleTipoChangeEdit;
 
   // Por defecto, abrir en modo lectura
-  setModoEdicionMaquina(false);
+  // Si es técnico, abrir en modo edición limitada (solo estado)
+  if (rolActual === 'tecnico') {
+    setModoEdicionMaquina(true, true); // true = modo técnico (solo estado editable)
+  } else {
+    setModoEdicionMaquina(false);
+  }
 
   abrirModal('modalMaquina');
 }
@@ -817,39 +848,54 @@ async function handleTipoChangeEdit() {
   }
 }
 
-function setModoEdicionMaquina(editando) {
+function setModoEdicionMaquina(editando, soloEstado = false) {
   const inputs = ['editNombre', 'editTipo', 'editModelo', 'editEstado', 'editNotas'];
   inputs.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.readOnly = !editando;
-    if (el.tagName === 'SELECT') el.disabled = !editando;
-    el.style.opacity = editando ? '' : '0.65';
-    el.style.cursor = editando ? '' : 'default';
+    
+    // Si es modo técnico (soloEstado=true), solo permitir editar el estado
+    const esEstado = (id === 'editEstado');
+    const puedeEditar = soloEstado ? esEstado : editando;
+    
+    el.readOnly = !puedeEditar;
+    if (el.tagName === 'SELECT') el.disabled = !puedeEditar;
+    el.style.opacity = puedeEditar ? '' : '0.65';
+    el.style.cursor = puedeEditar ? '' : 'default';
   });
 
-  // Bloquear interacción completa del body del modal en modo lectura
+  // Bloquear interacción completa del body del modal en modo lectura (solo si no es técnico)
   const modalBody = document.querySelector('#modalMaquina .modal-body');
-  if (modalBody) {
+  if (modalBody && !soloEstado) {
     modalBody.style.pointerEvents = editando ? '' : 'none';
     modalBody.style.userSelect = editando ? '' : 'none';
   }
   
   const btnToggle = document.getElementById('btnToggleEditarMaquina');
   if (btnToggle) {
-    if (editando) {
+    if (editando && !soloEstado) {
       btnToggle.innerHTML = '❌ Cancelar';
       btnToggle.className = 'btn btn-outline btn-sm';
       btnToggle.style.cssText = 'padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; transition:all 0.2s ease; border-color:var(--danger); color:var(--danger);';
+    } else if (soloEstado) {
+      // Ocultar botón de edición para técnicos
+      btnToggle.style.display = 'none';
     } else {
       btnToggle.innerHTML = '✏️ Editar';
       btnToggle.className = 'btn btn-primary btn-sm';
       btnToggle.style.cssText = 'padding: 8px 16px; font-size:13px; font-weight:600; min-width:80px; border-radius:8px; box-shadow:0 2px 8px rgba(59,130,246,0.3); transition:all 0.2s ease;';
+      btnToggle.style.display = 'block';
     }
   }
   
   const btnGuardar = document.getElementById('btnGuardarMaquina');
   if (btnGuardar) btnGuardar.style.display = editando ? 'block' : 'none';
+  
+  // Mostrar mensaje informativo para técnicos
+  const msgTecnico = document.getElementById('msgTecnico');
+  if (msgTecnico) {
+    msgTecnico.style.display = soloEstado ? 'block' : 'none';
+  }
 }
 
 function toggleModoEdicionMaquina() {
@@ -863,11 +909,33 @@ async function editarMaquina(id) {
 }
 
 async function guardarMaquina() {
+  const id = document.getElementById('editMaquinaId').value;
+  
+  // Si es técnico, solo permitir cambiar el estado
+  if (rolActual === 'tecnico') {
+    const nuevoEstado = document.getElementById('editEstado').value;
+    const { error } = await supabaseClient
+      .from('equipos')
+      .update({ estado: nuevoEstado })
+      .eq('id', id);
+      
+    if (error) {
+      showFeedback('Error', 'No se pudo actualizar el estado: ' + error.message, '❌');
+      return;
+    }
+    
+    showFeedback('Éxito', `Estado cambiado a ${nuevoEstado}`, '✅');
+    await cargarDatosBase();
+    renderMaquinas();
+    cerrarModal('modalMaquina');
+    return;
+  }
+  
   if (rolActual !== 'admin') {
     showFeedback('Acceso denegado', 'Solo los administradores pueden guardar cambios en máquinas.', '🔒');
     return;
   }
-  const id = document.getElementById('editMaquinaId').value;
+  
   let tipo = document.getElementById('editTipo').value;
 
   // Manejar tipo personalizado
@@ -1326,9 +1394,9 @@ function renderizarContenidoHistorial(data, tbody, empty) {
           </div>
         </td>
         <td data-label="Sala">${r.sala}</td>
-        <td data-label="Operario" style="max-width: 150px; white-space: normal; word-break: break-word;">
+        <td data-label="Usuario" style="max-width: 150px; white-space: normal; word-break: break-word;">
           <div style="font-weight:700">${r.operario}</div>
-          <div style="font-size:10px; color:var(--text-muted)">${r.operario_email || '–'}</div>
+          <div style="font-size:10px; color:var(--text-muted)">${r.rol === 'usuario' ? '👤 Usuario' : (r.rol === 'admin' ? '🛡️ Admin' : '🔧 Técnico')}</div>
         </td>
         <td data-label="Fecha" style="font-size:11px">${formatFechaHora(r.completado_en)}</td>
         <td data-label="Observ." style="font-size:11px;color:var(--text-muted)">
@@ -1363,7 +1431,7 @@ async function toggleResolucionIncidencia(id, nuevoEstado) {
     if (document.getElementById('section-historial').classList.contains('active')) await cargarHistorial();
     if (document.getElementById('section-incidencias').classList.contains('active')) {
       const filtroActual = document.querySelector('.btn-outline.btn-sm.active[id^="btn-inc-"]')?.id.replace('btn-inc-', '') || 'todas';
-      renderIncidencias(filtroActual);
+      await renderIncidencias(filtroActual);
     }
   } else {
     showFeedback('Error de estado', 'No se pudo actualizar el estado de la incidencia: ' + res.error, '❌');
@@ -1412,7 +1480,7 @@ async function verDetalleSesion(id) {
         <!-- Columna Izquierda: Información Principal -->
         <div>
           <div class="detail-stats-grid" style="margin-bottom: 16px;">
-            <div class="detail-stat"><div class="label">👷 Operario</div><div class="value">${sesion.operario}</div></div>
+            <div class="detail-stat"><div class="label">👤 ${sesion.rol === 'usuario' ? 'Reportado por' : (sesion.rol === 'admin' ? 'Administrador' : 'Técnico')}</div><div class="value">${sesion.operario}<span style="font-size:11px;color:var(--text-muted);margin-left:6px">(${sesion.rol || 'usuario'})</span></div></div>
             <div class="detail-stat"><div class="label">📅 Fecha</div><div class="value">${formatFechaHora(sesion.completado_en)}</div></div>
           </div>
           
@@ -1479,17 +1547,31 @@ async function verDetalleSesion(id) {
         timeline.innerHTML = '<div style="text-align:center;padding:10px;opacity:0.5;font-size:12px">No hay notas registradas aún.</div>';
       } else {
         timeline.classList.add('timeline-compact');
-        timeline.innerHTML = notas.map(n => `
-          <div class="timeline-item">
-            <div class="timeline-meta">
-              <b>${n.usuario_nombre || 'Técnico'}</b>
-              <span>${formatFechaHora(n.timestamp)}</span>
+        timeline.innerHTML = notas.map((n, index) => {
+          const fechaCreado = formatFechaHora(n.timestamp);
+          const esPrimera = index === notas.length - 1; // La más reciente
+          
+          return `
+          <div class="timeline-item" id="seg-item-${n.id}">
+            <div class="timeline-meta" style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <b>${n.usuario_nombre || 'Técnico'}</b>
+                <span style="font-size:11px;color:var(--text-muted)">${fechaCreado}</span>
+              </div>
+              ${esPrimera ? `<button onclick="iniciarEdicionSeguimiento('${n.id}', '${encodeURIComponent(n.nota)}')" style="background:transparent;border:none;color:var(--accent);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px" title="Editar nota">✏️</button>` : ''}
             </div>
             <div class="timeline-content">
-              <div class="timeline-text">${n.nota}</div>
+              <div class="timeline-text" id="seg-text-${n.id}">${n.nota}</div>
+              <div id="seg-edit-${n.id}" style="display:none;margin-top:8px">
+                <textarea id="seg-input-${n.id}" class="form-control" rows="2" style="font-size:13px;margin-bottom:8px">${n.nota}</textarea>
+                <div style="display:flex;gap:8px">
+                  <button onclick="guardarEdicionSeguimiento('${n.id}')" style="padding:4px 12px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer">💾 Guardar</button>
+                  <button onclick="cancelarEdicionSeguimiento('${n.id}')" style="padding:4px 12px;background:var(--bg-secondary);color:var(--text-muted);border:none;border-radius:6px;font-size:12px;cursor:pointer">❌ Cancelar</button>
+                </div>
+              </div>
             </div>
           </div>
-        `).join('');
+        `}).join('');
         // Hacer scroll al final
         timeline.scrollTop = timeline.scrollHeight;
       }
@@ -1526,6 +1608,44 @@ async function guardarNuevaNota() {
   }
   btn.disabled = false;
   btn.innerHTML = '<span>➕ Añadir Nota</span>';
+}
+
+// ── Edición de Seguimientos ─────────────────────────────────────────────────
+function iniciarEdicionSeguimiento(segId, notaEncoded) {
+  const nota = decodeURIComponent(notaEncoded);
+  document.getElementById(`seg-text-${segId}`).style.display = 'none';
+  document.getElementById(`seg-edit-${segId}`).style.display = 'block';
+  document.getElementById(`seg-input-${segId}`).focus();
+}
+
+function cancelarEdicionSeguimiento(segId) {
+  document.getElementById(`seg-text-${segId}`).style.display = 'block';
+  document.getElementById(`seg-edit-${segId}`).style.display = 'none';
+}
+
+async function guardarEdicionSeguimiento(segId) {
+  const nuevaNota = document.getElementById(`seg-input-${segId}`).value.trim();
+  if (!nuevaNota) {
+    alert('La nota no puede estar vacía');
+    return;
+  }
+  
+  const incidenciaId = window.currentIncidenciaId;
+  
+  // Usar Supabase directamente - solo actualizar nota (sin editado_en)
+  const client = window.supabaseClient;
+  const { error } = await client
+    .from('seguimientos')
+    .update({ nota: nuevaNota })
+    .eq('id', segId);
+    
+  if (error) {
+    showFeedback('Error', 'No se pudo editar la nota: ' + error.message, '❌');
+    return;
+  }
+  
+  // Recargar el detalle
+  verDetalleSesion(incidenciaId);
 }
 
 async function editarDescripcionIncidencia(id) {
@@ -1569,8 +1689,8 @@ async function eliminarIncidencia(id) {
     cerrarModal('modalDetalle');
     showFeedback('Registro eliminado', 'La incidencia ha sido eliminada correctamente.', '✅');
     await cargarDatosBase();
-    cargarHistorial();
-    renderIncidencias();
+    await cargarHistorial();
+    await renderIncidencias();
   } else {
     showFeedback('Error al eliminar', res.error, '❌');
   }
@@ -1590,7 +1710,7 @@ async function verHistorialMaquina(nombreMaquina) {
   tbody.innerHTML = filtrados.map(r => `
     <tr>
       <td data-label="Fecha">${formatFechaHora(r.completado_en)}</td>
-      <td data-label="Operario">${r.operario}</td>
+      <td data-label="Usuario"><div style="font-weight:600">${r.operario}</div><div style="font-size:10px;color:var(--text-muted)">${r.rol === 'usuario' ? '👤' : (r.rol === 'admin' ? '🛡️' : '🔧')} ${r.rol || 'usuario'}</div></td>
       <td data-label="Tipo"><span class="estado-badge ${r.tipo === 'Incidencia' ? 'vencido' : 'ok'}">${r.tipo}</span></td>
       <td data-label="Nota">${truncate(r.observaciones || '', 20)}</td>
       <td><button class="btn btn-outline btn-sm" onclick="verDetalleSesion('${r.id}')">Detalles</button></td>
@@ -1803,6 +1923,7 @@ async function apiFetch(url, options = {}) {
             maquina: r.maquina_nombre || 'Desconocida',
             sala: r.sala_nombre || 'Sin sala',
             operario: r.operario_nombre || 'Anónimo',
+            rol: r.usuario_rol || 'usuario',
             iniciado_en: r.timestamp,
             completado_en: r.timestamp,
             observaciones: r.notas || '',
@@ -1870,7 +1991,7 @@ async function apiFetch(url, options = {}) {
       const id = url.split('/')[3];
       const { data: reg, error } = await client.from('registros').select('*').eq('id', id).single();
       if (error) throw error;
-      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.maquina_nombre, sala: reg.sala_nombre, operario: reg.operario_nombre, iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
+      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.maquina_nombre, sala: reg.sala_nombre, operario: reg.operario_nombre, rol: reg.usuario_rol || 'usuario', iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
     }
 
     if (url.includes('/api/incidencia/') && url.includes('/seguimientos')) {
