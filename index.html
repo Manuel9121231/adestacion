@@ -770,6 +770,13 @@
         const rol = session.rol || 'usuario';
         const nombre = session.nombre || session.email || 'Usuario';
 
+        // Sincroniza admin_session para técnicos/admins (acceso directo al panel)
+        if ((rol === 'admin' || rol === 'tecnico') && !adminSessionStr) {
+          localStorage.setItem('sgi_admin_session', JSON.stringify({
+            type: rol, userId: session.userId, email: session.email, nombre
+          }));
+        }
+
         userNameEl.textContent = nombre;
         const roleLabels = { 'usuario': 'Usuario', 'tecnico': 'Técnico', 'admin': 'Administrador' };
         userRoleEl.textContent = roleLabels[rol] || rol;
@@ -826,9 +833,9 @@
           userId: user.id, email: user.email, nombre, rol
         }));
 
-        if (rol === 'admin') {
+        if (rol === 'admin' || rol === 'tecnico') {
           localStorage.setItem('sgi_admin_session', JSON.stringify({
-            type: 'admin', userId: user.id, email: user.email, nombre
+            type: rol, userId: user.id, email: user.email, nombre
           }));
           window.location.href = 'dashboard.html';
           return;

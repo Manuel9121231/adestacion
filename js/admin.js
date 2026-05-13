@@ -124,10 +124,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // Restaurar sección guardada al refrescar (si existe)
+    // Restaurar sección guardada al refrescar (si existe y el rol tiene permiso)
     const savedSection = localStorage.getItem('sgi_admin_section');
-    if (savedSection && savedSection !== 'dashboard') {
+    const seccionesRestringidasTecnico = ['usuarios'];
+    const seccionesSoloPanel = ['usuarios', 'qrcodes'];
+    let puedeRestaurar = !!savedSection && savedSection !== 'dashboard';
+    if (puedeRestaurar) {
+      if (rolActual === 'tecnico' && seccionesRestringidasTecnico.includes(savedSection)) puedeRestaurar = false;
+      else if (rolActual !== 'admin' && rolActual !== 'tecnico' && seccionesSoloPanel.includes(savedSection)) puedeRestaurar = false;
+    }
+    if (puedeRestaurar) {
       navigateTo(savedSection);
+    } else if (savedSection && savedSection !== 'dashboard') {
+      localStorage.removeItem('sgi_admin_section');
     }
 
     const grid = document.getElementById('gridMaquinas');
@@ -385,6 +394,8 @@ function navigateTo(section, machineId = null, incFilter = null) {
   } else {
     document.getElementById('topbarTitle').textContent = 'Acceso Denegado';
     document.getElementById('topbarSubtitle').textContent = 'Sección restringida por permisos';
+    // No persistir secciones a las que no se tiene acceso
+    localStorage.removeItem('sgi_admin_section');
     return;
   }
 
@@ -1192,10 +1203,34 @@ async function poblarFiltroMaquinasHistorial() {
 }
 
 let filtroTipoHistorial = '';
+let filtroSoloMisReportes = false;
 
 function setFiltroTipo(tipo) {
   filtroTipoHistorial = tipo;
   cargarHistorial();
+}
+
+function toggleMisReportes() {
+  filtroSoloMisReportes = !filtroSoloMisReportes;
+  const btn = document.getElementById('btnMisReportesHist');
+  if (btn) {
+    btn.classList.toggle('active', filtroSoloMisReportes);
+    btn.textContent = filtroSoloMisReportes ? '✖️ Mostrar todos' : '👤 Solo mis reportes';
+  }
+  cargarHistorial();
+}
+
+function getUsuarioActualId() {
+  try {
+    const s = JSON.parse(localStorage.getItem('sgi_admin_session') || '{}');
+    return s.userId || null;
+  } catch { return null; }
+}
+function getUsuarioActualEmail() {
+  try {
+    const s = JSON.parse(localStorage.getItem('sgi_admin_session') || '{}');
+    return (s.email || '').toLowerCase();
+  } catch { return ''; }
 }
 
 async function cargarHistorial() {
@@ -1221,8 +1256,17 @@ async function cargarHistorial() {
     source = res.data;
   }
 
+  // Filtro "solo mis reportes"
+  const miId = filtroSoloMisReportes ? getUsuarioActualId() : null;
+  const miEmail = filtroSoloMisReportes ? getUsuarioActualEmail() : '';
+
   // All filtering client-side
   let base = source.filter(r => {
+    if (filtroSoloMisReportes) {
+      const matchId = miId && r.usuario_id && String(r.usuario_id) === String(miId);
+      const matchEmail = miEmail && (r.operario_email || '').toLowerCase() === miEmail;
+      if (!matchId && !matchEmail) return false;
+    }
     if (filtroTipoHistorial && r.tipo !== filtroTipoHistorial) return false;
     if (salaId && String(r.sala_id) !== String(salaId) && (datosSalas.find(s => s.id == salaId)?.nombre !== r.sala)) return false;
     if (maqId  && String(r.maquina_id) !== String(maqId) && (datosMaquinas.find(m => m.id == maqId)?.nombre !== r.maquina)) return false;
@@ -1802,7 +1846,7 @@ async function apiFetch(url, options = {}) {
       if (searchParams.get('hasta')) query = query.lte('timestamp', searchParams.get('hasta') + 'T23:59:59');
       const { data, error } = await query.order('timestamp', { ascending: false });
       if (error) throw error;
-      return { ok: true, data: (data || []).map(r => ({ id: r.id, maquina: r.maquina_nombre, sala: r.sala_nombre, operario: r.operario_nombre, iniciado_en: r.timestamp, completado_en: r.timestamp, observaciones: r.notas || '', tipo: r.tipo, resuelta: r.resuelta || false, fotos: r.photos || [], tiene_fotos: (r.photos && r.photos.length > 0) })) };
+      return { ok: true, data: (data || []).map(r => ({ id: r.id, maquina: r.maquina_nombre, sala: r.sala_nombre, operario: r.operario_nombre, operario_email: r.operario_email, usuario_id: r.usuario_id, iniciado_en: r.timestamp, completado_en: r.timestamp, observaciones: r.notas || '', tipo: r.tipo, resuelta: r.resuelta || false, en_seguimiento: r.en_seguimiento || false, fotos: r.photos || [], tiene_fotos: (r.photos && r.photos.length > 0) })) };
     }
 
     if (url.includes('/api/sesion/') && method === 'DELETE') {

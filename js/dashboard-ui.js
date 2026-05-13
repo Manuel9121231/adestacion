@@ -267,7 +267,10 @@ const DASHBOARD_HTML = `
               <div class="section-title">📋 Historial</div>
               <div class="section-subtitle">Registro completo de todas las sesiones</div>
             </div>
-            <button class="btn btn-outline btn-sm" onclick="exportarCSV()">⬇️ Exportar CSV</button>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn btn-outline btn-sm" id="btnMisReportesHist" onclick="toggleMisReportes()">👤 Solo mis reportes</button>
+              <button class="btn btn-outline btn-sm" onclick="exportarCSV()">⬇️ Exportar CSV</button>
+            </div>
           </div>
 
           <div class="table-wrap">
