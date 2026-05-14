@@ -1781,7 +1781,11 @@ async function renderUsuarios() {
       const fecha = u.creado_en ? new Date(u.creado_en).toLocaleDateString('es-ES') : '–';
       return `
       <tr>
-        <td data-label="Nombre"><b>${u.nombre || '–'}</b><div style="font-size:11px;color:var(--text-muted)">${u.email}</div></td>
+        <td data-label="Nombre">
+          <b>${u.nombre || '–'}</b>
+          <div style="font-size:11px;color:var(--text-muted)">${u.email}</div>
+          ${esAdmin ? `<button class="btn btn-text btn-sm" style="font-size:11px;padding:2px 0;color:var(--accent)" onclick="editarNombreUsuario('${u.id}','${(u.nombre || '').replace(/'/g, "\\'")}')">Editar nombre</button>` : ''}
+        </td>
         <td data-label="Rol"><span class="estado-badge ${rol.cls}">${rol.label}</span></td>
         <td data-label="Estado"><span class="estado-badge ok">Activo</span></td>
         <td data-label="Registro" style="font-size:11px">${fecha}</td>
@@ -1861,6 +1865,28 @@ async function cambiarRolUsuario(userId, nuevoRol) {
     renderUsuarios();
   } catch (err) {
     showFeedback('Error de permisos', 'No se ha podido cambiar el rol: ' + err.message, '');
+  }
+}
+
+async function editarNombreUsuario(userId, nombreActual) {
+  const nuevoNombre = await customPrompt('Editar nombre', 'Introduce el nuevo nombre del usuario:', nombreActual);
+  if (nuevoNombre === null) return;
+  const nombreLimpio = nuevoNombre.trim();
+  if (!nombreLimpio) {
+    showFeedback('Nombre vacío', 'El nombre no puede estar vacío.', '');
+    return;
+  }
+  if (nombreLimpio === nombreActual) return;
+
+  try {
+    const client = window.supabaseClient;
+    const { error } = await client.from('perfiles').update({ nombre: nombreLimpio }).eq('id', userId);
+    if (error) throw error;
+    showFeedback('Nombre actualizado', 'El nombre del usuario se ha cambiado correctamente.', '');
+    await recargarTodo();
+    renderUsuarios();
+  } catch (err) {
+    showFeedback('Error', 'No se pudo actualizar el nombre: ' + err.message, '');
   }
 }
 
