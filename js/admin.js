@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Si es usuario normal (no admin ni técnico), redirigir al portal
   if (rolActual === 'usuario') {
-    window.location.href = 'seleccion.html';
+    window.location.href = 'estado.html';
     return;
   }
 

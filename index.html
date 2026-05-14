@@ -681,14 +681,6 @@
       </div>
     </a>
 
-    <a href="seleccion.html" class="nav-card" id="navOperario" style="display:none">
-      <span class="icon">⚙️</span>
-      <div class="card-text">
-        <h2>Portal de Máquinas</h2>
-        <p>Reportar mantenimientos o incidencias mediante código QR o selección manual.</p>
-      </div>
-    </a>
-
     <a href="dashboard.html" class="nav-card" id="navAdmin" style="display:none">
       <span class="icon">🔐</span>
       <div class="card-text">
@@ -735,17 +727,14 @@
       document.getElementById('estadoPublicoLink').style.display = 'none';
       document.getElementById('loginPageHeader').style.display = 'none';
       document.getElementById('portalsWrapper').style.display = 'block';
-      const navOperario = document.getElementById('navOperario');
       const navAdmin = document.getElementById('navAdmin');
       const navUsuarios = document.getElementById('navUsuarios');
       if (navUsuarios) navUsuarios.style.display = 'none';
       const navEstado = document.getElementById('navEstado');
-      if (navEstado) navEstado.style.display = 'none';
+      if (navEstado) navEstado.style.display = 'flex';
       if (rol === 'usuario') {
-        if (navOperario) navOperario.style.display = 'flex';
         if (navAdmin) navAdmin.style.display = 'none';
       } else if (rol === 'tecnico') {
-        if (navOperario) navOperario.style.display = 'flex';
         if (navAdmin) navAdmin.style.display = 'flex';
         const badge = document.getElementById('navAdminBadge');
         if (badge) badge.style.display = 'none';
@@ -757,7 +746,6 @@
           if (p)  p.textContent  = 'Consulta máquinas, incidencias e historial.';
         }
       } else if (rol === 'admin') {
-        if (navOperario) navOperario.style.display = 'flex';
         if (navAdmin) navAdmin.style.display = 'flex';
         const badge = document.getElementById('navAdminBadge'); if (badge) badge.style.display = 'none';
       }

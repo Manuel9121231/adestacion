@@ -357,7 +357,7 @@ async function enviarChecklist() {
 }
 
 function reiniciar() {
-  window.location.href = 'seleccion.html';
+  window.location.href = 'estado.html';
 }
 
 async function handlePhotoUploads(base64Photos) {
@@ -839,7 +839,7 @@ async function resolverIncidencia() {
       }
       
       showToast('Incidencia marcada como resuelta', 'success');
-      setTimeout(() => window.location.href = 'seleccion.html', 1500);
+      setTimeout(() => window.location.href = 'estado.html', 1500);
     }
   );
 }

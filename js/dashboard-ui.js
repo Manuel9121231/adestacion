@@ -53,7 +53,7 @@ const DASHBOARD_HTML = `
       <div class="sidebar-footer">
         <div style="margin-bottom:8px">v3.1</div>
         <button class="btn btn-primary btn-sm btn-full" onclick="window.location.href='index.html'" style="margin-bottom:8px;font-size:11px;padding:6px">Volver al Inicio</button>
-        <button class="btn btn-outline btn-sm btn-full" onclick="window.location.href='seleccion.html'" style="margin-bottom:8px;font-size:11px;padding:6px">Portal de Máquinas</button>
+        <button class="btn btn-outline btn-sm btn-full" onclick="window.location.href='estado.html'" style="margin-bottom:8px;font-size:11px;padding:6px">Estado de Máquinas</button>
         <button class="btn btn-outline btn-sm btn-full" onclick="cerrarSesionAdmin()" style="font-size:11px;padding:6px">Cerrar Sesión</button>
       </div>
     </aside>

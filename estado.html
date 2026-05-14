@@ -397,14 +397,7 @@
     const hasSession = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
     document.addEventListener('DOMContentLoaded', () => {
       const ctaBanner = document.getElementById('ctaBanner');
-      const loggedInBanner = document.getElementById('loggedInBanner');
-      if (hasSession) {
-        if (ctaBanner) ctaBanner.style.display = 'none';
-        if (loggedInBanner) loggedInBanner.style.display = 'flex';
-      } else {
-        if (ctaBanner) ctaBanner.style.display = 'block';
-        if (loggedInBanner) loggedInBanner.style.display = 'none';
-      }
+      if (ctaBanner) ctaBanner.style.display = hasSession ? 'none' : 'block';
     });
   })();
 </script>
@@ -448,12 +441,6 @@
   Estás viendo el estado público.
   <a href="index.html" style="color:var(--accent); font-weight:600; text-decoration:none; margin:0 4px">Inicia sesión</a>
   para reportar incidencias o mantenimientos.
-</div>
-
-<!-- Warning banner: only shown when logged in -->
-<div id="loggedInBanner" style="display:none; background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(251,191,36,0.08)); border-bottom:1px solid rgba(245,158,11,0.3); padding:12px 20px; text-align:center; font-size:13px; color:var(--text-muted); display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap">
-  <span>Esta página solo muestra el estado. Para ver detalles de máquinas y gestionar incidencias, usa el portal de selección.</span>
-  <a href="seleccion.html" style="background:var(--accent); color:white; padding:6px 14px; border-radius:6px; font-weight:600; text-decoration:none; font-size:12px; white-space:nowrap">Ir a Selección de Equipo</a>
 </div>
 
 <main id="mainContent">
