@@ -274,16 +274,38 @@ async function renderIncidencias(filtro = 'todas') {
   const empty = document.getElementById('incidenciasEmpty');
   if (!grid) return;
 
-  // Actualizar todos los botones
-  ['todas', 'pendientes', 'resueltas'].forEach(f => {
-    const btn = document.getElementById(`btn-inc-${f}`);
-    if (btn) {
-      btn.classList.toggle('active', f === filtro);
-      btn.style.opacity = (f === 'resueltas' && filtro !== 'resueltas') ? '0.5' : '1';
+  // Actualizar label de filtro activo
+  const filtroLabelEl = document.getElementById('filtro-incidencias-label');
+  if (filtroLabelEl) {
+    const nombresFiltro = { 'todas': 'Todas', 'pendientes': 'Sin resolver', 'seguimiento': 'En seguimiento', 'resueltas': 'Resueltas' };
+    filtroLabelEl.textContent = 'Filtrado por: ' + nombresFiltro[filtro];
+  }
+
+  // Actualizar todos los botones (fondo relleno + texto blanco cuando activo)
+  const botones = [
+    { id: 'btn-inc-todas', color: 'var(--accent)' },
+    { id: 'btn-inc-pendientes', color: 'var(--danger)' },
+    { id: 'btn-inc-seguimiento', color: 'var(--warning)' },
+    { id: 'btn-inc-resueltas', color: 'var(--success)' },
+  ];
+  const filtroMap = { 'todas': 'btn-inc-todas', 'pendientes': 'btn-inc-pendientes', 'seguimiento': 'btn-inc-seguimiento', 'resueltas': 'btn-inc-resueltas' };
+  botones.forEach(({ id, color }) => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    const activo = filtroMap[filtro] === id;
+    btn.classList.toggle('active', activo);
+    if (activo) {
+      btn.style.background = color;
+      btn.style.color = '#fff';
+      btn.style.borderColor = color;
+      btn.style.opacity = '1';
+    } else {
+      btn.style.background = 'transparent';
+      btn.style.borderColor = color;
+      btn.style.color = color;
+      btn.style.opacity = id === 'btn-inc-resueltas' ? '0.85' : '1';
     }
   });
-  const btnSeg = document.getElementById('btn-inc-seguimiento');
-  if (btnSeg) btnSeg.classList.toggle('active', filtro === 'seguimiento');
 
   let lista = datosHistorial.filter(r => r.tipo === 'Incidencia');
 
@@ -295,6 +317,40 @@ async function renderIncidencias(filtro = 'todas') {
   if (document.getElementById('kpi-inc-pendientes')) document.getElementById('kpi-inc-pendientes').textContent = totalPendientes;
   if (document.getElementById('kpi-inc-resueltas'))  document.getElementById('kpi-inc-resueltas').textContent  = totalResueltas;
   if (document.getElementById('kpi-inc-seguimiento')) document.getElementById('kpi-inc-seguimiento').textContent = totalSeguimiento;
+
+  // Mostrar/ocultar tarjetas KPI según filtro activo (transición suave)
+  const cardPendientes = document.getElementById('kpi-inc-pendientes-card');
+  const cardSeguimiento = document.getElementById('kpi-inc-seguimiento-card');
+  const cardResueltas = document.getElementById('kpi-inc-resueltas-card');
+  function mostrarCard(el, mostrar) {
+    if (!el) return;
+    if (mostrar) {
+      el.style.opacity = '1';
+      el.style.transform = 'scale(1)';
+      el.style.pointerEvents = 'auto';
+    } else {
+      el.style.opacity = '0';
+      el.style.transform = 'scale(0.92)';
+      el.style.pointerEvents = 'none';
+    }
+  }
+  if (filtro === 'todas') {
+    mostrarCard(cardPendientes, true);
+    mostrarCard(cardSeguimiento, true);
+    mostrarCard(cardResueltas, true);
+  } else if (filtro === 'pendientes') {
+    mostrarCard(cardPendientes, true);
+    mostrarCard(cardSeguimiento, false);
+    mostrarCard(cardResueltas, false);
+  } else if (filtro === 'seguimiento') {
+    mostrarCard(cardPendientes, false);
+    mostrarCard(cardSeguimiento, true);
+    mostrarCard(cardResueltas, false);
+  } else if (filtro === 'resueltas') {
+    mostrarCard(cardPendientes, false);
+    mostrarCard(cardSeguimiento, false);
+    mostrarCard(cardResueltas, true);
+  }
 
   if (filtro === 'resueltas') {
     lista = lista.filter(r => r.resuelta);

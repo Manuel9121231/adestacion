@@ -266,6 +266,7 @@ a { color: var(--accent); text-decoration: none; }
   border-radius: var(--radius);
   padding: 20px;
   position: relative; overflow: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .kpi-card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-glow); transform: translateY(-2px); }
 .kpi-card::before {

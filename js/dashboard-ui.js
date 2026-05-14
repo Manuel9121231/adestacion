@@ -234,10 +234,11 @@ const DASHBOARD_HTML = `
               <div class="section-subtitle">Gestión de fallos técnicos y reparaciones</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div id="filtro-incidencias-label" style="font-size:12px;color:var(--text-muted);font-weight:500;white-space:nowrap"></div>
               <button class="btn btn-outline btn-sm active" id="btn-inc-todas" onclick="renderIncidencias('todas')">Todas</button>
               <button class="btn btn-outline btn-sm" id="btn-inc-pendientes" onclick="renderIncidencias('pendientes')" style="border-color:var(--danger);color:var(--danger)">Sin resolver</button>
               <button class="btn btn-outline btn-sm" id="btn-inc-seguimiento" onclick="toggleSeguimiento()" style="border-color:var(--warning);color:var(--warning)">En seguimiento</button>
-              <button class="btn btn-outline btn-sm" id="btn-inc-resueltas" onclick="renderIncidencias('resueltas')" style="border-color:var(--success);color:var(--success)" title="Ver incidencias resueltas">Ver Resueltas</button>
+              <button class="btn btn-outline btn-sm" id="btn-inc-resueltas" onclick="renderIncidencias('resueltas')" style="border-color:var(--success);color:var(--success)" title="Ver incidencias resueltas">Resueltas</button>
               <div style="width:1px;height:24px;background:var(--border);margin:0 2px"></div>
               <select id="select-inc-orden" onchange="cambiarOrdenInc(this.value)" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary);cursor:pointer">
                 <option value="fecha-desc">Fecha (reciente)</option>
