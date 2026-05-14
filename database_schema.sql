@@ -25,8 +25,6 @@ CREATE TABLE IF NOT EXISTS equipos (
     modelo TEXT,
     sala_id INTEGER,
     estado TEXT DEFAULT 'activa', -- 'activa', 'inactiva'
-    frecuencia_dias INTEGER DEFAULT 7,
-    ultimo_mantenimiento DATETIME,
     notas TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -76,7 +74,7 @@ CREATE INDEX IF NOT EXISTS idx_perfiles_email ON perfiles(email);
 
 -- =============================================================================
 -- 5. TABLA: registros
--- Descripción: Historial de mantenimientos e incidencias reportadas
+-- Descripción: Historial de incidencias reportadas
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS registros (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,7 +87,7 @@ CREATE TABLE IF NOT EXISTS registros (
     operario_nombre TEXT NOT NULL, -- Nombre del operario que realizó el trabajo
     operario_email TEXT, -- Email para trazabilidad
     
-    tipo TEXT NOT NULL, -- 'Mantenimiento', 'Incidencia'
+    tipo TEXT NOT NULL, -- 'Incidencia'
     notas TEXT,
     photos TEXT, -- JSON array de URLs de fotos
     
@@ -150,13 +148,7 @@ CREATE INDEX IF NOT EXISTS idx_seguimientos_incidencia ON seguimientos(incidenci
 CREATE VIEW IF NOT EXISTS v_equipos_completo AS
 SELECT 
     e.*,
-    s.nombre as sala_nombre,
-    CASE 
-        WHEN e.ultimo_mantenimiento IS NULL THEN 'pendiente'
-        WHEN (julianday('now') - julianday(e.ultimo_mantenimiento)) > e.frecuencia_dias THEN 'vencido'
-        WHEN (julianday('now') - julianday(e.ultimo_mantenimiento)) > (e.frecuencia_dias * 0.8) THEN 'proximo'
-        ELSE 'ok'
-    END as estado_mantenimiento
+    s.nombre as sala_nombre
 FROM equipos e
 LEFT JOIN salas s ON e.sala_id = s.id;
 
@@ -165,11 +157,6 @@ CREATE VIEW IF NOT EXISTS v_incidencias_pendientes AS
 SELECT * FROM registros 
 WHERE tipo = 'Incidencia' AND resuelta = 0;
 
--- Vista de mantenimientos del día
-CREATE VIEW IF NOT EXISTS v_mantenimientos_hoy AS
-SELECT * FROM registros 
-WHERE tipo = 'Mantenimiento' 
-AND date(timestamp) = date('now');
 
 -- =============================================================================
 -- DATOS INICIALES (Opcional - descomentar si se necesitan)

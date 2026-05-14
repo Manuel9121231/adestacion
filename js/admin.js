@@ -223,16 +223,6 @@ async function cargarDatosBase() {
 
   // El filtro de operario ahora es un input de texto, no necesita población inicial
 
-  // Actualizar badge alertas
-  const alertas = datosMaquinas.filter(m =>
-    m.estado_mantenimiento === 'vencido' || m.estado_mantenimiento === 'pendiente'
-  ).length;
-  const badge = document.getElementById('badge-alertas');
-  if (badge) {
-    if (alertas > 0) { badge.textContent = alertas; badge.style.display = 'inline'; }
-    else badge.style.display = 'none';
-  }
-
   // Badge máquinas total
   const maqBadge = document.getElementById('badge-maquinas');
   if (maqBadge) {
@@ -334,9 +324,6 @@ async function renderIncidencias(filtro = 'todas') {
     lista.sort((a, b) => new Date(b.completado_en) - new Date(a.completado_en));
   } else if (ordenIncActual === 'fecha-asc') {
     lista.sort((a, b) => new Date(a.completado_en) - new Date(b.completado_en));
-  } else if (ordenIncActual === 'tipo') {
-    const prioridad = r => r.resuelta ? 2 : (r.en_seguimiento ? 1 : 0);
-    lista.sort((a, b) => prioridad(a) - prioridad(b));
   } else if (ordenIncActual === 'maquina') {
     lista.sort((a, b) => (a.maquina || '').localeCompare(b.maquina || ''));
   }
@@ -395,7 +382,7 @@ const sectionTitles = {
   dashboard: ['Panel General', 'Resumen del sistema'],
   maquinas: ['Máquinas', 'Estado y gestión de todas las máquinas'],
   incidencias: ['Centro de Incidencias', 'Gestión de fallos técnicos y reparaciones'],
-  historial: ['Historial', 'Registro completo de mantenimientos e incidencias'],
+  historial: ['Historial', 'Registro completo de incidencias'],
   qrcodes: ['Códigos QR', 'QR individuales para el operario móvil'],
   usuarios: ['Usuarios del Sistema', 'Gestión de accesos y privilegios de usuario']
 };
@@ -485,11 +472,6 @@ function actualizarVistaDashboard(stats, historial) {
   if (kpiHoy) kpiHoy.textContent = d.hoy;
   const kpiSem = document.getElementById('kpi-semana');
   if (kpiSem) kpiSem.textContent = d.semana;
-  const kpiPen = document.getElementById('kpi-pendientes');
-  if (kpiPen) kpiPen.textContent = d.pendientes;
-  const kpiProx = document.getElementById('kpi-proximos');
-  if (kpiProx) kpiProx.textContent = d.proximos;
-
   // KPI Sin resolver y En seguimiento
   const sinResolver = (historial || []).filter(r => r.tipo === 'Incidencia' && !r.resuelta && !r.en_seguimiento).length;
   const enSeguimiento = (historial || []).filter(r => r.tipo === 'Incidencia' && !r.resuelta && r.en_seguimiento).length;
@@ -521,7 +503,7 @@ function actualizarVistaDashboard(stats, historial) {
   renderIncPendientesDashboard(incPendientes.slice(0, 5));
 
   // Últimos reportes
-  if (historial) renderUltimosMantenimientos(historial.slice(0, 8));
+  if (historial) renderUltimosRegistros(historial.slice(0, 8));
 }
 
 function renderIncPendientesDashboard(lista) {
@@ -563,18 +545,15 @@ function renderBarChart(containerId, items) {
   `).join('');
 }
 
-function renderUltimosMantenimientos(registros) {
+function renderUltimosRegistros(registros) {
   const tbody = document.getElementById('dashboardUltimos');
   if (!registros.length) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">Sin reportes aún</td></tr>';
     return;
   }
   tbody.innerHTML = registros.map(r => {
-    const isIncidencia = r.tipo === 'Incidencia';
     const resuelta = r.resuelta || false;
-    const tipoBadge = isIncidencia
-      ? `<span class="estado-badge ${resuelta ? 'ok' : 'vencido'}" style="font-size:10px">Incidencia</span>`
-      : `<span class="estado-badge ok" style="font-size:10px;background:rgba(79,142,247,0.15);color:var(--accent)">Mantenimiento</span>`;
+    const tipoBadge = `<span class="estado-badge ${resuelta ? 'ok' : 'vencido'}" style="font-size:10px">Incidencia</span>`;
 
     const maq = datosMaquinas.find(m => m.id === r.maquina_id);
     const maquinaEstado = maq ? maq.estado : 'activa';
@@ -584,7 +563,7 @@ function renderUltimosMantenimientos(registros) {
       <tr onclick="verDetalleSesion('${r.id}')" style="cursor:pointer">
         <td data-label="Máquina">
           <div style="display:flex;flex-direction:column;gap:2px">
-            <span style="${isIncidencia && !resuelta ? 'color:var(--danger);font-weight:600' : ''}">${r.maquina}</span>
+            <span style="${!resuelta ? 'color:var(--danger);font-weight:600' : ''}">${r.maquina}</span>
             <span class="estado-badge ${maqStatusClass}" style="font-size:8px;padding:0 4px;width:fit-content">${maquinaEstado || 'activa'}</span>
           </div>
         </td>
@@ -594,8 +573,8 @@ function renderUltimosMantenimientos(registros) {
         <td data-label="Fecha y hora">${formatFechaHora(r.completado_en)}</td>
         <td data-label="Estado">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-            <span class="estado-badge ${isIncidencia ? (resuelta ? 'ok' : 'vencido') : 'ok'}" style="font-size:10px">
-              ${isIncidencia ? (resuelta ? 'Resuelta' : 'Sin resolver') : 'Completado'}
+            <span class="estado-badge ${resuelta ? 'ok' : 'vencido'}" style="font-size:10px">
+              ${resuelta ? 'Resuelta' : 'Sin resolver'}
             </span>
             ${r.tiene_fotos ? `<img src="${r.fotos[0]}" style="width:24px;height:24px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : ''}
           </div>
@@ -655,10 +634,6 @@ function renderMaquinas() {
   }
 
   function tarjetaMaquina(m) {
-    const ultimo = m.ultimo_mantenimiento
-      ? `Último: ${formatFechaHora(m.ultimo_mantenimiento)}`
-      : 'Sin mantenimiento registrado';
-
     const selectedId = localStorage.getItem('sgi_selected_machine');
     const isSelected = selectedId === String(m.id);
     const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : '';
@@ -1131,7 +1106,7 @@ async function eliminarMaquina(id) {
   }
   const ok = await customConfirm(
     'Eliminar máquina',
-    '¿Estás seguro? Se eliminarán también todos sus registros de mantenimiento. Esta acción no se puede deshacer.',
+    '¿Estás seguro? Se eliminarán también todos sus registros. Esta acción no se puede deshacer.',
     ''
   );
   if (!ok) return;
@@ -1296,13 +1271,7 @@ async function poblarFiltroMaquinasHistorial() {
   });
 }
 
-let filtroTipoHistorial = '';
 let filtroSoloMisReportes = false;
-
-function setFiltroTipo(tipo) {
-  filtroTipoHistorial = tipo;
-  cargarHistorial();
-}
 
 function toggleMisReportes() {
   filtroSoloMisReportes = !filtroSoloMisReportes;
@@ -1361,7 +1330,6 @@ async function cargarHistorial() {
       const matchEmail = miEmail && (r.operario_email || '').toLowerCase() === miEmail;
       if (!matchId && !matchEmail) return false;
     }
-    if (filtroTipoHistorial && r.tipo !== filtroTipoHistorial) return false;
     if (salaId && String(r.sala_id) !== String(salaId) && (datosSalas.find(s => s.id == salaId)?.nombre !== r.sala)) return false;
     if (maqId  && String(r.maquina_id) !== String(maqId) && (datosMaquinas.find(m => m.id == maqId)?.nombre !== r.maquina)) return false;
     if (desde) {
@@ -1483,11 +1451,11 @@ async function verDetalleSesion(id) {
   const resuelta = sesion.resuelta || false;
 
   // Cambiar título del modal dinámicamente
-  if (titleEl) titleEl.textContent = isInc ? 'Detalles de la Incidencia' : 'Detalles del Mantenimiento';
+  if (titleEl) titleEl.textContent = 'Detalles de la Incidencia';
 
   container.innerHTML = `
     <div class="detail-container">
-      <div class="detail-header-info" style="${isInc ? 'border-bottom: 2px solid var(--danger)' : ''}; margin-bottom: 20px;">
+      <div class="detail-header-info" style="border-bottom: 2px solid var(--danger); margin-bottom: 20px;">
         <div class="detail-machine">
           <div>
             <div class="machine-name">${sesion.maquina}</div>
@@ -1495,8 +1463,8 @@ async function verDetalleSesion(id) {
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <div class="estado-badge ${isInc ? 'vencido' : 'ok'}">${isInc ? 'Incidencia' : 'Mantenimiento'}</div>
-          ${isInc ? `<div class="estado-badge ${resuelta ? 'ok' : 'vencido'}">${resuelta ? 'Resuelta' : 'Sin resolver'}</div>` : ''}
+          <div class="estado-badge vencido">Incidencia</div>
+          <div class="estado-badge ${resuelta ? 'ok' : 'vencido'}">${resuelta ? 'Resuelta' : 'Sin resolver'}</div>
           ${rolActual === 'admin' ? `<button class="btn btn-icon" style="background:transparent;border:none;color:var(--danger);padding:4px;font-size:16px;cursor:pointer;" onclick="eliminarIncidencia('${sesion.id}')" title="Eliminar registro">Eliminar</button>` : ''}
         </div>
       </div>
@@ -1969,15 +1937,10 @@ async function apiFetch(url, options = {}) {
       if (registros.error) throw registros.error;
 
       const regs = registros.data || [];
-      const formattedMaquinas = (equipos.data || []).map(m => {
-        const frec = m.frecuencia_dias || 7;
-        let estadoMant = 'pendiente';
-        if (m.ultimo_mantenimiento) {
-          const dif = (new Date() - new Date(m.ultimo_mantenimiento)) / (1000 * 60 * 60 * 24);
-          if (dif > frec) estadoMant = 'vencido'; else if (dif > frec * 0.8) estadoMant = 'proximo'; else estadoMant = 'ok';
-        }
-        return { ...m, sala_nombre: m.salas ? m.salas.nombre : 'Sin sala', estado_mantenimiento: estadoMant };
-      });
+      const formattedMaquinas = (equipos.data || []).map(m => ({
+        ...m,
+        sala_nombre: m.salas ? m.salas.nombre : 'Sin sala'
+      }));
 
       const porDiaMap = {}; const porMaquinaMap = {};
       regs.forEach(r => {
@@ -2014,8 +1977,6 @@ async function apiFetch(url, options = {}) {
           dashboard: {
             hoy: regs.filter(r => r.timestamp && r.timestamp.startsWith(new Date().toISOString().split('T')[0])).length,
             semana: regs.filter(r => r.timestamp && new Date(r.timestamp) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length,
-            pendientes: formattedMaquinas.filter(m => m.estado_mantenimiento === 'vencido' || m.estado_mantenimiento === 'pendiente').length,
-            proximos: formattedMaquinas.filter(m => m.estado_mantenimiento === 'proximo').length,
             porDia: Object.entries(porDiaMap).map(([dia, total]) => ({ dia, total })).sort((a, b) => a.dia.localeCompare(b.dia)),
             porMaquina: Object.entries(porMaquinaMap).map(([nombre, total_sesiones]) => ({ nombre, total_sesiones })).sort((a, b) => b.total_sesiones - a.total_sesiones)
           }
@@ -2438,7 +2399,7 @@ function iniciarTour() {
         element: '#nav-historial',
         popover: {
           title: 'Historial',
-          description: 'Accede a todos los registros de mantenimiento e incidencias pasadas.'
+          description: 'Accede a todos los registros de incidencias pasadas.'
         },
         onHighlightStarted: () => navigateTo('historial')
       }

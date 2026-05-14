@@ -224,7 +224,6 @@ const DASHBOARD_HTML = `
               <select id="select-inc-orden" onchange="cambiarOrdenInc(this.value)" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary);cursor:pointer">
                 <option value="fecha-desc">Fecha (reciente)</option>
                 <option value="fecha-asc">Fecha (antigua)</option>
-                <option value="tipo">Por tipo</option>
                 <option value="maquina">Por máquina</option>
               </select>
             </div>
@@ -275,13 +274,6 @@ const DASHBOARD_HTML = `
 
           <div class="table-wrap">
             <div class="filtros-bar">
-              <div class="filtro-item">
-                <select class="form-control" id="filtroTipoHistorial" onchange="setFiltroTipo(this.value)">
-                  <option value="">Todos los tipos</option>
-                  <option value="Mantenimiento">Mantenimiento</option>
-                  <option value="Incidencia">Incidencia</option>
-                </select>
-              </div>
               <div class="filtro-item">
                 <select class="form-control" id="filtroSala" onchange="cargarHistorial()">
                   <option value="">Todas las salas</option>
@@ -418,7 +410,7 @@ const DASHBOARD_HTML = `
                 1. Imprime o muestra en pantalla el QR de cada máquina.<br>
                 2. El operario escanea el QR con la cámara del móvil.<br>
                 3. La impresora queda <strong>pre-seleccionada automáticamente</strong>.<br>
-                4. El operario elige el tipo (Incidencia / Mantenimiento), describe el problema y puede añadir fotos.<br>
+                4. El operario describe la incidencia y puede añadir fotos.<br>
                 5. El registro queda guardado en la base de datos del sistema.
               </div>
             </div>

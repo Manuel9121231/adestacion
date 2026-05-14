@@ -415,7 +415,7 @@
       const c = window.supabaseClient;
 
       const [mRes, iRes] = await Promise.all([
-        c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
+        c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,salas(nombre)').order('nombre'),
         c.from('registros').select('maquina_id').eq('tipo','Incidencia').eq('resuelta',false)
       ]);
       if (mRes.error) throw mRes.error;
@@ -595,7 +595,7 @@
   function rowHTML(m, isErr, nameFs, codeFs, typeFs) {
     const cls   = isErr ? 'err' : 'ok';
     const badge = isErr ? `<span class="row-badge badge-err">${esc(m.motivo)}</span>` : '';
-    // Bloque de información central: notas + mantenimiento
+    // Bloque de información central: notas
     let infoHTML = '';
     if (m.notas) {
       infoHTML += `<span class="row-nota" style="font-size:${Math.round(nameFs*.6)}px">${esc(m.notas)}</span>`;

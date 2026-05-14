@@ -440,7 +440,7 @@
 <div id="ctaBanner" style="display:none; background:linear-gradient(135deg,rgba(79,142,247,0.12),rgba(124,58,237,0.08)); border-bottom:1px solid rgba(79,142,247,0.2); padding:10px 20px; text-align:center; font-size:13px; color:var(--text-muted)">
   Estás viendo el estado público.
   <a href="index.html" style="color:var(--accent); font-weight:600; text-decoration:none; margin:0 4px">Inicia sesión</a>
-  para reportar incidencias o mantenimientos.
+  para reportar incidencias.
 </div>
 
 <main id="mainContent">
@@ -491,7 +491,7 @@
 
       // 1. Cargar máquinas y obtener IDs de incidencias abiertas con en_seguimiento
       const [mRes, iRes] = await Promise.all([
-        c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,ultimo_mantenimiento,frecuencia_dias,salas(nombre)').order('nombre'),
+        c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,salas(nombre)').order('nombre'),
         c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta',false)
       ]);
 

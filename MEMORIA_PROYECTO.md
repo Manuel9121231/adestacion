@@ -12,7 +12,7 @@ Este archivo es de **LECTURA OBLIGATORIA** para la IA al inicio de cada sesión.
 3. **DISEÑO**: Mantener la estética premium (oscura, minimalista) sin recargar con datos innecesarios.
 
 ## 🧠 Arquitectura
-1. **SEPARACIÓN TOTAL**: Mantener Mantenimientos e Incidencias como flujos de trabajo e interfaces completamente diferentes.
+1. **SOLO INCIDENCIAS**: El sistema gestiona únicamente incidencias. No existe flujo de mantenimiento preventivo.
 2. **TRAZABILIDAD**: Todo registro debe estar vinculado a un Email de operario/técnico.
 
 ---

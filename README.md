@@ -32,8 +32,6 @@ erDiagram
         uuid sala_id FK
         string tipo
         string modelo
-        int frecuencia_dias
-        datetime ultimo_mantenimiento
         string estado "activa / inactiva"
     }
 
@@ -41,7 +39,7 @@ erDiagram
         uuid id PK
         uuid maquina_id FK
         string operario_email FK "Trazabilidad"
-        string tipo "Mantenimiento / Incidencia"
+        string tipo "Incidencia"
         text notas
         boolean resuelta
         boolean en_seguimiento
@@ -61,13 +59,13 @@ erDiagram
 
 - **USUARIOS** (`id` PK, `email` UK, `nombre`, `pin`, `rol`, `activo`)
 - **SALAS** (`id` PK, `nombre`)
-- **EQUIPOS** (`id` PK, `codigo` UK, `nombre`, `sala_id` FK -> SALAS.id, `tipo`, `modelo`, `frecuencia_dias`, `ultimo_mantenimiento`, `estado`)
+- **EQUIPOS** (`id` PK, `codigo` UK, `nombre`, `sala_id` FK -> SALAS.id, `tipo`, `modelo`, `estado`)
 - **REGISTROS** (`id` PK, `maquina_id` FK -> EQUIPOS.id, `operario_email` FK -> USUARIOS.email, `tipo`, `notas`, `resuelta`, `en_seguimiento`, `timestamp`)
 - **SEGUIMIENTOS** (`id` PK, `incidencia_id` FK -> REGISTROS.id, `usuario_nombre`, `nota`, `timestamp`)
 
 ## Arquitectura de Interfaces
 1. **Panel de Administración (`/dashboard.html`)**: Gestión técnica avanzada, tickets de incidencia y configuración.
-2. **Interfaz de Operario (`/operario.html`)**: Acceso vía QR para reporte de mantenimiento e incidencias.
+2. **Interfaz de Operario (`/operario.html`)**: Acceso vía QR para reporte de incidencias.
 3. **Consulta Pública (`/estado.html`)**: Semáforo visual de disponibilidad para usuarios finales.
 
 ---

@@ -6,7 +6,7 @@ let maquinaData = null;
 let operarioData = null;
 let sesionId = null;
 let pinBuffer = '';
-let modoActual = 'Mantenimiento'; // 'Mantenimiento' o 'Incidencia'
+let modoActual = 'Incidencia';
 let selectedPhotos = [];
 let incidenciaAbiertaId = null; // ID de incidencia abierta para seguimiento
 
@@ -83,29 +83,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const banner = document.getElementById('statusBanner');
     const icon = document.getElementById('statusIcon');
     const text = document.getElementById('statusText');
-    const maintCard = document.querySelector('.portal-card.maintenance');
     const incCard = document.querySelector('.portal-card.incident');
-    
-    console.log('🎴 Tarjeta incidencia encontrada:', incCard);
 
     if (openInc && openInc.length > 0) {
       incidenciaAbiertaId = openInc[0].id;
-      console.log('✅ Incidencia abierta detectada, ID:', incidenciaAbiertaId);
-      console.log('📋 Datos incidencia:', openInc[0]);
       banner.className = 'status-banner status-repair';
       icon.textContent = '🔴';
       text.textContent = 'Máquina en Reparación / Parada';
-      // Bloqueamos visualmente el mantenimiento preventivo
-      if (maintCard) {
-        maintCard.style.opacity = '0.4';
-        maintCard.style.pointerEvents = 'none';
-        maintCard.innerHTML += '<div style="font-size:10px; color:var(--accent-inc); margin-top:5px; font-weight:700;">⚠️ BLOQUEADO POR INCIDENCIA</div>';
-      }
-      // Cambiamos el botón de incidencia para mostrar seguimiento
       if (incCard) {
-        incCard.removeAttribute('onclick'); // Eliminar el onclick inline original
+        incCard.removeAttribute('onclick');
         incCard.onclick = function(e) {
-          console.log('🖱️ Click en tarjeta incidencia - yendo a seguimiento');
           e.preventDefault();
           e.stopPropagation();
           showScreen('incidencia-seguimiento');
@@ -113,17 +100,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         const titleEl = incCard.querySelector('.portal-card-title');
         const subEl = incCard.querySelector('.portal-card-sub');
-        if (titleEl) {
-          titleEl.textContent = 'Ver/Actualizar incidencia';
-          console.log('📝 Título cambiado');
-        }
-        if (subEl) {
-          subEl.textContent = 'Hay una incidencia abierta - añade notas o resuélvela';
-          console.log('📝 Subtítulo cambiado');
-        }
-        console.log('✅ Botón de incidencia configurado para seguimiento');
-      } else {
-        console.error('❌ No se encontró la tarjeta de incidencia');
+        if (titleEl) titleEl.textContent = 'Ver/Actualizar incidencia';
+        if (subEl) subEl.textContent = 'Hay una incidencia abierta - añade notas o resuélvela';
       }
     } else {
       incidenciaAbiertaId = null;
@@ -162,25 +140,14 @@ function showError(msg) {
 }
 
 function seleccionarModo(modo) {
-  modoActual = modo === 'incidencia' ? 'Incidencia' : 'Mantenimiento';
-
-  // En ambos casos, ahora vamos directo al formulario de reporte
+  modoActual = 'Incidencia';
   iniciarSesion();
 }
 
 function setOpTipo(tipo) {
-  modoActual = tipo;
-  const mCard = document.getElementById('op-tipo-maint');
+  modoActual = 'Incidencia';
   const iCard = document.getElementById('op-tipo-inc');
-
-  if (tipo === 'Mantenimiento') {
-    mCard.classList.add('active');
-    iCard.classList.remove('active-inc');
-  } else {
-    mCard.classList.remove('active');
-    iCard.classList.add('active-inc');
-  }
-  console.log('Tipo de reporte cambiado a:', modoActual);
+  if (iCard) iCard.classList.add('active-inc');
 }
 
 // ── Reporte ───────────────────────────────────────────────────────────────────
@@ -196,9 +163,6 @@ async function iniciarSesion() {
     // Actualizar nombres en la UI de checklist
     document.getElementById('checkMaquinaNombre').textContent = maquinaData.nombre;
     document.getElementById('checkSalaNombre').textContent = maquinaData.sala_nombre;
-
-    // Si veníamos de modo incidencia desde el portal, lo marcamos en el selector del formulario
-    setOpTipo(modoActual);
 
     document.getElementById('reporteTextarea').value = '';
     document.getElementById('reporteError').style.display = 'none';
@@ -459,16 +423,9 @@ async function apiFetch(url, options = {}) {
 
       if (rError) throw rError;
 
-      // 3. Update machine state if it's an incident
-      if (modoActual === 'Incidencia') {
-        await client.from('equipos')
-          .update({ estado: 'Inactiva' })
-          .eq('id', maquinaId);
-      }
-
-      // 4. Update last maintenance date on the machine
+      // 3. Update machine state to inactive for incident
       await client.from('equipos')
-        .update({ ultimo_mantenimiento: new Date().toISOString() })
+        .update({ estado: 'inactiva' })
         .eq('id', maquinaId);
 
       return { ok: true, data: registro };

@@ -1,7 +1,7 @@
 {
   "name": "sistema-gestion-impresoras",
   "version": "1.0.0",
-  "description": "Sistema de gestión de mantenimiento preventivo para impresoras y máquinas 3D",
+  "description": "Sistema de gestión de incidencias para impresoras y máquinas 3D",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

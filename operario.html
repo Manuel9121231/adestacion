@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Mantenimiento – Gestión Impresoras</title>
+  <title>Reportar Incidencia – Gestión Impresoras</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
-  <meta name="description" content="Checklist de mantenimiento preventivo">
+  <meta name="description" content="Reporte de incidencias de equipos">
   <meta name="theme-color" content="#0f0f1a">
   <style>
     :root {
@@ -249,7 +249,6 @@
       opacity: 0.5;
     }
     .portal-card.incident { border-bottom: 4px solid var(--accent-inc); }
-    .portal-card.maintenance { border-bottom: 4px solid var(--accent-maint); }
     
     .btn-photo {
       width: 100%;
@@ -394,12 +393,6 @@
           <div class="portal-card-title">Crear una incidencia</div>
           <div class="portal-card-sub">Algo no funciona bien o está roto</div>
         </div>
-
-        <div class="portal-card maintenance" onclick="seleccionarModo('mantenimiento')" style="background: rgba(79, 142, 247, 0.1); border: 1px solid var(--accent-maint);">
-          <div class="portal-card-icon">🔧</div>
-          <div class="portal-card-title">Mantenimiento Técnico</div>
-          <div class="portal-card-sub">Revisión periódica u operario identificado</div>
-        </div>
       </div>
     </div>
   </div>
@@ -411,7 +404,7 @@
       <div style="flex:1; display:flex; align-items:center; gap:12px">
         <div style="font-size:22px">📋</div>
         <div>
-          <div style="font-size:20px; font-weight:800; margin:0" id="checkMaquinaNombre">Mantenimiento</div>
+          <div style="font-size:20px; font-weight:800; margin:0" id="checkMaquinaNombre">Incidencia</div>
           <div style="font-size:13px; opacity:0.6; margin:0" id="checkSalaNombre">–</div>
         </div>
       </div>
@@ -442,29 +435,7 @@
         </div>
       </div>
 
-      <!-- Panel 2: Tipo de Reporte -->
-      <div class="form-panel" style="
-        background: var(--card-bg); 
-        border: 1px solid var(--border); 
-        border-radius: 16px; 
-        padding: 20px;
-        position: relative;
-        z-index: 1;
-      ">
-        <div class="reporte-label" style="margin-bottom: 12px;">⚡ TIPO DE REPORTE</div>
-        <div style="display:flex; gap:12px;">
-          <div id="op-tipo-inc" class="tipo-op-card" onclick="setOpTipo('Incidencia')">
-            <span style="font-size:18px">⚡</span>
-            <span style="font-size:11px; font-weight:700">Incidencia</span>
-          </div>
-          <div id="op-tipo-maint" class="tipo-op-card active" onclick="setOpTipo('Mantenimiento')">
-            <span style="font-size:18px">🔧</span>
-            <span style="font-size:11px; font-weight:700">Mantenimiento</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Panel 3: Reporte Detallado -->
+      <!-- Panel 2: Reporte Detallado -->
       <div class="form-panel" style="
         background: var(--card-bg); 
         border: 1px solid var(--border); 

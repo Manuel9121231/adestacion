@@ -1,7 +1,7 @@
 {
   "name": "Estación",
   "short_name": "Estación",
-  "description": "Gestión técnica, mantenimiento y estado de equipos en tiempo real.",
+  "description": "Gestión técnica y estado de equipos en tiempo real.",
   "start_url": "/index.html",
   "display": "standalone",
   "orientation": "portrait",
