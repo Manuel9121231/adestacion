@@ -621,11 +621,13 @@ async function guardarNotaSeguimiento() {
   
   // Obtener usuario actual
   let usuarioNombre = 'Técnico';
+  let usuarioRol = 'tecnico';
   const sessionStr = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
   if (sessionStr) {
     try {
       const session = JSON.parse(sessionStr);
       usuarioNombre = session.nombre || session.username || 'Técnico';
+      usuarioRol = session.type || session.rol || 'tecnico';
     } catch(e) {}
   }
   
@@ -641,7 +643,7 @@ async function guardarNotaSeguimiento() {
     .insert({
       incidencia_id: incidenciaAbiertaId,
       nota: nota,
-      usuario_nombre: usuarioNombre,
+      usuario_nombre: `${usuarioNombre} (${usuarioRol})`,
       timestamp: new Date().toISOString()
     });
     

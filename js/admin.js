@@ -71,6 +71,23 @@ function getEmailAdmin() {
   } catch { return ''; }
 }
 
+// ── Obtener nombre y rol del usuario actual (admin o usuario normal) ──
+function getUsuarioActualInfo() {
+  try {
+    const adminSession = JSON.parse(localStorage.getItem('sgi_admin_session') || 'null');
+    if (adminSession) {
+      const nombre = adminSession.nombre || adminSession.username || 'Administrador';
+      const rol = adminSession.type === 'superadmin' ? 'superadmin' : (adminSession.type || 'admin');
+      return { nombre, rol };
+    }
+    const userSession = JSON.parse(localStorage.getItem('sgi_user_session') || 'null');
+    if (userSession) {
+      return { nombre: userSession.nombre || 'Usuario', rol: userSession.rol || 'usuario' };
+    }
+  } catch {}
+  return { nombre: 'Usuario', rol: 'usuario' };
+}
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   const adminSessionStr = localStorage.getItem('sgi_admin_session');
@@ -440,9 +457,6 @@ async function renderIncidencias(filtro = 'todas') {
         </div>
         <div class="ticket-footer">
           <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); verDetalleSesion('${r.id}')">Gestionar</button>
-          ${!resuelta ? `
-            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); toggleResolucionIncidencia('${r.id}', true)">Cerrar Ticket</button>
-          ` : ''}
         </div>
       </div>
     `;
@@ -1517,17 +1531,13 @@ async function verDetalleSesion(id) {
           
           <div class="detail-section" style="margin-bottom: 16px;">
             <div class="section-label">${isInc ? 'Informe de Fallo' : 'Observaciones'}</div>
-            <div class="detail-notes" style="font-size:13px; ${isInc ? 'background:rgba(239, 68, 68, 0.05); border-left:4px solid var(--danger)' : ''}">
-              ${sesion.observaciones || 'Sin notas'}
-            </div>
+            <div class="detail-notes" style="font-size:13px; ${isInc ? 'background:rgba(239, 68, 68, 0.05); border-left:4px solid var(--danger)' : ''}">${sesion.observaciones || 'Sin notas'}</div>
           </div>
 
           ${sesion.comentario_resolucion ? `
             <div class="detail-section" style="margin-bottom: 16px;">
               <div class="section-label">Solución / Resolución</div>
-              <div class="detail-notes" style="font-size:13px; background:rgba(16, 185, 129, 0.05); border-left:4px solid var(--success); color:var(--success); font-weight:600">
-                ${sesion.comentario_resolucion}
-              </div>
+              <div class="detail-notes" style="font-size:13px; background:rgba(16, 185, 129, 0.05); border-left:4px solid var(--success); color:var(--success); font-weight:600">${sesion.comentario_resolucion}</div>
             </div>
           ` : ''}
 
@@ -1581,12 +1591,17 @@ async function verDetalleSesion(id) {
         timeline.innerHTML = notas.map((n, index) => {
           const fechaCreado = formatFechaHora(n.timestamp);
           const esPrimera = index === notas.length - 1; // La más reciente
+          // Parsear formato "Nombre (Rol)" si existe
+          const match = (n.usuario_nombre || '').match(/^(.+?)\s*\(([^)]+)\)$/);
+          const nombreAutor = match ? match[1].trim() : (n.usuario_nombre || 'Técnico');
+          const rolAutor = match ? match[2].trim() : '';
           
           return `
           <div class="timeline-item" id="seg-item-${n.id}">
             <div class="timeline-meta" style="display:flex;justify-content:space-between;align-items:center">
-              <div>
-                <b>${n.usuario_nombre || 'Técnico'}</b>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <b>${nombreAutor}</b>
+                ${rolAutor ? `<span style="font-size:11px;color:var(--text-muted)">(${rolAutor})</span>` : ''}
                 <span style="font-size:11px;color:var(--text-muted)">${fechaCreado}</span>
               </div>
               ${esPrimera ? `<button onclick="iniciarEdicionSeguimiento('${n.id}', '${encodeURIComponent(n.nota)}')" style="background:transparent;border:none;color:var(--accent);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px" title="Editar nota">Editar</button>` : ''}
@@ -2087,12 +2102,13 @@ async function apiFetch(url, options = {}) {
       }
 
       if (method === 'POST') {
+        const usuario = getUsuarioActualInfo();
         const { data, error } = await client
           .from('seguimientos')
           .insert({
             incidencia_id: id,
             nota: payload.nota,
-            usuario_nombre: 'Administrador',
+            usuario_nombre: `${usuario.nombre} (${usuario.rol})`,
             timestamp: new Date().toISOString()
           })
           .select()
