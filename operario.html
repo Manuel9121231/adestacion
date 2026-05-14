@@ -335,8 +335,8 @@
         <div class="user-role" id="userRole">Sin sesión</div>
       </div>
       <div class="user-actions">
-        <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">🌙</button>
-        <button class="user-btn" id="btnChangeAccount" onclick="window.location.href='estado.html'" style="display:none">🔄 Máquina</button>
+        <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">Tema oscuro</button>
+        <button class="user-btn" id="btnChangeAccount" onclick="window.location.href='estado.html'" style="display:none">Máquina</button>
         <button class="user-btn logout" id="btnLogout" onclick="cerrarSesion()" style="display:none">Salir</button>
       </div>
     </div>
@@ -353,13 +353,13 @@
   <!-- ════ PANTALLA: ERROR ════ -->
   <div class="screen" id="screen-error">
     <div class="error-screen" style="padding: 40px 20px; text-align: center;">
-      <div style="font-size: 64px; margin-bottom: 20px;">❌</div>
+      <div style="font-size: 64px; margin-bottom: 20px;"></div>
       <h2 style="margin-bottom: 12px; font-weight: 700;">Máquina no encontrada</h2>
       <p id="errorMsg" style="margin-bottom: 30px; opacity: 0.8; font-size: 1.1rem; line-height: 1.4;">
         No se especificó una máquina válida. Escanea el QR de nuevo o selecciona la impresora manualmente.
       </p>
       <button class="btn-nuevo" onclick="window.location.href='estado.html'" style="width: 100%; max-width: 300px; margin: 0 auto; display: block;">
-        📋 Seleccionar manualmente
+        Seleccionar manualmente
       </button>
     </div>
   </div>
@@ -374,10 +374,10 @@
         </div>
         <div style="display:flex; gap:8px; flex-shrink: 0;">
           <button onclick="window.location.href='estado.html'" style="background:var(--card-bg); border:1.5px solid #c8cdd4; color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:500; cursor:pointer; white-space: nowrap;">
-            🔄 Cambiar máquina
+            Cambiar máquina
           </button>
           <button onclick="window.location.href='index.html'" style="background:var(--card-bg); border:1.5px solid #c8cdd4; color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:500; cursor:pointer; white-space: nowrap;">
-            🏠 Inicio
+            Inicio
           </button>
         </div>
       </div>
@@ -470,7 +470,7 @@
 
     <div class="bottom-bar">
       <button class="btn-enviar bloqueado" id="btnEnviar" onclick="enviarChecklist()">
-        ✏️ Rellena el reporte para continuar
+        Rellena el reporte para continuar
       </button>
     </div>
     </div>
@@ -489,7 +489,7 @@
         </div>
         <div style="display:flex; gap:8px; flex-shrink: 0;">
           <button onclick="showScreen('portal')" style="background:var(--card-bg); border:1.5px solid #c8cdd4; color:var(--text-white); padding:8px 12px; border-radius:10px; font-size:11px; font-weight:500; cursor:pointer; white-space: nowrap;">
-            ← Volver
+            Volver
           </button>
         </div>
       </div>
@@ -498,14 +498,14 @@
         
         <!-- Descripción de la incidencia -->
         <div class="form-panel" style="background: rgba(255, 71, 87, 0.08); border: 1px solid var(--accent-inc); border-radius: 16px; padding: 20px;">
-          <div class="reporte-label" style="color: var(--accent-inc); margin-bottom: 8px;">📋 DESCRIPCIÓN DEL REPORTE INICIAL</div>
+          <div class="reporte-label" style="color: var(--accent-inc); margin-bottom: 8px;">DESCRIPCIÓN DEL REPORTE INICIAL</div>
           <div id="incDescTexto" style="font-size: 15px; line-height: 1.5; color: var(--text-primary); margin-bottom: 8px;">Cargando...</div>
           <div id="incDescMeta" style="font-size: 12px; color: var(--text-muted);">–</div>
         </div>
 
         <!-- Timeline de seguimientos -->
         <div class="form-panel" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px;">
-          <div class="reporte-label" style="margin-bottom: 12px;">📝 HISTORIAL DE SEGUIMIENTO</div>
+          <div class="reporte-label" style="margin-bottom: 12px;">HISTORIAL DE SEGUIMIENTO</div>
           <div id="seguimientoTimeline" style="max-height: 300px; overflow-y: auto; padding-right: 8px;">
             <div style="text-align:center;padding:20px;opacity:0.5">Cargando seguimientos...</div>
           </div>
@@ -513,22 +513,22 @@
 
         <!-- Añadir nueva nota -->
         <div class="form-panel" style="background: rgba(79, 142, 247, 0.05); border: 1px solid var(--accent); border-radius: 16px; padding: 20px;">
-          <div class="reporte-label" style="margin-bottom: 12px;">➕ AÑADIR NOTA DE SEGUIMIENTO</div>
+          <div class="reporte-label" style="margin-bottom: 12px;">AÑADIR NOTA DE SEGUIMIENTO</div>
           <textarea id="nuevaNotaSeguimiento" class="reporte-textarea" style="margin-bottom: 12px;"></textarea>
           <button id="btnGuardarNota" onclick="guardarNotaSeguimiento()" style="width:100%; padding:12px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
-            ➕ Añadir Nota
+            Añadir Nota
           </button>
         </div>
 
         <!-- Cambiar estado de la máquina (solo técnicos/admins) -->
         <div class="form-panel" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px;">
-          <div class="reporte-label" style="margin-bottom: 12px;">⚡ ESTADO DE LA MÁQUINA</div>
+          <div class="reporte-label" style="margin-bottom: 12px;">ESTADO DE LA MÁQUINA</div>
           <div style="display:flex;gap:10px;margin-bottom:12px">
             <button id="btnEstadoActiva" onclick="cambiarEstadoMaquina('activa')" style="flex:1;padding:10px;border:2px solid var(--success);background:rgba(16,185,129,0.1);border-radius:8px;color:var(--success);font-weight:600;cursor:pointer">
-              ✅ Activa
+              Activa
             </button>
             <button id="btnEstadoInactiva" onclick="cambiarEstadoMaquina('inactiva')" style="flex:1;padding:10px;border:2px solid var(--danger);background:rgba(239,68,68,0.1);border-radius:8px;color:var(--danger);font-weight:600;cursor:pointer">
-              ⛔ Inactiva
+              Inactiva
             </button>
           </div>
           <div id="estadoMaquinaMsg" style="font-size:12px;color:var(--text-muted);text-align:center">Cargando estado...</div>
@@ -536,10 +536,10 @@
 
         <!-- Resolver incidencia -->
         <div class="form-panel" style="background: rgba(16, 185, 129, 0.05); border: 1px solid var(--success); border-radius: 16px; padding: 20px;">
-          <div class="reporte-label" style="color: var(--success); margin-bottom: 12px;">✅ MARCAR COMO RESUELTA</div>
+          <div class="reporte-label" style="color: var(--success); margin-bottom: 12px;">MARCAR COMO RESUELTA</div>
           <textarea id="notaResolucion" class="reporte-textarea" style="margin-bottom: 12px;"></textarea>
           <button onclick="resolverIncidencia()" style="width:100%; padding:12px; background: var(--success); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
-            ✅ Resolver Incidencia
+            Resolver Incidencia
           </button>
         </div>
       </div>
@@ -573,7 +573,7 @@
       </div>
 
       <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:8px">
-        <button class="btn-nuevo" onclick="window.close()" style="min-width:220px;font-size:16px;padding:14px 28px">✅ Terminar</button>
+        <button class="btn-nuevo" onclick="window.close()" style="min-width:220px;font-size:16px;padding:14px 28px">Terminar</button>
         <button onclick="location.href='estado.html'" style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;padding:4px">Consultar estado del equipo</button>
       </div>
     </div>

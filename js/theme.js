@@ -8,7 +8,7 @@
 
     const btn = document.getElementById('btnThemeToggle');
     if (btn) {
-      btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+      btn.textContent = isDark ? 'Tema claro' : 'Tema oscuro';
     }
 
     requestAnimationFrame(() => {
@@ -34,7 +34,7 @@
 
     const btn = document.getElementById('btnThemeToggle');
     if (btn) {
-      btn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+      btn.textContent = isDark ? 'Tema claro' : 'Tema oscuro';
     }
   }
 

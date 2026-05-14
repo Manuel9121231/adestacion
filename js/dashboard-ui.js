@@ -72,7 +72,7 @@ const DASHBOARD_HTML = `
         </div>
         <div class="topbar-actions">
            <button class="btn btn-outline btn-sm" id="btnThemeToggle" onclick="toggleTheme()" style="border-radius:20px; padding: 6px 16px;">
-             Modo Oscuro
+             Tema oscuro
            </button>
            <button class="btn btn-outline btn-sm" onclick="iniciarTour()" style="border-radius:20px; padding: 6px 16px;">
              Guía Rápida
@@ -88,7 +88,7 @@ const DASHBOARD_HTML = `
             <div class="icon"></div>
             <h2>Acceso Restringido</h2>
             <p>No tienes los permisos suficientes para ver esta sección. Esta función está limitada a Administradores.</p>
-            <button class="btn btn-primary" onclick="navigateTo('dashboard')">← Volver al Panel</button>
+            <button class="btn btn-primary" onclick="navigateTo('dashboard')">Volver al Panel</button>
           </div>
         </div>
 

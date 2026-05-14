@@ -29,7 +29,26 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    
+
+    .theme-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: var(--card-bg);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    body.dark-mode .theme-toggle {
+      border-color: rgba(255,255,255,0.15);
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       background: var(--bg);
@@ -201,5 +220,8 @@
     // Procesar cuando la página cargue
     window.addEventListener('load', processAuth);
   </script>
+
+  <button class="theme-toggle" id="btnThemeToggle" onclick="toggleTheme()">Tema oscuro</button>
+  <script src="js/theme.js"></script>
 </body>
 </html>
