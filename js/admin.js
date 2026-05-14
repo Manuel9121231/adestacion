@@ -238,7 +238,7 @@ async function cargarDatosBase() {
     datosHistorial = d.historial || [];
 
     // Poblar dashboard con los datos ya recibidos
-    actualizarVistaDashboard(d.dashboard, d.historial);
+    actualizarVistaDashboard();
   }
 
   // Actualizar la vista actual ahora que los datos están listos
@@ -281,6 +281,7 @@ async function cargarDatosBase() {
 // ── Incidencias ─────────────────────────────────────────────────────────────
 let filtroIncActual = 'todas';
 let ordenIncActual = 'fecha-desc';
+let incidenciasVisibles = []; // Lista filtrada actual para exportar CSV
 
 async function cambiarOrdenInc(orden) {
   ordenIncActual = orden;
@@ -386,6 +387,19 @@ async function renderIncidencias(filtro = 'todas') {
     lista = lista.filter(r => !r.resuelta);
   }
 
+  // Filtros por fecha
+  const desde = document.getElementById('filtroIncDesde')?.value;
+  const hasta = document.getElementById('filtroIncHasta')?.value;
+  if (desde) {
+    lista = lista.filter(r => new Date(r.completado_en || r.iniciado_en) >= new Date(desde));
+  }
+  if (hasta) {
+    lista = lista.filter(r => new Date(r.completado_en || r.iniciado_en) <= new Date(hasta + 'T23:59:59'));
+  }
+
+  // Guardar lista filtrada para exportación CSV
+  incidenciasVisibles = lista;
+
   // Cargar últimas notas de seguimiento para incidencias en seguimiento
   const incSeguimiento = lista.filter(r => !r.resuelta && r.en_seguimiento);
   let ultimasNotas = {};
@@ -473,7 +487,6 @@ const sectionTitles = {
   dashboard: ['Panel General', 'Resumen del sistema'],
   maquinas: ['Máquinas', 'Estado y gestión de todas las máquinas'],
   incidencias: ['Centro de Incidencias', 'Gestión de fallos técnicos y reparaciones'],
-  historial: ['Historial', 'Registro completo de incidencias'],
   qrcodes: ['Códigos QR', 'QR individuales para el operario móvil'],
   usuarios: ['Usuarios del Sistema', 'Gestión de accesos y privilegios de usuario']
 };
@@ -522,7 +535,6 @@ async function navigateTo(section, machineId = null, incFilter = null) {
   // Cargar datos bajo demanda
   if (section === 'maquinas') renderMaquinas();
   if (section === 'incidencias') await renderIncidencias(incFilter || filtroIncActual);
-  if (section === 'historial') { cargarHistorial(); poblarFiltroMaquinasHistorial(); }
   if (section === 'usuarios') renderUsuarios();
   if (section === 'qrcodes') renderQRs();
 }
@@ -533,7 +545,6 @@ async function renderActualSection() {
   const id = activeSection.id.replace('section-', '');
   if (id === 'maquinas') renderMaquinas();
   if (id === 'incidencias') await renderIncidencias();
-  if (id === 'historial') cargarHistorial();
   if (id === 'usuarios') renderUsuarios();
   if (id === 'qrcodes') renderQRs();
 }
@@ -547,25 +558,17 @@ function toggleSidebar() {
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 async function cargarDashboard() {
-  // Ahora es solo un wrapper por si se llama manualmente
-  const res = await apiFetch('/api/dashboard');
-  if (res.ok) {
-    const histRes = await apiFetch('/api/historial?');
-    actualizarVistaDashboard(res.data, histRes.ok ? histRes.data : []);
-  }
+  // Los datos ya se cargan en cargarDatosBase(); esta función solo actualiza la vista
+  if (!datosHistorial.length) return;
+  actualizarVistaDashboard();
 }
 
-function actualizarVistaDashboard(stats, historial) {
-  if (!stats) return;
+function actualizarVistaDashboard() {
+  const historial = datosHistorial;
 
-  const d = stats;
-  const kpiHoy = document.getElementById('kpi-hoy');
-  if (kpiHoy) kpiHoy.textContent = d.hoy;
-  const kpiSem = document.getElementById('kpi-semana');
-  if (kpiSem) kpiSem.textContent = d.semana;
   // KPI Sin resolver y En seguimiento
-  const sinResolver = (historial || []).filter(r => r.tipo === 'Incidencia' && !r.resuelta && !r.en_seguimiento).length;
-  const enSeguimiento = (historial || []).filter(r => r.tipo === 'Incidencia' && !r.resuelta && r.en_seguimiento).length;
+  const sinResolver = historial.filter(r => r.tipo === 'Incidencia' && !r.resuelta && !r.en_seguimiento).length;
+  const enSeguimiento = historial.filter(r => r.tipo === 'Incidencia' && !r.resuelta && r.en_seguimiento).length;
   const kpiSinResolver = document.getElementById('kpi-sin-resolver');
   if (kpiSinResolver) kpiSinResolver.textContent = sinResolver;
   const kpiSeg = document.getElementById('kpi-en-seguimiento-dash');
@@ -590,11 +593,11 @@ function actualizarVistaDashboard(stats, historial) {
   }
 
   // Mini-lista incidencias sin resolver
-  const incPendientes = (historial || []).filter(r => r.tipo === 'Incidencia' && !r.resuelta);
+  const incPendientes = historial.filter(r => r.tipo === 'Incidencia' && !r.resuelta);
   renderIncPendientesDashboard(incPendientes.slice(0, 5));
 
   // Últimos reportes
-  if (historial) renderUltimosRegistros(historial.slice(0, 8));
+  renderUltimosRegistros(historial.slice(0, 8));
 }
 
 function renderIncPendientesDashboard(lista) {
@@ -1350,118 +1353,6 @@ function imprimirQR() {
   w.document.close();
 }
 
-// ── Historial ─────────────────────────────────────────────────────────────────
-async function poblarFiltroMaquinasHistorial() {
-  const sel = document.getElementById('filtroMaquina');
-  if (!sel) return;
-  sel.innerHTML = '<option value="">Todas las máquinas</option>';
-  datosMaquinas.forEach(m => {
-    const opt = document.createElement('option');
-    opt.value = m.id; opt.textContent = `${m.nombre} (${m.sala_nombre})`;
-    sel.appendChild(opt);
-  });
-}
-
-async function cargarHistorial() {
-  const salaId  = document.getElementById('filtroSala')?.value;
-  const maqId   = document.getElementById('filtroMaquina')?.value;
-  const buscar  = (document.getElementById('filtroOperario')?.value || '').trim().toLowerCase();
-  const desde   = document.getElementById('filtroDesde')?.value;
-  const hasta   = document.getElementById('filtroHasta')?.value;
-
-  const tbody = document.getElementById('tablaHistorial');
-  const empty = document.getElementById('historialEmpty');
-
-  // Ensure we have data
-  let source = datosHistorial;
-  if (!source.length) {
-    if (tbody) tbody.innerHTML = skeletonTabla(8);
-    const res = await apiFetch('/api/historial?');
-    if (!res.ok) {
-      if (tbody) tbody.innerHTML = '';
-      if (empty) empty.style.display = 'block';
-      return;
-    }
-    source = res.data;
-  }
-
-  // All filtering client-side
-  let base = source.filter(r => {
-    if (salaId && String(r.sala_id) !== String(salaId) && (datosSalas.find(s => s.id == salaId)?.nombre !== r.sala)) return false;
-    if (maqId  && String(r.maquina_id) !== String(maqId) && (datosMaquinas.find(m => m.id == maqId)?.nombre !== r.maquina)) return false;
-    if (desde) {
-      const d = new Date(r.completado_en || r.iniciado_en);
-      if (d < new Date(desde)) return false;
-    }
-    if (hasta) {
-      const d = new Date(r.completado_en || r.iniciado_en);
-      if (d > new Date(hasta + 'T23:59:59')) return false;
-    }
-    if (buscar) {
-      const hayMatch =
-        (r.maquina       || '').toLowerCase().includes(buscar) ||
-        (r.sala          || '').toLowerCase().includes(buscar) ||
-        (r.operario      || '').toLowerCase().includes(buscar) ||
-        (r.observaciones || '').toLowerCase().includes(buscar);
-      if (!hayMatch) return false;
-    }
-    return true;
-  });
-
-  if (!base.length) {
-    if (tbody) tbody.innerHTML = '';
-    if (empty) empty.style.display = 'block';
-    return;
-  }
-  renderizarContenidoHistorial(base, tbody, empty);
-}
-
-function renderizarContenidoHistorial(data, tbody, empty) {
-  if (!tbody) return;
-  if (empty) empty.style.display = 'none';
-  tbody.innerHTML = data.map(r => {
-    const isInc = r.tipo === 'Incidencia';
-    const resuelta = r.resuelta || false;
-
-    // Badge de resolución para incidencias
-    let resBadge = '';
-    if (isInc) {
-      resBadge = resuelta
-        ? `<span class="estado-badge ok" style="margin-left:8px;font-size:10px">Resuelta</span>`
-        : `<span class="estado-badge vencido" style="margin-left:8px;font-size:10px">Sin resolver</span>`;
-    }
-
-    return `
-      <tr style="${isInc && !resuelta ? 'background: rgba(239, 68, 68, 0.03)' : ''}">
-        <td data-label="Tipo">
-          <span class="estado-badge ${isInc ? 'vencido' : 'ok'}" style="font-size:10px">
-            ${isInc ? 'INCIDENCIA' : 'MANT.'}
-          </span>
-        </td>
-        <td data-label="Máquina">
-          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">
-            <span style="font-weight:600; color:var(--text-primary)">${r.maquina}</span>
-            ${resBadge}
-          </div>
-        </td>
-        <td data-label="Sala">${r.sala}</td>
-        <td data-label="Usuario" style="max-width: 150px; white-space: normal; word-break: break-word;">
-          <div style="font-weight:700">${r.operario}</div>
-          <div style="font-size:10px; color:var(--text-muted)">${formatearRol(r.rol)}</div>
-        </td>
-        <td data-label="Fecha" style="font-size:11px">${formatFechaHora(r.completado_en)}</td>
-        <td data-label="Observ." style="font-size:11px;color:var(--text-muted)">
-          <div style="display:flex;align-items:center;gap:12px;justify-content:space-between">
-            <span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.observaciones || '–'}</span>
-            ${r.tiene_fotos ? `<img src="${r.fotos[0]}" style="width:26px;height:26px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="event.stopPropagation(); window.open('${r.fotos[0]}','_blank')">` : ''}
-          </div>
-        </td>
-        <td data-label="Acciones"><button class="btn btn-outline btn-sm" onclick="verDetalleSesion('${r.id}')">Detalles</button></td>
-      </tr>
-    `;
-  }).join('');
-}
-
 async function toggleResolucionIncidencia(id, nuevoEstado) {
   let comentario = '';
   if (nuevoEstado) {
@@ -1479,7 +1370,6 @@ async function toggleResolucionIncidencia(id, nuevoEstado) {
 
   if (res.ok) {
     await cargarDatosBase();
-    if (document.getElementById('section-historial').classList.contains('active')) await cargarHistorial();
     if (document.getElementById('section-incidencias').classList.contains('active')) {
       const filtroActual = document.querySelector('.btn-outline.btn-sm.active[id^="btn-inc-"]')?.id.replace('btn-inc-', '') || 'todas';
       await renderIncidencias(filtroActual);
@@ -1752,7 +1642,6 @@ async function eliminarIncidencia(id) {
     cerrarModal('modalDetalle');
     showFeedback('Registro eliminado', 'La incidencia ha sido eliminada correctamente.', '');
     await cargarDatosBase();
-    await cargarHistorial();
     await renderIncidencias();
   } else {
     showFeedback('Error al eliminar', res.error, '');
@@ -1783,12 +1672,13 @@ async function verHistorialMaquina(nombreMaquina) {
 
 function exportarCSV() {
   const rows = [['ID', 'Máquina', 'Sala', 'Operario', 'Fecha', 'Observaciones']];
-  datosHistorial.forEach(r => rows.push([r.id, r.maquina, r.sala, r.operario, r.completado_en, r.observaciones || '']));
+  const datos = incidenciasVisibles.length ? incidenciasVisibles : datosHistorial.filter(r => r.tipo === 'Incidencia');
+  datos.forEach(r => rows.push([r.id, r.maquina, r.sala, r.operario, r.completado_en, r.observaciones || '']));
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `historial_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `incidencias_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
 }
 
@@ -2061,19 +1951,6 @@ async function apiFetch(url, options = {}) {
       const id = url.split('/')[3];
       if (method === 'PUT') { await client.from('equipos').update(payload).eq('id', id); return { ok: true }; }
       if (method === 'DELETE') { await client.from('equipos').delete().eq('id', id); return { ok: true }; }
-    }
-
-    if (url.includes('/api/historial')) {
-      const searchParams = new URL(url, window.location.origin).searchParams;
-      let query = client.from('registros').select('*');
-      if (searchParams.get('sala_id')) query = query.eq('sala_id', searchParams.get('sala_id'));
-      if (searchParams.get('maquina_id')) query = query.eq('maquina_id', searchParams.get('maquina_id'));
-      if (searchParams.get('operario_nombre')) query = query.ilike('operario_nombre', `%${searchParams.get('operario_nombre')}%`);
-      if (searchParams.get('desde')) query = query.gte('timestamp', searchParams.get('desde'));
-      if (searchParams.get('hasta')) query = query.lte('timestamp', searchParams.get('hasta') + 'T23:59:59');
-      const { data, error } = await query.order('timestamp', { ascending: false });
-      if (error) throw error;
-      return { ok: true, data: (data || []).map(r => ({ id: r.id, maquina: r.maquina_nombre, sala: r.sala_nombre, operario: r.operario_nombre, operario_email: r.operario_email, usuario_id: r.usuario_id, iniciado_en: r.timestamp, completado_en: r.timestamp, observaciones: r.notas || '', tipo: r.tipo, resuelta: r.resuelta || false, en_seguimiento: r.en_seguimiento || false, fotos: r.photos || [], tiene_fotos: (r.photos && r.photos.length > 0) })) };
     }
 
     if (url.includes('/api/sesion/') && method === 'DELETE') {
@@ -2476,14 +2353,6 @@ function iniciarTour() {
             if (driverObj.refresh) driverObj.refresh();
           }, 400);
         }
-      },
-      {
-        element: '#nav-historial',
-        popover: {
-          title: 'Historial',
-          description: 'Accede a todos los registros de incidencias pasadas.'
-        },
-        onHighlightStarted: () => navigateTo('historial')
       }
     ]
   });

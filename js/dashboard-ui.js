@@ -35,10 +35,6 @@ const DASHBOARD_HTML = `
             <span class="nav-icon"></span>
             <span>Máquinas</span>
           </div>
-          <div class="nav-item" id="nav-historial" onclick="navigateTo('historial')">
-            <span class="nav-icon"></span>
-            <span>Historial</span>
-          </div>
           <div class="nav-item" id="nav-qrcodes" onclick="navigateTo('qrcodes')">
             <span class="nav-icon"></span>
             <span>Códigos QR</span>
@@ -181,7 +177,7 @@ const DASHBOARD_HTML = `
           <div class="table-wrap" style="margin-bottom:0">
             <div class="table-header">
               <div class="table-title">Últimos registros realizados</div>
-              <button class="btn btn-outline btn-sm" onclick="navigateTo('historial')">Ver todos →</button>
+              <button class="btn btn-outline btn-sm" onclick="navigateTo('incidencias')">Ver todas →</button>
             </div>
             <div style="overflow-x:auto">
               <table>
@@ -245,6 +241,10 @@ const DASHBOARD_HTML = `
                 <option value="fecha-asc">Fecha (antigua)</option>
                 <option value="maquina">Por máquina</option>
               </select>
+              <div style="width:1px;height:24px;background:var(--border);margin:0 2px"></div>
+              <input type="date" id="filtroIncDesde" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
+              <input type="date" id="filtroIncHasta" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
+              <button class="btn btn-outline btn-sm" onclick="exportarCSV()">Exportar CSV</button>
             </div>
           </div>
 
@@ -278,67 +278,6 @@ const DASHBOARD_HTML = `
           </div>
         </div>
 
-        <!-- ══════════ HISTORIAL ══════════ -->
-        <div class="section fade-in" id="section-historial">
-          <div class="section-header">
-            <div>
-              <div class="section-title">Historial</div>
-              <div class="section-subtitle">Registro completo de todas las sesiones</div>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <button class="btn btn-outline btn-sm" onclick="exportarCSV()">Exportar CSV</button>
-            </div>
-          </div>
-
-          <div class="table-wrap">
-            <div class="filtros-bar">
-              <div class="filtro-item">
-                <select class="form-control" id="filtroSala" onchange="cargarHistorial()">
-                  <option value="">Todas las salas</option>
-                </select>
-              </div>
-              <div class="filtro-item">
-                <select class="form-control" id="filtroMaquina" onchange="cargarHistorial()">
-                  <option value="">Todas las máquinas</option>
-                </select>
-              </div>
-              <div class="filtro-item" style="position:relative;display:flex;align-items:center">
-                <svg style="position:absolute;left:10px;width:15px;height:15px;color:var(--text-muted);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="filtroOperario" class="form-control" oninput="cargarHistorial()" title="Busca por máquina, sala, operario u observaciones" style="min-width:140px;flex:1;padding-left:32px">
-              </div>
-              <div class="filtro-item">
-                <input type="date" class="form-control" id="filtroDesde" onchange="cargarHistorial()">
-              </div>
-              <div class="filtro-item">
-                <input type="date" class="form-control" id="filtroHasta" onchange="cargarHistorial()">
-              </div>
-            </div>
-            <div style="overflow-x:auto">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Máquina</th>
-                    <th>Sala</th>
-                    <th>Operario</th>
-                    <th>Inicio</th>
-                    <th>Fin</th>
-                    <th>Observaciones</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="tablaHistorial"></tbody>
-              </table>
-            </div>
-            <div id="historialEmpty" class="empty-state" style="display:none">
-              <div class="icon"></div>
-              <p>No se encontraron registros con esos filtros</p>
-            </div>
-          </div>
-        </div>
-
-
-
         <!-- ══════════ USUARIOS / ADMINISTRADORES ══════════ -->
         <div class="section fade-in" id="section-usuarios">
           <div class="section-header">
@@ -352,7 +291,7 @@ const DASHBOARD_HTML = `
                 <div id="rolesHelpPopover" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:200;width:300px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.15);padding:18px 20px;font-size:13px;line-height:1.6">
                   <div style="font-weight:700;margin-bottom:12px;font-size:14px">Roles del sistema</div>
                   <div style="margin-bottom:10px"><span style="background:rgba(239,68,68,0.1);color:#dc2626;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Usuario</span><br><span style="color:var(--text-secondary)">Solo puede registrar reportes desde el portal de operario. Sin acceso al panel.</span></div>
-                  <div style="margin-bottom:10px"><span style="background:rgba(16,163,74,0.1);color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Técnico</span><br><span style="color:var(--text-secondary)">Accede al panel para ver máquinas, incidencias e historial. No puede editar máquinas ni gestionar usuarios.</span></div>
+                  <div style="margin-bottom:10px"><span style="background:rgba(16,163,74,0.1);color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Técnico</span><br><span style="color:var(--text-secondary)">Accede al panel para ver máquinas e incidencias. No puede editar máquinas ni gestionar usuarios.</span></div>
                   <div><span style="background:rgba(79,142,247,0.1);color:#3b82f6;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Administrador</span><br><span style="color:var(--text-secondary)">Acceso completo: crear/editar máquinas, gestionar usuarios y todas las secciones.</span></div>
                 </div>
               </div>
