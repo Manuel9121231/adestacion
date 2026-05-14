@@ -77,6 +77,24 @@ const DASHBOARD_HTML = `
            <button class="btn btn-outline btn-sm" onclick="iniciarTour()" style="border-radius:20px; padding: 6px 16px;">
              Guía Rápida
            </button>
+           <div class="account-btn" id="accountBtn" style="display:none">
+             <button class="account-btn-trigger" onclick="toggleAccountMenu()">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+               Cuenta
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+             </button>
+             <div class="account-dropdown" id="accountDropdown">
+               <div class="account-dropdown-info">
+                 <div class="account-dropdown-name" id="dropdownUserName">Usuario</div>
+                 <div class="account-dropdown-role" id="dropdownUserRole">Rol</div>
+                 <div class="account-dropdown-email" id="dropdownUserEmail">correo@ejemplo.com</div>
+               </div>
+               <button class="account-dropdown-item danger" onclick="cerrarSesionAdmin()">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                 Cerrar sesión
+               </button>
+             </div>
+           </div>
         </div>
       </header>
 
@@ -267,7 +285,6 @@ const DASHBOARD_HTML = `
               <div class="section-subtitle">Registro completo de todas las sesiones</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
-              <button class="btn btn-outline btn-sm" id="btnMisReportesHist" onclick="toggleMisReportes()">Solo mis reportes</button>
               <button class="btn btn-outline btn-sm" onclick="exportarCSV()">Exportar CSV</button>
             </div>
           </div>

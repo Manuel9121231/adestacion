@@ -64,6 +64,13 @@ function getNombreAdmin() {
   } catch { return 'Administrador'; }
 }
 
+function getEmailAdmin() {
+  try {
+    const s = JSON.parse(localStorage.getItem('sgi_admin_session') || '{}');
+    return s.email || '';
+  } catch { return ''; }
+}
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   const adminSessionStr = localStorage.getItem('sgi_admin_session');
@@ -111,13 +118,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       container.innerHTML = DASHBOARD_HTML;
     }
 
-    // Mostrar nombre y rol en sidebar footer
+    // Mostrar nombre y rol en sidebar footer y dropdown Cuenta
     const adminName = getNombreAdmin();
+    const adminEmail = getEmailAdmin();
     const rolLabel = { superadmin: 'Administrador', admin: 'Administrador', tecnico: 'Técnico' }[rolActual] || 'Usuario';
     const footerVersion = container?.querySelector('.sidebar-footer div');
     if (footerVersion) {
       footerVersion.innerHTML = `<strong>${adminName}</strong><br><span style="font-size:12px;opacity:1;color:var(--accent)">${rolLabel}</span>`;
     }
+    const dropdownName = document.getElementById('dropdownUserName');
+    const dropdownRole = document.getElementById('dropdownUserRole');
+    const dropdownEmail = document.getElementById('dropdownUserEmail');
+    const accountBtn = document.getElementById('accountBtn');
+    if (dropdownName) dropdownName.textContent = adminName;
+    if (dropdownRole) dropdownRole.textContent = rolLabel;
+    if (dropdownEmail) dropdownEmail.textContent = adminEmail;
+    if (accountBtn) accountBtn.style.display = 'block';
 
     // Ocultar solo usuarios para técnicos
     if (rolActual === 'tecnico') {
@@ -1271,31 +1287,6 @@ async function poblarFiltroMaquinasHistorial() {
   });
 }
 
-let filtroSoloMisReportes = false;
-
-function toggleMisReportes() {
-  filtroSoloMisReportes = !filtroSoloMisReportes;
-  const btn = document.getElementById('btnMisReportesHist');
-  if (btn) {
-    btn.classList.toggle('active', filtroSoloMisReportes);
-    btn.textContent = filtroSoloMisReportes ? 'Mostrar todos' : 'Solo mis reportes';
-  }
-  cargarHistorial();
-}
-
-function getUsuarioActualId() {
-  try {
-    const s = JSON.parse(localStorage.getItem('sgi_admin_session') || '{}');
-    return s.userId || null;
-  } catch { return null; }
-}
-function getUsuarioActualEmail() {
-  try {
-    const s = JSON.parse(localStorage.getItem('sgi_admin_session') || '{}');
-    return (s.email || '').toLowerCase();
-  } catch { return ''; }
-}
-
 async function cargarHistorial() {
   const salaId  = document.getElementById('filtroSala')?.value;
   const maqId   = document.getElementById('filtroMaquina')?.value;
@@ -1319,17 +1310,8 @@ async function cargarHistorial() {
     source = res.data;
   }
 
-  // Filtro "solo mis reportes"
-  const miId = filtroSoloMisReportes ? getUsuarioActualId() : null;
-  const miEmail = filtroSoloMisReportes ? getUsuarioActualEmail() : '';
-
   // All filtering client-side
   let base = source.filter(r => {
-    if (filtroSoloMisReportes) {
-      const matchId = miId && r.usuario_id && String(r.usuario_id) === String(miId);
-      const matchEmail = miEmail && (r.operario_email || '').toLowerCase() === miEmail;
-      if (!matchId && !matchEmail) return false;
-    }
     if (salaId && String(r.sala_id) !== String(salaId) && (datosSalas.find(s => s.id == salaId)?.nombre !== r.sala)) return false;
     if (maqId  && String(r.maquina_id) !== String(maqId) && (datosMaquinas.find(m => m.id == maqId)?.nombre !== r.maquina)) return false;
     if (desde) {
@@ -2170,6 +2152,19 @@ async function intentarLogin() {
     if (btn) btn.disabled = false;
   }
 }
+
+function toggleAccountMenu() {
+  const dropdown = document.getElementById('accountDropdown');
+  if (dropdown) dropdown.classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  const btn = document.getElementById('accountBtn');
+  const dropdown = document.getElementById('accountDropdown');
+  if (btn && dropdown && !btn.contains(e.target)) {
+    dropdown.classList.remove('open');
+  }
+});
 
 function cerrarSesionAdmin() {
   const pendingMaquinaId = localStorage.getItem('sgi_pending_maquinaId');
