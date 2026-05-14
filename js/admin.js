@@ -2213,10 +2213,11 @@ async function intentarLogin() {
 function cerrarSesionAdmin() {
   const pendingMaquinaId = localStorage.getItem('sgi_pending_maquinaId');
   localStorage.removeItem('sgi_admin_session');
+  localStorage.removeItem('sgi_user_session');
   localStorage.removeItem('admin_pin');
   if (pendingMaquinaId) localStorage.setItem('sgi_pending_maquinaId', pendingMaquinaId);
   if (window.supabaseClient) window.supabaseClient.auth.signOut();
-  location.reload();
+  window.location.href = 'index.html';
 }
 function abrirModal(id) { document.getElementById(id)?.classList.add('open'); }
 function cerrarModal(id) { document.getElementById(id)?.classList.remove('open'); }
