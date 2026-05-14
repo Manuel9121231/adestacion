@@ -421,13 +421,7 @@ const DASHBOARD_HTML = `
           </div>
           <div class="form-group">
             <label class="form-label">Tipo</label>
-            <select class="form-control" id="editTipo">
-              <option>Impresora FDM</option>
-              <option>Impresora Resina</option>
-              <option>CNC / Fresadora</option>
-              <option>Cortadora Láser</option>
-              <option value="__CREAR_NUEVO__">+ Crear nuevo tipo</option>
-            </select>
+            <select class="form-control" id="editTipo"></select>
           </div>
           <div class="form-group">
             <label class="form-label">Modelo</label>
@@ -475,13 +469,7 @@ const DASHBOARD_HTML = `
         <div class="grid-2">
           <div class="form-group">
             <label class="form-label">Tipo</label>
-            <select class="form-control" id="nuevoMaquinaTipo">
-              <option>Impresora FDM</option>
-              <option>Impresora Resina</option>
-              <option>CNC / Fresadora</option>
-              <option>Cortadora Láser</option>
-              <option value="__CREAR_NUEVO__">+ Crear nuevo tipo</option>
-            </select>
+            <select class="form-control" id="nuevoMaquinaTipo"></select>
           </div>
           <div class="form-group">
             <label class="form-label">Modelo</label>
@@ -625,7 +613,7 @@ const DASHBOARD_HTML = `
       </div>
       <div class="form-group" style="overflow:visible !important">
         <label class="form-label" id="promptLabel">Instrucciones</label>
-        <textarea id="promptInput" class="form-control" rows="4" style="resize:none"></textarea>
+        <input id="promptInput" class="form-control" type="text" style="padding:12px 14px;font-size:15px">
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="window.promptReject?.()">Cancelar</button>

@@ -867,25 +867,8 @@ async function verDetalleMaquina(id) {
   document.getElementById('editEstado').value = maq.estado || 'activa';
   document.getElementById('editNotas').value = maq.notas || '';
 
-  // Configurar opciones del select de tipo según el rol
-  const tipoSelect = document.getElementById('editTipo');
-  const crearNuevoOption = tipoSelect.querySelector('option[value="__CREAR_NUEVO__"]');
-
-  // Solo el administrador puede ver la opción "Crear nuevo tipo"
-  if (crearNuevoOption) {
-    crearNuevoOption.style.display = (rolActual === 'admin') ? '' : 'none';
-    // Restaurar texto original
-    crearNuevoOption.textContent = '+ Crear nuevo tipo';
-  }
-
-  // Resetear variable de tipo personalizado
-  nuevoTipoPersonalizado = null;
-
-  // Establecer valor del tipo (si no existe en las opciones, se mantendrá el valor actual)
-  tipoSelect.value = maq.tipo;
-
-  // Añadir event listener para manejar cambio de tipo
-  tipoSelect.onchange = handleTipoChangeEdit;
+  renderSelectTipos('editTipo', maq.tipo);
+  document.getElementById('editTipo').onchange = () => handleNuevoTipo('editTipo');
 
   // Por defecto, abrir en modo lectura
   // Si es técnico, abrir en modo edición limitada (solo estado)
@@ -896,34 +879,6 @@ async function verDetalleMaquina(id) {
   }
 
   abrirModal('modalMaquina');
-}
-
-// Manejar cambio en el select de tipo en edición
-async function handleTipoChangeEdit() {
-  const tipoSelect = document.getElementById('editTipo');
-
-  if (tipoSelect.value === '__CREAR_NUEVO__') {
-    // Solo permitir a administradores crear nuevos tipos
-    if (rolActual !== 'admin') {
-      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '');
-      tipoSelect.value = 'Impresora FDM';
-      return;
-    }
-
-    const nuevoTipo = await customPrompt('Crear nuevo tipo', 'Ingrese el nombre del nuevo tipo de máquina:');
-    if (nuevoTipo && nuevoTipo.trim()) {
-      nuevoTipoPersonalizado = nuevoTipo.trim();
-      // Cambiar el texto de la opción seleccionada temporalmente
-      const option = tipoSelect.options[tipoSelect.selectedIndex];
-      option.textContent = `+ Crear: ${nuevoTipoPersonalizado}`;
-    } else {
-      // Si cancela, volver al valor por defecto
-      tipoSelect.value = 'Impresora FDM';
-      nuevoTipoPersonalizado = null;
-    }
-  } else {
-    nuevoTipoPersonalizado = null;
-  }
 }
 
 function setModoEdicionMaquina(editando, soloEstado = false) {
@@ -1014,25 +969,14 @@ async function guardarMaquina() {
     return;
   }
   
-  let tipo = document.getElementById('editTipo').value;
-
-  // Manejar tipo personalizado
-  if (tipo === '__CREAR_NUEVO__') {
-    if (rolActual !== 'admin') {
-      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '');
-      return;
-    }
-    if (nuevoTipoPersonalizado) {
-      tipo = nuevoTipoPersonalizado;
-    } else {
-      showFeedback('Error', 'Debe especificar un nombre para el nuevo tipo.', '');
-      return;
-    }
+  const tipoVal = document.getElementById('editTipo').value.trim();
+  if (tipoVal === '__NUEVO__') {
+    showFeedback('Error', 'Selecciona un tipo válido o crea uno nuevo.', '');
+    return;
   }
-
   const datos = {
     nombre: document.getElementById('editNombre').value.trim(),
-    tipo: tipo,
+    tipo: tipoVal,
     modelo: document.getElementById('editModelo').value.trim(),
     estado: document.getElementById('editEstado').value,
     notas: document.getElementById('editNotas').value.trim() || null,
@@ -1074,15 +1018,9 @@ function abrirModalNuevaMaquina() {
     if (estadoEl) estadoEl.value = 'activa';
     if (msgEl) msgEl.innerHTML = '';
 
-    // Configurar opciones del select de tipo según el rol
     if (tipoSelect) {
-      const crearNuevoOption = tipoSelect.querySelector('option[value="__CREAR_NUEVO__"]');
-      if (crearNuevoOption) {
-        crearNuevoOption.style.display = (rolActual === 'admin') ? '' : 'none';
-      }
-      tipoSelect.value = 'Impresora FDM';
-      // Configurar event listener para crear nuevo tipo
-      tipoSelect.onchange = handleTipoChange;
+      renderSelectTipos('nuevoMaquinaTipo');
+      tipoSelect.onchange = () => handleNuevoTipo('nuevoMaquinaTipo');
     }
 
     // Poblar el select de salas si está vacío
@@ -1094,37 +1032,6 @@ function abrirModalNuevaMaquina() {
   } catch (err) {
     console.error('Error al abrir modal de nueva máquina:', err);
     showFeedback('Error', 'No se pudo abrir el formulario de nueva máquina.', '');
-  }
-}
-
-// Variable para almacenar el tipo personalizado creado
-let nuevoTipoPersonalizado = null;
-
-// Manejar cambio en el select de tipo
-async function handleTipoChange() {
-  const tipoSelect = document.getElementById('nuevoMaquinaTipo');
-
-  if (tipoSelect.value === '__CREAR_NUEVO__') {
-    // Solo permitir a administradores crear nuevos tipos
-    if (rolActual !== 'admin') {
-      showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos de máquina.', '');
-      tipoSelect.value = 'Impresora FDM';
-      return;
-    }
-
-    const nuevoTipo = await customPrompt('Crear nuevo tipo', 'Ingrese el nombre del nuevo tipo de máquina:');
-    if (nuevoTipo && nuevoTipo.trim()) {
-      nuevoTipoPersonalizado = nuevoTipo.trim();
-      // Cambiar el texto de la opción seleccionada temporalmente
-      const option = tipoSelect.options[tipoSelect.selectedIndex];
-      option.textContent = `+ Crear: ${nuevoTipoPersonalizado}`;
-    } else {
-      // Si cancela, volver al valor por defecto
-      tipoSelect.value = 'Impresora FDM';
-      nuevoTipoPersonalizado = null;
-    }
-  } else {
-    nuevoTipoPersonalizado = null;
   }
 }
 
@@ -1154,28 +1061,15 @@ async function crearMaquina() {
   const notas = notasEl?.value.trim() || null;
   const msg = msgEl;
 
-  console.log('DEBUG crearMaquina - rolActual:', rolActual, 'tipo:', tipo, 'nuevoTipoPersonalizado:', nuevoTipoPersonalizado);
+  if (tipo === '__NUEVO__') {
+    msg.innerHTML = '<div class="alert alert-warning">Selecciona un tipo válido o crea uno nuevo</div>';
+    return;
+  }
 
   if (!nombre || !sala_id) {
     msg.innerHTML = '<div class="alert alert-warning">Nombre y Sala son obligatorios</div>';
     return;
   }
-
-  // Manejar tipo personalizado
-  if (tipo === '__CREAR_NUEVO__') {
-    if (rolActual !== 'admin') {
-      msg.innerHTML = '<div class="alert alert-danger">Solo los administradores pueden crear nuevos tipos de máquina</div>';
-      return;
-    }
-    if (nuevoTipoPersonalizado) {
-      tipo = nuevoTipoPersonalizado;
-    } else {
-      msg.innerHTML = '<div class="alert alert-warning">Debe especificar un nombre para el nuevo tipo</div>';
-      return;
-    }
-  }
-
-  console.log('DEBUG - Tipo final:', tipo);
 
   const res = await apiFetch('/api/maquinas', {
     method: 'POST',
@@ -2510,6 +2404,78 @@ function poblarSelectsSalas() {
   });
 }
 
+function renderSelectTipos(selectId, valorSeleccionado = '') {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const tipos = [...new Set(datosMaquinas.map(m => m.tipo).filter(Boolean))].sort();
+  const tiposBase = ['Impresora FDM', 'Impresora Resina', 'CNC / Fresadora', 'Cortadora Láser'];
+  let todos = [...new Set([...tiposBase, ...tipos])];
+
+  // Si el valor seleccionado no está en la lista, añadirlo para evitar perder datos
+  if (valorSeleccionado && !todos.some(t => t.toLowerCase() === valorSeleccionado.toLowerCase())) {
+    todos.push(valorSeleccionado);
+    todos.sort();
+  }
+
+  sel.innerHTML = '';
+  todos.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  });
+  // Opción para añadir nuevo tipo
+  const addOpt = document.createElement('option');
+  addOpt.value = '__NUEVO__';
+  addOpt.textContent = '➕ Añadir otro tipo...';
+  sel.appendChild(addOpt);
+  // Seleccionar el valor actual si existe (coincidencia exacta o case-insensitive)
+  const match = todos.find(t => t.toLowerCase() === (valorSeleccionado || '').toLowerCase());
+  if (match) sel.value = match;
+}
+
+function primerTipoValido(sel) {
+  return Array.from(sel.options).find(o => o.value !== '__NUEVO__')?.value || '';
+}
+
+async function handleNuevoTipo(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel || sel.value !== '__NUEVO__') return;
+  if (rolActual !== 'admin') {
+    showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos.', '');
+    sel.value = primerTipoValido(sel);
+    return;
+  }
+  const nuevo = await customPrompt('Nuevo tipo', 'Ingrese el nombre del nuevo tipo de máquina:');
+  if (!nuevo || !nuevo.trim()) {
+    sel.value = primerTipoValido(sel);
+    return;
+  }
+
+  const nombre = nuevo.trim();
+  if (nombre.toLowerCase() === '__nuevo__') {
+    showFeedback('Nombre reservado', '"__NUEVO__" no es un nombre válido para un tipo.', '');
+    sel.value = primerTipoValido(sel);
+    return;
+  }
+  const nombreLower = nombre.toLowerCase();
+
+  // Buscar si ya existe (ignorando mayúsculas/minúsculas)
+  const existente = Array.from(sel.options).find(o => o.value !== '__NUEVO__' && o.value.toLowerCase() === nombreLower);
+  if (existente) {
+    sel.value = existente.value;
+    showFeedback('Tipo existente', `El tipo "${existente.value}" ya existe y ha sido seleccionado.`, '');
+    return;
+  }
+
+  // Insertar ordenadamente antes de "Añadir otro tipo"
+  const addOpt = sel.querySelector('option[value="__NUEVO__"]');
+  const opt = document.createElement('option');
+  opt.value = nombre; opt.textContent = nombre;
+  sel.insertBefore(opt, addOpt);
+  sel.value = nombre;
+  showFeedback('Tipo creado', `Se ha añadido "${nombre}" como nuevo tipo de máquina.`, '✅');
+}
+
 // ── Helpers de UI (Nuevos) ───────────────────────────────────────────────────
 function customConfirm(titulo, msg, icon = '') {
   return new Promise((resolve) => {
@@ -2539,13 +2505,25 @@ function customPrompt(titulo, label, defaultValue = '') {
     abrirModal('modalPrompt');
     setTimeout(() => input.focus(), 100);
 
+    const onKey = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        window.promptResolve();
+      } else if (e.key === 'Escape') {
+        window.promptReject();
+      }
+    };
+    input.addEventListener('keydown', onKey);
+
     window.promptResolve = () => {
+      input.removeEventListener('keydown', onKey);
       const val = input.value.trim();
       cerrarModal('modalPrompt');
       resolve(val);
     };
 
     window.promptReject = () => {
+      input.removeEventListener('keydown', onKey);
       cerrarModal('modalPrompt');
       resolve(null);
     };
