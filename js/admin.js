@@ -1626,6 +1626,7 @@ async function guardarNuevaNota() {
 
   if (res.ok) {
     input.value = '';
+    await recargarTodo();
     // Recargar el detalle para ver la nueva nota
     verDetalleSesion(id);
   } else {
@@ -1668,7 +1669,8 @@ async function guardarEdicionSeguimiento(segId) {
     showFeedback('Error', 'No se pudo editar la nota: ' + error.message, '');
     return;
   }
-  
+
+  await recargarTodo();
   // Recargar el detalle
   verDetalleSesion(incidenciaId);
 }
@@ -1903,6 +1905,7 @@ async function eliminarUsuario(userId) {
     if (rpcError) console.warn("No se pudo eliminar de Auth, pero sí del perfil:", rpcError);
 
     showFeedback('Usuario Eliminado', 'El perfil de usuario ha sido eliminado correctamente.', '');
+    await recargarTodo();
     renderUsuarios();
   } catch (err) {
     showFeedback('Error', 'No se pudo eliminar el usuario: ' + err.message, '');
@@ -1928,6 +1931,7 @@ async function cambiarRolUsuario(userId, nuevoRol) {
     const client = window.supabaseClient;
     const { error } = await client.from('perfiles').update({ rol: nuevoRol }).eq('id', userId);
     if (error) throw error;
+    await recargarTodo();
     renderUsuarios();
   } catch (err) {
     showFeedback('Error de permisos', 'No se ha podido cambiar el rol: ' + err.message, '');
