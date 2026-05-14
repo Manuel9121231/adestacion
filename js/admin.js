@@ -68,6 +68,15 @@ function getNombreAdmin() {
 document.addEventListener('DOMContentLoaded', async () => {
   const adminSessionStr = localStorage.getItem('sgi_admin_session');
   const userSessionStr  = localStorage.getItem('sgi_user_session');
+
+  // Si hay sesión admin activa y una máquina pendiente por QR, redirigir directamente
+  const pendingMaquinaIdOnLoad = localStorage.getItem('sgi_pending_maquinaId');
+  if (pendingMaquinaIdOnLoad && adminSessionStr) {
+    localStorage.removeItem('sgi_pending_maquinaId');
+    window.location.href = `operario.html?maquinaId=${pendingMaquinaIdOnLoad}`;
+    return;
+  }
+
   detectarServidor(); // Cargar IP real para los QRs
   await cargarRolUsuario(); // Cargar rol del usuario
 
@@ -2139,7 +2148,13 @@ async function intentarLogin() {
       loginTime: new Date().getTime()
     };
     localStorage.setItem('sgi_admin_session', JSON.stringify(sessionData));
-    location.reload();
+    const pendingMaquinaIdSuperadmin = localStorage.getItem('sgi_pending_maquinaId');
+    if (pendingMaquinaIdSuperadmin) {
+      localStorage.removeItem('sgi_pending_maquinaId');
+      window.location.href = `operario.html?maquinaId=${pendingMaquinaIdSuperadmin}`;
+    } else {
+      location.reload();
+    }
     return;
   }
 
@@ -2173,7 +2188,13 @@ async function intentarLogin() {
       nombre: perfil?.nombre || data.user.email
     }));
     localStorage.removeItem('admin_pin');
-    location.reload();
+    const pendingMaquinaIdLogin = localStorage.getItem('sgi_pending_maquinaId');
+    if (pendingMaquinaIdLogin) {
+      localStorage.removeItem('sgi_pending_maquinaId');
+      window.location.href = `operario.html?maquinaId=${pendingMaquinaIdLogin}`;
+    } else {
+      location.reload();
+    }
 
   } catch (err) {
     console.error('Login error:', err);
@@ -2186,8 +2207,10 @@ async function intentarLogin() {
 }
 
 function cerrarSesionAdmin() {
+  const pendingMaquinaId = localStorage.getItem('sgi_pending_maquinaId');
   localStorage.removeItem('sgi_admin_session');
   localStorage.removeItem('admin_pin');
+  if (pendingMaquinaId) localStorage.setItem('sgi_pending_maquinaId', pendingMaquinaId);
   if (window.supabaseClient) window.supabaseClient.auth.signOut();
   location.reload();
 }
