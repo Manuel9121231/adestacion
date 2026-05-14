@@ -701,7 +701,7 @@ function customConfirm(message, onConfirm, onCancel) {
       animation: slideUp 0.3s ease;
     ">
       <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary, #1f2937);">
-        ¿Resolver incidencia?
+        ¿Marcar incidencia como resuelta?
       </div>
       <div style="font-size: 14px; color: var(--text-muted, #6b7280); margin-bottom: 24px; line-height: 1.5;">
         ${message}
@@ -727,7 +727,7 @@ function customConfirm(message, onConfirm, onCancel) {
           font-weight: 600;
           cursor: pointer;
           box-shadow: 0 4px 12px rgba(16,185,129,0.3);
-        ">Resolver</button>
+        ">Marcar como resuelta</button>
       </div>
     </div>
   `;
@@ -761,7 +761,7 @@ async function resolverIncidencia() {
   }
   
   customConfirm(
-    '¿Marcar esta incidencia como RESUELTA?',
+    '¿Confirmas que quieres marcar esta incidencia como resuelta?',
     async () => {
       // Obtener usuario actual
       let usuarioNombre = 'Técnico';
@@ -793,7 +793,7 @@ async function resolverIncidencia() {
         .eq('id', incidenciaAbiertaId);
         
       if (error) {
-        showToast('Error al resolver: ' + error.message, 'error');
+        showToast('Error al marcar como resuelta: ' + error.message, 'error');
         return;
       }
       

@@ -434,7 +434,7 @@ async function renderIncidencias(filtro = 'todas') {
     const resuelta = r.resuelta || false;
     const esSeguimiento = !resuelta && r.en_seguimiento;
     const statusClass = resuelta ? 'resuelto' : (esSeguimiento ? 'seguimiento' : 'urgente');
-    const statusText = resuelta ? 'Finalizado' : (esSeguimiento ? 'En Seguimiento' : 'Sin resolver');
+    const statusText = resuelta ? 'Resuelta' : (esSeguimiento ? 'En Seguimiento' : 'Sin resolver');
 
     // Buscar estado actual de la máquina
     const maq = datosMaquinas.find(m => m.id === r.maquina_id);
@@ -1465,7 +1465,7 @@ function renderizarContenidoHistorial(data, tbody, empty) {
 async function toggleResolucionIncidencia(id, nuevoEstado) {
   let comentario = '';
   if (nuevoEstado) {
-    comentario = await customPrompt('Resolver Incidencia', 'Escribe un breve comentario sobre la solución (opcional):');
+    comentario = await customPrompt('Marcar como resuelta', 'Escribe un breve comentario sobre la solución (opcional):');
     if (comentario === null) return; // Cancelado
   }
 
@@ -1489,6 +1489,12 @@ async function toggleResolucionIncidencia(id, nuevoEstado) {
   }
 }
 
+function finalizarIncidenciaDesdeModal() {
+  const id = window.currentIncidenciaId;
+  if (!id) return;
+  toggleResolucionIncidencia(id, true);
+}
+
 async function verDetalleSesion(id) {
   cerrarModal('modalHistorialMaquina');
   const container = document.getElementById('detalleContenido');
@@ -1504,6 +1510,7 @@ async function verDetalleSesion(id) {
   }
 
   const { sesion } = res.data;
+  window.currentIncidenciaId = id; // Necesario para botón Finalizar incidencia
   const isInc = sesion.tipo === 'Incidencia';
   const resuelta = sesion.resuelta || false;
 
@@ -1630,18 +1637,10 @@ async function verDetalleSesion(id) {
     seccionSeg.style.display = 'none';
   }
 
-  // Botones de acción debajo del hilo de seguimiento
-  const accionesEl = document.getElementById('detalleAcciones');
-  if (accionesEl) {
-    if (isInc && !resuelta) {
-      accionesEl.innerHTML = `
-        <button class="btn btn-primary btn-sm" style="width:100%" onclick="toggleResolucionIncidencia('${sesion.id}', true)">Finalizar incidencia</button>
-      `;
-      accionesEl.style.display = 'block';
-    } else {
-      accionesEl.innerHTML = '';
-      accionesEl.style.display = 'none';
-    }
+  // Mostrar/ocultar botón Finalizar incidencia en el modal-footer
+  const btnFinalizar = document.getElementById('btnFinalizarIncidencia');
+  if (btnFinalizar) {
+    btnFinalizar.style.display = (isInc && !resuelta) ? 'inline-flex' : 'none';
   }
 }
 

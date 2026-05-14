@@ -600,11 +600,11 @@ const DASHBOARD_HTML = `
         </div>
       </div>
 
-      <div id="detalleAcciones" style="display:none; margin-top: 16px;"></div>
       </div>
 
       <div class="modal-footer" style="margin-top:20px">
         <button class="btn btn-outline" onclick="cerrarModal('modalDetalle')">Cerrar</button>
+        <button class="btn btn-primary btn-sm" id="btnFinalizarIncidencia" style="display:none" onclick="finalizarIncidenciaDesdeModal()">Marcar como resuelta</button>
       </div>
     </div>
   </div>
