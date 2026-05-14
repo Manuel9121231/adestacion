@@ -449,7 +449,6 @@
         <textarea
           class="reporte-textarea"
           id="reporteTextarea"
-          placeholder="Ej: Se ha encontrado el cabezal obstruido. Se ha limpiado y calibrado..."
           rows="7"
           oninput="onReporteChange()"
           style="margin-bottom: 16px;"
@@ -515,7 +514,7 @@
         <!-- Añadir nueva nota -->
         <div class="form-panel" style="background: rgba(79, 142, 247, 0.05); border: 1px solid var(--accent); border-radius: 16px; padding: 20px;">
           <div class="reporte-label" style="margin-bottom: 12px;">➕ AÑADIR NOTA DE SEGUIMIENTO</div>
-          <textarea id="nuevaNotaSeguimiento" class="reporte-textarea" rows="4" placeholder="Describe las acciones realizadas, avances, o cualquier información relevante..." style="margin-bottom: 12px;"></textarea>
+          <textarea id="nuevaNotaSeguimiento" class="reporte-textarea" style="margin-bottom: 12px;"></textarea>
           <button id="btnGuardarNota" onclick="guardarNotaSeguimiento()" style="width:100%; padding:12px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
             ➕ Añadir Nota
           </button>
@@ -538,7 +537,7 @@
         <!-- Resolver incidencia -->
         <div class="form-panel" style="background: rgba(16, 185, 129, 0.05); border: 1px solid var(--success); border-radius: 16px; padding: 20px;">
           <div class="reporte-label" style="color: var(--success); margin-bottom: 12px;">✅ MARCAR COMO RESUELTA</div>
-          <textarea id="notaResolucion" class="reporte-textarea" rows="3" placeholder="Describe la solución aplicada..." style="margin-bottom: 12px;"></textarea>
+          <textarea id="notaResolucion" class="reporte-textarea" style="margin-bottom: 12px;"></textarea>
           <button onclick="resolverIncidencia()" style="width:100%; padding:12px; background: var(--success); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
             ✅ Resolver Incidencia
           </button>

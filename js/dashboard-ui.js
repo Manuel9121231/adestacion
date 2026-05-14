@@ -193,7 +193,7 @@ const DASHBOARD_HTML = `
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <div style="position:relative;display:flex;align-items:center">
                 <svg style="position:absolute;left:10px;width:15px;height:15px;color:var(--text-muted);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="searchMaquinas" placeholder="Buscar máquina..." oninput="filtrarMaquinas()"
+                <input type="text" id="searchMaquinas" oninput="filtrarMaquinas()"
                   style="padding:8px 12px 8px 32px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg-secondary);color:var(--text-primary);font-family:inherit;width:180px;outline:none"
                   onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
               </div>
@@ -284,8 +284,9 @@ const DASHBOARD_HTML = `
                   <option value="">Todas las máquinas</option>
                 </select>
               </div>
-              <div class="filtro-item">
-                <input type="text" id="filtroOperario" class="form-control" placeholder="Buscar..." oninput="cargarHistorial()" title="Busca por máquina, sala, operario u observaciones" style="min-width:140px;flex:1">
+              <div class="filtro-item" style="position:relative;display:flex;align-items:center">
+                <svg style="position:absolute;left:10px;width:15px;height:15px;color:var(--text-muted);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="filtroOperario" class="form-control" oninput="cargarHistorial()" title="Busca por máquina, sala, operario u observaciones" style="min-width:140px;flex:1;padding-left:32px">
               </div>
               <div class="filtro-item">
                 <input type="date" class="form-control" id="filtroDesde" onchange="cargarHistorial()">
@@ -391,8 +392,11 @@ const DASHBOARD_HTML = `
               <div class="section-subtitle">QR individuales para cada máquina — escanear con el móvil del operario</div>
             </div>
             <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
-              <input type="text" id="buscarQR" class="form-control" placeholder="Buscar máquina…"
-                oninput="filtrarQRs()" style="width:180px;padding:8px 12px;font-size:13px">
+              <div style="position:relative;display:flex;align-items:center">
+                <svg style="position:absolute;left:10px;width:15px;height:15px;color:var(--text-muted);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="buscarQR" class="form-control"
+                  oninput="filtrarQRs()" style="width:180px;padding:8px 12px 8px 32px;font-size:13px">
+              </div>
               <select class="form-control" id="filtroSalaQR" onchange="filtrarQRs()"
                 style="width:160px;padding:8px 12px;font-size:13px">
                 <option value="">Todas las salas</option>
@@ -470,7 +474,7 @@ const DASHBOARD_HTML = `
           </div>
           <div class="form-group">
             <label class="form-label">Modelo</label>
-            <input class="form-control" id="editModelo" type="text" placeholder="Ej: Prusa MK4">
+            <input class="form-control" id="editModelo" type="text">
           </div>
           <div class="form-group">
             <label class="form-label">Estado operativo</label>
@@ -482,7 +486,7 @@ const DASHBOARD_HTML = `
         </div>
         <div class="form-group">
           <label class="form-label">Notas / Especificaciones adicionales</label>
-          <textarea class="form-control" id="editNotas" rows="2" placeholder="Nozzle, material, configuración especial..."></textarea>
+          <textarea class="form-control" id="editNotas" rows="2"></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -505,7 +509,7 @@ const DASHBOARD_HTML = `
         <div id="msgNuevaMaquina"></div>
         <div class="form-group">
           <label class="form-label">Nombre <span style="color:var(--danger)">*</span></label>
-          <input class="form-control" id="nuevoMaquinaNombre" type="text" placeholder="Ej: Impresora A-11">
+          <input class="form-control" id="nuevoMaquinaNombre" type="text">
         </div>
         <div class="form-group">
           <label class="form-label">Sala <span style="color:var(--danger)">*</span></label>
@@ -524,7 +528,7 @@ const DASHBOARD_HTML = `
           </div>
           <div class="form-group">
             <label class="form-label">Modelo</label>
-            <input class="form-control" id="nuevoMaquinaModelo" type="text" placeholder="Ej: Prusa MK4">
+            <input class="form-control" id="nuevoMaquinaModelo" type="text">
           </div>
           <div class="form-group">
             <label class="form-label">Estado operativo</label>
@@ -536,7 +540,7 @@ const DASHBOARD_HTML = `
         </div>
         <div class="form-group">
           <label class="form-label">Notas / Especificaciones adicionales</label>
-          <textarea class="form-control" id="nuevoMaquinaNotas" rows="2" placeholder="Nozzle, material, configuración especial..."></textarea>
+          <textarea class="form-control" id="nuevoMaquinaNotas" rows="2"></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -569,7 +573,7 @@ const DASHBOARD_HTML = `
 
         <div class="add-note-box" style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--accent)">
           <label class="form-label" style="font-size:12px">Añadir nueva nota de progreso:</label>
-          <textarea id="nuevaNotaSeguimiento" class="form-control" rows="2" placeholder="Describe los avances, piezas pedidas, etc..." style="margin-bottom:10px; font-size:13px"></textarea>
+          <textarea id="nuevaNotaSeguimiento" class="form-control" rows="2" style="margin-bottom:10px; font-size:13px"></textarea>
           <div style="display:flex; justify-content:flex-end">
             <button class="btn btn-primary btn-sm" id="btnGuardarNota" onclick="guardarNuevaNota()">
               <span>Añadir Nota</span>
@@ -629,7 +633,7 @@ const DASHBOARD_HTML = `
       <div class="form-group" style="background:var(--bg-secondary); padding:16px; border-radius:12px; margin-bottom:20px">
         <label class="form-label">Nombre de la nueva sala</label>
         <div style="display:flex; gap:8px">
-          <input type="text" id="nuevaSalaNombre" class="form-control" placeholder="Ej: Laboratorio Prototipado">
+          <input type="text" id="nuevaSalaNombre" class="form-control">
           <button class="btn btn-primary" onclick="crearSala()">+ Añadir</button>
         </div>
       </div>
