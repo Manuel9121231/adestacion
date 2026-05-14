@@ -580,8 +580,12 @@
   <div class="screen" id="screen-exito">
     <div class="success-screen">
       <div class="success-icon">✅</div>
-      <div class="success-title" id="exitoTitulo">¡Reporte<br>registrado!</div>
-      <div class="success-sub">El registro ha quedado guardado<br>en la base de datos correctamente.</div>
+      <div class="success-title" id="exitoTitulo">¡Incidencia<br>enviada!</div>
+      <div class="success-sub">
+        El técnico ya ha sido notificado.<br>
+        <strong style="color:var(--success)">No necesitas hacer nada más.</strong><br>
+        <span style="font-size:13px;opacity:0.7">Puedes cerrar esta página cuando quieras.</span>
+      </div>
 
       <div class="success-details fade-up">
         <div class="success-detail-row">
@@ -598,9 +602,9 @@
         </div>
       </div>
 
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <button class="btn-nuevo" onclick="reiniciar()" id="btnNuevoReporte">🔄 Nuevo reporte</button>
-        <button class="btn-nuevo" onclick="location.href='index.html'" style="background:#fff;border:1.5px solid #dde1e7;color:#1e2a38">🏠 Ir al inicio</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:8px">
+        <button class="btn-nuevo" onclick="window.close()" style="min-width:220px;font-size:16px;padding:14px 28px">✅ Terminar</button>
+        <button onclick="location.href='estado.html'" style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;text-decoration:underline;padding:4px">Consultar estado del equipo</button>
       </div>
     </div>
   </div>
