@@ -572,7 +572,7 @@ const DASHBOARD_HTML = `
   <div class="overlay" id="modalDetalle">
     <div class="modal" style="max-width:650px; width:90%">
       <div class="modal-header">
-        <div class="modal-title" id="modalDetalleTitulo">Detalles del Reporte</div>
+        <div class="modal-title" id="modalDetalleTitulo">Detalles de la Incidencia</div>
         <button class="modal-close" onclick="cerrarModal('modalDetalle')">✕</button>
       </div>
       
@@ -599,6 +599,8 @@ const DASHBOARD_HTML = `
           </div>
         </div>
       </div>
+
+      <div id="detalleAcciones" style="display:none; margin-top: 16px;"></div>
       </div>
 
       <div class="modal-footer" style="margin-top:20px">

@@ -1535,7 +1535,7 @@ async function verDetalleSesion(id) {
           </div>
           
           <div class="detail-section" style="margin-bottom: 16px;">
-            <div class="section-label">${isInc ? 'Informe de Fallo' : 'Observaciones'}</div>
+            <div class="section-label">Descripción</div>
             <div class="detail-notes" style="font-size:13px; ${isInc ? 'background:rgba(239, 68, 68, 0.05); border-left:4px solid var(--danger)' : ''}">${sesion.observaciones || 'Sin notas'}</div>
           </div>
 
@@ -1546,12 +1546,9 @@ async function verDetalleSesion(id) {
             </div>
           ` : ''}
 
-          <div style="display:flex; gap:10px; margin-top: 12px">
-            ${isInc && !resuelta ? `
-              <button class="btn btn-outline btn-sm flex-1" onclick="editarDescripcionIncidencia('${sesion.id}')">Editar Reporte</button>
-              <button class="btn btn-primary btn-sm flex-1" onclick="toggleResolucionIncidencia('${sesion.id}', true)">Resolver</button>
-            ` : ''}
-          </div>
+          ${isInc && !resuelta ? `
+            <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="editarDescripcionIncidencia('${sesion.id}')">Editar descripción</button>
+          ` : ''}
         </div>
 
         <!-- Columna Derecha: Fotos y Acciones rápidas -->
@@ -1632,6 +1629,20 @@ async function verDetalleSesion(id) {
   } else if (seccionSeg) {
     seccionSeg.style.display = 'none';
   }
+
+  // Botones de acción debajo del hilo de seguimiento
+  const accionesEl = document.getElementById('detalleAcciones');
+  if (accionesEl) {
+    if (isInc && !resuelta) {
+      accionesEl.innerHTML = `
+        <button class="btn btn-primary btn-sm" style="width:100%" onclick="toggleResolucionIncidencia('${sesion.id}', true)">Finalizar incidencia</button>
+      `;
+      accionesEl.style.display = 'block';
+    } else {
+      accionesEl.innerHTML = '';
+      accionesEl.style.display = 'none';
+    }
+  }
 }
 
 async function guardarNuevaNota() {
@@ -1707,7 +1718,7 @@ async function editarDescripcionIncidencia(id) {
   if (resDet.ok && resDet.data.sesion) {
     currentDesc = resDet.data.sesion.observaciones;
   }
-  const nuevaDesc = await customPrompt('Editar Reporte', 'Edita el reporte de la incidencia:', currentDesc);
+  const nuevaDesc = await customPrompt('Editar descripción', 'Edita la descripción de la incidencia:', currentDesc);
   if (nuevaDesc === null) return;
 
   const res = await apiFetch(`/api/incidencia/${id}/editar`, {
@@ -1716,7 +1727,7 @@ async function editarDescripcionIncidencia(id) {
   });
 
   if (res.ok) {
-    showFeedback('Reporte actualizado', 'La descripción del reporte se ha modificado correctamente.', '');
+    showFeedback('Descripción actualizada', 'La descripción se ha modificado correctamente.', '');
     // Recargar datos y refrescar vista
     await cargarDatosBase();
     verDetalleSesion(id);
