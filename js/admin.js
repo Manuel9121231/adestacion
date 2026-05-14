@@ -1774,8 +1774,10 @@ async function editarNombreUsuario(userId, nombreActual) {
 
   try {
     const client = window.supabaseClient;
-    const { error } = await client.from('perfiles').update({ nombre: nombreLimpio }).eq('id', userId);
-    if (error) throw error;
+    // 1. Actualizar perfil
+    const { error: errPerfil } = await client.from('perfiles').update({ nombre: nombreLimpio }).eq('id', userId);
+    if (errPerfil) throw errPerfil;
+
     showFeedback('Nombre actualizado', 'El nombre del usuario se ha cambiado correctamente.', '');
     await recargarTodo();
     renderUsuarios();
@@ -1807,7 +1809,7 @@ async function apiFetch(url, options = {}) {
       const [salas, equipos, registros] = await Promise.all([
         client.from('salas').select('*').order('nombre'),
         client.from('equipos').select('*, salas(nombre)').order('nombre'),
-        client.from('registros').select('*').order('timestamp', { ascending: false }).limit(500)
+        client.from('registros').select('*, perfiles(nombre, rol)').order('timestamp', { ascending: false }).limit(500)
       ]);
 
       if (salas.error) throw salas.error;
@@ -1840,8 +1842,8 @@ async function apiFetch(url, options = {}) {
             id: r.id,
             maquina: r.maquina_nombre || 'Desconocida',
             sala: r.sala_nombre || 'Sin sala',
-            operario: r.operario_nombre || 'Anónimo',
-            rol: r.usuario_rol || 'usuario',
+            operario: r.perfiles?.nombre || r.operario_nombre || 'Anónimo',
+            rol: r.perfiles?.rol || r.usuario_rol || 'usuario',
             iniciado_en: r.timestamp,
             completado_en: r.timestamp,
             observaciones: r.notas || '',
@@ -1892,9 +1894,9 @@ async function apiFetch(url, options = {}) {
 
     if (url.includes('/api/sesion/') && url.includes('/detalle')) {
       const id = url.split('/')[3];
-      const { data: reg, error } = await client.from('registros').select('*').eq('id', id).single();
+      const { data: reg, error } = await client.from('registros').select('*, perfiles(nombre, rol)').eq('id', id).single();
       if (error) throw error;
-      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.maquina_nombre, sala: reg.sala_nombre, operario: reg.operario_nombre, rol: reg.usuario_rol || 'usuario', iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
+      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.maquina_nombre, sala: reg.sala_nombre, operario: reg.perfiles?.nombre || reg.operario_nombre || 'Anónimo', rol: reg.perfiles?.rol || reg.usuario_rol || 'usuario', iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
     }
 
     if (url.includes('/api/incidencia/') && url.includes('/seguimientos')) {
