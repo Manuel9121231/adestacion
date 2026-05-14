@@ -71,6 +71,12 @@ function getEmailAdmin() {
   } catch { return ''; }
 }
 
+// ── Formatear rol para visualización ──
+function formatearRol(rol) {
+  const map = { usuario: 'Usuario', admin: 'Administrador', tecnico: 'Técnico', superadmin: 'Administrador' };
+  return map[rol] || (rol ? rol.charAt(0).toUpperCase() + rol.slice(1) : 'Usuario');
+}
+
 // ── Obtener nombre y rol del usuario actual (admin o usuario normal) ──
 function getUsuarioActualInfo() {
   try {
@@ -138,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Mostrar nombre y rol en sidebar footer y dropdown Cuenta
     const adminName = getNombreAdmin();
     const adminEmail = getEmailAdmin();
-    const rolLabel = { superadmin: 'Administrador', admin: 'Administrador', tecnico: 'Técnico' }[rolActual] || 'Usuario';
+    const rolLabel = formatearRol(rolActual);
     const footerVersion = container?.querySelector('.sidebar-footer div');
     if (footerVersion) {
       footerVersion.innerHTML = `<strong>${adminName}</strong><br><span style="font-size:12px;opacity:1;color:var(--accent)">${rolLabel}</span>`;
@@ -445,13 +451,12 @@ async function renderIncidencias(filtro = 'todas') {
         </div>
         <div class="ticket-body">
           <div class="ticket-sala">${r.sala}</div>
-          <div class="ticket-desc">${truncate(r.observaciones || 'Sin descripción detallada', 120)}</div>
-          <div class="ticket-date">Reportado: ${formatFechaHora(r.completado_en)}</div>
-          <div class="ticket-date">${r.rol === 'usuario' ? 'Usuario' : (r.rol === 'admin' ? 'Admin' : 'Técnico')}: ${r.operario}</div>
+          <div class="ticket-desc"><b>Incidencia:</b> ${truncate(r.observaciones || 'Sin descripción detallada', 120)}</div>
+          <div class="ticket-date">Reportado: ${formatFechaHora(r.completado_en)} · por ${r.operario} (${formatearRol(r.rol)})</div>
           
           ${esSeguimiento ? `
-            <div class="ticket-last-note">
-              ${ultimasNotas[r.id] ? truncate(ultimasNotas[r.id], 80) : 'En seguimiento - sin notas aún'}
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); font-size:12px; color:var(--text-muted);">
+              <b>Última actualización:</b> ${ultimasNotas[r.id] ? truncate(ultimasNotas[r.id], 100) : 'En seguimiento - sin notas aún'}
             </div>
           ` : ''}
         </div>
@@ -1442,7 +1447,7 @@ function renderizarContenidoHistorial(data, tbody, empty) {
         <td data-label="Sala">${r.sala}</td>
         <td data-label="Usuario" style="max-width: 150px; white-space: normal; word-break: break-word;">
           <div style="font-weight:700">${r.operario}</div>
-          <div style="font-size:10px; color:var(--text-muted)">${r.rol === 'usuario' ? 'Usuario' : (r.rol === 'admin' ? 'Admin' : 'Técnico')}</div>
+          <div style="font-size:10px; color:var(--text-muted)">${formatearRol(r.rol)}</div>
         </td>
         <td data-label="Fecha" style="font-size:11px">${formatFechaHora(r.completado_en)}</td>
         <td data-label="Observ." style="font-size:11px;color:var(--text-muted)">
@@ -1525,7 +1530,7 @@ async function verDetalleSesion(id) {
         <!-- Columna Izquierda: Información Principal -->
         <div>
           <div class="detail-stats-grid" style="margin-bottom: 16px;">
-            <div class="detail-stat"><div class="label">${sesion.rol === 'usuario' ? 'Reportado por' : (sesion.rol === 'admin' ? 'Administrador' : 'Técnico')}</div><div class="value">${sesion.operario}<span style="font-size:11px;color:var(--text-muted);margin-left:6px">(${sesion.rol || 'usuario'})</span></div></div>
+            <div class="detail-stat"><div class="label">${sesion.rol === 'usuario' ? 'Reportado por' : formatearRol(sesion.rol)}</div><div class="value">${sesion.operario}<span style="font-size:11px;color:var(--text-muted);margin-left:6px">(${formatearRol(sesion.rol)})</span></div></div>
             <div class="detail-stat"><div class="label">Fecha</div><div class="value">${formatFechaHora(sesion.completado_en)}</div></div>
           </div>
           
@@ -1601,7 +1606,7 @@ async function verDetalleSesion(id) {
             <div class="timeline-meta" style="display:flex;justify-content:space-between;align-items:center">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                 <b>${nombreAutor}</b>
-                ${rolAutor ? `<span style="font-size:11px;color:var(--text-muted)">(${rolAutor})</span>` : ''}
+                ${rolAutor ? `<span style="font-size:11px;color:var(--text-muted)">(${formatearRol(rolAutor)})</span>` : ''}
                 <span style="font-size:11px;color:var(--text-muted)">${fechaCreado}</span>
               </div>
               ${esPrimera ? `<button onclick="iniciarEdicionSeguimiento('${n.id}', '${encodeURIComponent(n.nota)}')" style="background:transparent;border:none;color:var(--accent);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px" title="Editar nota">Editar</button>` : ''}
@@ -1758,7 +1763,7 @@ async function verHistorialMaquina(nombreMaquina) {
   tbody.innerHTML = filtrados.map(r => `
     <tr>
       <td data-label="Fecha">${formatFechaHora(r.completado_en)}</td>
-      <td data-label="Usuario"><div style="font-weight:600">${r.operario}</div><div style="font-size:10px;color:var(--text-muted)">${r.rol || 'usuario'}</div></td>
+      <td data-label="Usuario"><div style="font-weight:600">${r.operario}</div><div style="font-size:10px;color:var(--text-muted)">${formatearRol(r.rol)}</div></td>
       <td data-label="Tipo"><span class="estado-badge ${r.tipo === 'Incidencia' ? 'vencido' : 'ok'}">${r.tipo}</span></td>
       <td data-label="Nota">${truncate(r.observaciones || '', 20)}</td>
       <td><button class="btn btn-outline btn-sm" onclick="verDetalleSesion('${r.id}')">Detalles</button></td>
@@ -1864,7 +1869,7 @@ async function renderUsuarios() {
     }
 
     if (!perfilesFiltrados.length) {
-      container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No hay usuarios con el rol "${filtroRolUsuarios}"</td></tr>`;
+      container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No hay usuarios con el rol "${formatearRol(filtroRolUsuarios)}"</td></tr>`;
       return;
     }
 
