@@ -916,7 +916,7 @@
     async function enviarRecuperacion() {
       const email = document.getElementById('recuperacionEmail').value.trim();
       const msgDiv = document.getElementById('recuperacionMensaje');
-      
+
       if (!email) {
         msgDiv.textContent = '⚠️ Introduce tu email.';
         msgDiv.style.cssText = 'display:block; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; background:#fef3c7; color:#92400e;';
@@ -927,6 +927,20 @@
         const client = window.supabaseClient;
         if (!client) throw new Error('No se pudo conectar al servidor.');
 
+        // Verificar que la cuenta existe en la base de datos
+        const { data: perfil, error: perfilError } = await client
+          .from('perfiles')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (perfilError) throw perfilError;
+        if (!perfil) {
+          msgDiv.textContent = '⚠️ No existe una cuenta registrada con este email.';
+          msgDiv.style.cssText = 'display:block; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; background:#fef3c7; color:#92400e;';
+          return;
+        }
+
         const { error } = await client.auth.resetPasswordForEmail(email, {
           redirectTo: window.location.origin + '/adestacion/reset-password.html'
         });
@@ -935,7 +949,7 @@
 
         msgDiv.textContent = '✅ Se ha enviado un enlace de recuperación a tu email.';
         msgDiv.style.cssText = 'display:block; padding:12px; border-radius:8px; margin-bottom:16px; font-size:14px; background:#d1fae5; color:#065f46;';
-        
+
         setTimeout(() => {
           cerrarRecuperacion();
         }, 3000);
