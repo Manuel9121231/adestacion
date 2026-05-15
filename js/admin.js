@@ -598,8 +598,6 @@ function actualizarVistaDashboard() {
   const incPendientes = historial.filter(r => r.tipo === 'Incidencia' && !r.resuelta);
   renderIncPendientesDashboard(incPendientes.slice(0, 5));
 
-  // Últimos reportes
-  renderUltimosRegistros(historial.slice(0, 8));
 }
 
 function renderIncPendientesDashboard(lista) {
@@ -641,44 +639,6 @@ function renderBarChart(containerId, items) {
   `).join('');
 }
 
-function renderUltimosRegistros(registros) {
-  const tbody = document.getElementById('dashboardUltimos');
-  if (!registros.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px">Sin reportes aún</td></tr>';
-    return;
-  }
-  tbody.innerHTML = registros.map(r => {
-    const resuelta = r.resuelta || false;
-    const tipoBadge = `<span class="estado-badge ${resuelta ? 'ok' : 'vencido'}" style="font-size:10px">Incidencia</span>`;
-
-    const maq = datosMaquinas.find(m => m.id === r.maquina_id);
-    const maquinaEstado = maq ? maq.estado : 'activa';
-    const maqStatusClass = maquinaEstado === 'activa' ? 'ok' : (maquinaEstado === 'inactiva' ? 'gris' : 'naranja');
-
-    return `
-      <tr onclick="verDetalleSesion('${r.id}')" style="cursor:pointer">
-        <td data-label="Máquina">
-          <div style="display:flex;flex-direction:column;gap:2px">
-            <span style="${!resuelta ? 'color:var(--danger);font-weight:600' : ''}">${r.maquina}</span>
-            <span class="estado-badge ${maqStatusClass}" style="font-size:8px;padding:0 4px;width:fit-content">${maquinaEstado || 'activa'}</span>
-          </div>
-        </td>
-        <td data-label="Tipo">${tipoBadge}</td>
-        <td data-label="Sala"><span class="text-muted">${r.sala}</span></td>
-        <td data-label="Operario">${r.operario}</td>
-        <td data-label="Fecha y hora">${formatFechaHora(r.completado_en)}</td>
-        <td data-label="Estado">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-            <span class="estado-badge ${resuelta ? 'ok' : 'vencido'}" style="font-size:10px">
-              ${resuelta ? 'Resuelta' : 'Sin resolver'}
-            </span>
-            ${r.tiene_fotos ? `<img src="${r.fotos[0]}" style="width:24px;height:24px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : ''}
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
 
 // ── Máquinas ──────────────────────────────────────────────────────────────────
 function renderMaquinas() {

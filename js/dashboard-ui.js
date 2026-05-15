@@ -178,27 +178,6 @@ const DASHBOARD_HTML = `
             </div>
           </div>
 
-          <div class="table-wrap" style="margin-bottom:0">
-            <div class="table-header">
-              <div class="table-title">Últimos registros realizados</div>
-              <button class="btn btn-outline btn-sm" onclick="navigateTo('incidencias')">Ver todas →</button>
-            </div>
-            <div style="overflow-x:auto">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Máquina</th>
-                    <th>Tipo</th>
-                    <th>Sala</th>
-                    <th>Operario</th>
-                    <th>Fecha y hora</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody id="dashboardUltimos"></tbody>
-              </table>
-            </div>
-          </div>
         </div>
 
         <!-- ══════════ MÁQUINAS ══════════ -->
