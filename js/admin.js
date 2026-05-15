@@ -1237,6 +1237,12 @@ async function toggleResolucionIncidencia(id, nuevoEstado) {
   });
 
   if (res.ok) {
+    cerrarModal('modalDetalle');
+    showFeedback(
+      nuevoEstado ? 'Incidencia resuelta' : 'Incidencia reabierta',
+      nuevoEstado ? 'La incidencia ha sido marcada como resuelta correctamente.' : 'La incidencia ha sido reabierta.',
+      ''
+    );
     await cargarDatosBase();
     if (document.getElementById('section-incidencias').classList.contains('active')) {
       const filtroActual = document.querySelector('.btn-outline.btn-sm.active[id^="btn-inc-"]')?.id.replace('btn-inc-', '') || 'todas';
