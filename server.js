@@ -50,7 +50,7 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 app.listen(PORT, '0.0.0.0', () => {
   const ip = getLocalIP();
   console.log('\n╔══════════════════════════════════════════════════╗');
-  console.log('║  SISTEMA DE GESTIÓN DE IMPRESORAS Y MÁQUINAS 3D  ║');
+  console.log('║         SISTEMA DE GESTIÓN DE MÁQUINAS           ║');
   console.log('╚══════════════════════════════════════════════════╝');
   console.log(`\n  🖥️  Panel de administración: http://localhost:${PORT}`);
   console.log(`  📱  Nueva interfaz móvil:     http://${ip}:${PORT}/index.html`);
