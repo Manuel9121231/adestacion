@@ -6,6 +6,7 @@ let datosMaquinas = [];
 let datosUsuarios = [];
 let datosHistorial = []; // Reutilizar datos ya cargados
 let isCargando = false;
+let cacheSeguimientosNotas = null; // Cache de notas por incidencia_id
 // Detectar base path (útil para GitHub Pages en subcarpetas)
 let serverHost = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
 
@@ -237,6 +238,9 @@ async function cargarDatosBase() {
     datosUsuarios = d.usuarios || [];
     datosHistorial = d.historial || [];
 
+    // Invalidar cache de seguimientos al recargar datos (nuevas notas podrían haberse añadido)
+    cacheSeguimientosNotas = null;
+
     // Poblar dashboard con los datos ya recibidos
     actualizarVistaDashboard();
   }
@@ -400,26 +404,26 @@ async function renderIncidencias(filtro = 'todas') {
   // Guardar lista filtrada para exportación CSV
   incidenciasVisibles = lista;
 
-  // Cargar últimas notas de seguimiento para incidencias en seguimiento (no bloqueante)
+  // Cargar últimas notas de seguimiento para incidencias en seguimiento (cache primero, async si falta)
   const incSeguimiento = lista.filter(r => !r.resuelta && r.en_seguimiento);
-  let ultimasNotas = {};
-  const seguimientosPromise = (incSeguimiento.length > 0 && window.supabaseClient)
+  const idsSinCache = incSeguimiento.filter(r => !cacheSeguimientosNotas || !(r.id in cacheSeguimientosNotas));
+  const seguimientosPromise = (idsSinCache.length > 0 && window.supabaseClient)
     ? window.supabaseClient
         .from('seguimientos')
         .select('incidencia_id, nota, timestamp')
-        .in('incidencia_id', incSeguimiento.map(r => r.id))
+        .in('incidencia_id', idsSinCache.map(r => r.id))
         .order('timestamp', { ascending: false })
         .then(({ data: seguimientos }) => {
           if (seguimientos) {
-            const notas = {};
+            if (!cacheSeguimientosNotas) cacheSeguimientosNotas = {};
             seguimientos.forEach(s => {
-              if (!notas[s.incidencia_id]) notas[s.incidencia_id] = s.nota;
+              cacheSeguimientosNotas[s.incidencia_id] = s.nota;
+              const el = document.getElementById('seguimiento-nota-' + s.incidencia_id);
+              if (el) el.textContent = truncate(s.nota, 100);
             });
-            return notas;
           }
-          return {};
-        }).catch(() => ({}))
-    : Promise.resolve({});
+        }).catch(() => {})
+    : Promise.resolve();
 
   // Ordenar según criterio seleccionado
   const ordenSelect = document.getElementById('select-inc-orden');
@@ -439,7 +443,6 @@ async function renderIncidencias(filtro = 'todas') {
   }
 
   empty.style.display = 'none';
-  ultimasNotas = await seguimientosPromise;
   grid.innerHTML = lista.map(r => {
     const resuelta = r.resuelta || false;
     const esSeguimiento = !resuelta && r.en_seguimiento;
@@ -465,8 +468,8 @@ async function renderIncidencias(filtro = 'todas') {
           <div class="ticket-date">Reportado: ${formatFechaHora(r.completado_en)} · por ${r.operario} (${formatearRol(r.rol)})</div>
           
           ${esSeguimiento ? `
-            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); font-size:12px; color:var(--text-muted);">
-              <b>Última actualización:</b> ${ultimasNotas[r.id] ? truncate(ultimasNotas[r.id], 100) : 'En seguimiento - sin notas aún'}
+            <div id="seguimiento-nota-${r.id}" style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); font-size:12px; color:var(--text-muted);">
+              <b>Última actualización:</b> ${cacheSeguimientosNotas && r.id in cacheSeguimientosNotas ? truncate(cacheSeguimientosNotas[r.id], 100) : 'En seguimiento - sin notas aún'}
             </div>
           ` : ''}
         </div>
@@ -476,6 +479,9 @@ async function renderIncidencias(filtro = 'todas') {
       </div>
     `;
   }).join('');
+
+  // La query de seguimientos sigue ejecutándose en segundo plano y actualiza los textos cuando llega
+  seguimientosPromise;
 }
 
 // ── Navegación ────────────────────────────────────────────────────────────────
