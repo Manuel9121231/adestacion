@@ -754,11 +754,13 @@ async function resolverIncidencia() {
     async () => {
       // Obtener usuario actual
       let usuarioNombre = 'Técnico';
+      let usuarioId = null;
       const sessionStr = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
       if (sessionStr) {
         try {
           const session = JSON.parse(sessionStr);
           usuarioNombre = session.nombre || session.username || 'Técnico';
+          usuarioId = session.userId || null;
         } catch(e) {}
       }
       
@@ -768,6 +770,7 @@ async function resolverIncidencia() {
       await client.from('seguimientos').insert({
         incidencia_id: incidenciaAbiertaId,
         nota: `✅ RESUELTO: ${comentario}`,
+        usuario_id: usuarioId,
         usuario_nombre: usuarioNombre,
         timestamp: new Date().toISOString()
       });

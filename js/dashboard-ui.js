@@ -109,33 +109,37 @@ const DASHBOARD_HTML = `
         <!-- ══════════ DASHBOARD ══════════ -->
         <div class="section active fade-in" id="section-dashboard">
           <!-- KPI Cards en fila horizontal -->
-          <div class="kpi-grid" id="kpiGrid" style="margin-bottom:16px;grid-template-columns:1fr 1fr 1fr">
-            <div class="kpi-card rojo" style="border:2px solid var(--danger);animation:pulse-red 2s infinite">
-              <div class="kpi-icon"></div>
-              <div class="kpi-value" id="kpi-sin-resolver" style="color:var(--danger)">–</div>
-              <div class="kpi-label">Sin resolver</div>
-              <button onclick="navigateTo('incidencias', null, 'pendientes')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--danger);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
-            </div>
-            <div class="kpi-card amarillo" style="border:2px solid var(--warning)">
-              <div class="kpi-icon"></div>
-              <div class="kpi-value" id="kpi-en-seguimiento-dash" style="color:var(--warning)">–</div>
-              <div class="kpi-label">En seguimiento</div>
-              <button onclick="navigateTo('incidencias', null, 'seguimiento')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--warning);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
-            </div>
-            <div class="kpi-card" style="border:2px solid var(--border)">
-              <div class="kpi-icon"></div>
-              <div style="display:flex;gap:12px;align-items:baseline">
-                <div>
-                  <div class="kpi-value" id="kpi-maq-activas" style="color:var(--success);font-size:22px">–</div>
-                  <div style="font-size:10px;color:var(--text-muted)">Activas</div>
+          <div class="kpi-grid" id="kpiGrid" style="margin-bottom:16px;grid-template-columns:1fr 1fr">
+            <!-- Tarjeta unificada de Incidencias -->
+            <div class="kpi-card rojo" style="border:2px solid var(--danger);animation:pulse-red 2s infinite;display:flex;flex-direction:column">
+              <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:12px">Incidencias</div>
+              <div style="display:flex;gap:24px;align-items:center;flex:1">
+                <div style="text-align:center;flex:1">
+                  <div class="kpi-value" id="kpi-sin-resolver" style="color:var(--danger);font-size:28px">–</div>
+                  <div style="font-size:11px;color:var(--text-secondary)">Sin resolver</div>
                 </div>
-                <div style="color:var(--text-muted)">/</div>
-                <div>
-                  <div class="kpi-value" id="kpi-maq-inactivas" style="color:var(--text-muted);font-size:22px">–</div>
-                  <div style="font-size:10px;color:var(--text-muted)">Inactivas</div>
+                <div style="width:1px;height:40px;background:var(--border)"></div>
+                <div style="text-align:center;flex:1">
+                  <div class="kpi-value" id="kpi-en-seguimiento-dash" style="color:var(--warning);font-size:28px">–</div>
+                  <div style="font-size:11px;color:var(--text-secondary)">En seguimiento</div>
                 </div>
               </div>
-              <div class="kpi-label" style="margin-top:4px">Máquinas</div>
+              <button onclick="navigateTo('incidencias')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--danger);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ir al panel →</button>
+            </div>
+            <!-- Tarjeta de Máquinas -->
+            <div class="kpi-card" style="border:2px solid var(--border);display:flex;flex-direction:column">
+              <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:12px">Máquinas</div>
+              <div style="display:flex;gap:12px;align-items:center;flex:1">
+                <div style="text-align:center;flex:1">
+                  <div class="kpi-value" id="kpi-maq-activas" style="color:var(--success);font-size:28px">–</div>
+                  <div style="font-size:11px;color:var(--text-secondary)">Activas</div>
+                </div>
+                <div style="width:1px;height:40px;background:var(--border)"></div>
+                <div style="text-align:center;flex:1">
+                  <div class="kpi-value" id="kpi-maq-inactivas" style="color:var(--text-muted);font-size:28px">–</div>
+                  <div style="font-size:11px;color:var(--text-secondary)">Inactivas</div>
+                </div>
+              </div>
               <button onclick="navigateTo('maquinas')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ver máquinas →</button>
             </div>
           </div>
