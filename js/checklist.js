@@ -3,9 +3,7 @@
 // ── Estado global ─────────────────────────────────────────────────────────────
 let maquinaId = null;
 let maquinaData = null;
-let operarioData = null;
 let sesionId = null;
-let pinBuffer = '';
 let modoActual = 'Incidencia';
 let selectedPhotos = [];
 let incidenciaAbiertaId = null; // ID de incidencia abierta para seguimiento
@@ -374,18 +372,6 @@ async function apiFetch(url, options = {}) {
         sala_nombre: data.salas ? data.salas.nombre : 'Sin sala'
       };
       return { ok: true, data: formatted };
-    }
-
-    if (url.includes('/api/operarios/verificar-pin')) {
-      const { data, error } = await client
-        .from('operarios')
-        .select('*')
-        .eq('pin', payload.pin)
-        .eq('activo', true)
-        .single();
-
-      if (error || !data) return { ok: false, error: 'PIN incorrecto' };
-      return { ok: true, data };
     }
 
     if (url.includes('/api/sesion/iniciar')) {

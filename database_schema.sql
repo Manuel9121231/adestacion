@@ -1,229 +1,119 @@
 -- =============================================================================
--- ESQUEMA DE BASE DE DATOS SQLITE - Sistema de Gestión de Máquinas
--- Migración desde Supabase
+-- ESQUEMA DE BASE DE DATOS - Sistema de Gestión de Máquinas
+-- Plataforma: Supabase (PostgreSQL)
+-- Exportado desde: SQL Editor de Supabase
 -- =============================================================================
 
--- =============================================================================
--- 1. TABLA: salas
--- Descripción: Almacena las salas o ubicaciones donde están los equipos
--- =============================================================================
-CREATE TABLE IF NOT EXISTS salas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+-- Tablas reales en la base de datos (dump de producción)
+
+CREATE TABLE public.salas (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  nombre text NOT NULL,
+  creado_en timestamp with time zone DEFAULT now(),
+  CONSTRAINT salas_pkey PRIMARY KEY (id)
+);
+
+CREATE TABLE public.equipos (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  nombre text NOT NULL,
+  tipo text,
+  modelo text,
+  sala_id uuid,
+  estado text DEFAULT 'activa'::text,
+  ancho_mm integer,
+  alto_mm integer,
+  profundidad_mm integer,
+  notas text,
+  frecuencia_dias integer DEFAULT 7,
+  ultimo_mantenimiento timestamp with time zone,
+  creado_en timestamp with time zone DEFAULT now(),
+  CONSTRAINT equipos_pkey PRIMARY KEY (id),
+  CONSTRAINT equipos_sala_id_fkey FOREIGN KEY (sala_id) REFERENCES public.salas(id)
+);
+
+CREATE TABLE public.perfiles (
+  id uuid NOT NULL,
+  email text NOT NULL,
+  nombre text,
+  rol text DEFAULT 'usuario'::text,
+  activo boolean DEFAULT true,
+  creado_en timestamp with time zone DEFAULT now(),
+  CONSTRAINT perfiles_pkey PRIMARY KEY (id),
+  CONSTRAINT perfiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+
+CREATE TABLE public.registros (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  maquina_id uuid,
+  usuario_id uuid, -- SIN FK constraint. El código hace JOIN manual con perfiles
+  maquina_nombre text,
+  sala_nombre text,
+  operario_nombre text,
+  operario_email text,
+  tipo text NOT NULL,
+  notas text,
+  timestamp timestamp with time zone DEFAULT now(),
+  resuelta boolean DEFAULT false,
+  en_seguimiento boolean DEFAULT false,
+  comentario_resolucion text,
+  photos ARRAY, -- PostgreSQL array (no JSONB). El frontend lo recibe como JSON
+  CONSTRAINT registros_pkey PRIMARY KEY (id),
+  CONSTRAINT registros_maquina_id_fkey FOREIGN KEY (maquina_id) REFERENCES public.equipos(id)
+);
+
+CREATE TABLE public.seguimientos (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  incidencia_id uuid,
+  nota text NOT NULL,
+  usuario_nombre text,
+  timestamp timestamp with time zone DEFAULT now(),
+  CONSTRAINT seguimientos_pkey PRIMARY KEY (id),
+  CONSTRAINT seguimientos_incidencia_id_fkey FOREIGN KEY (incidencia_id) REFERENCES public.registros(id)
+);
+
+-- Tabla backup (no se usa en la aplicación)
+CREATE TABLE public.usuarios_backup (
+  id uuid,
+  nombre text,
+  email text,
+  rol text,
+  activo boolean,
+  creado_en timestamp with time zone
 );
 
 -- =============================================================================
--- 2. TABLA: equipos (máquinas)
--- Descripción: Almacena la información de todas las máquinas/equipos
--- =============================================================================
-CREATE TABLE IF NOT EXISTS equipos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
-    codigo TEXT UNIQUE NOT NULL,
-    tipo TEXT,
-    modelo TEXT,
-    sala_id INTEGER,
-    estado TEXT DEFAULT 'activa', -- 'activa', 'inactiva'
-    notas TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (sala_id) REFERENCES salas(id) ON DELETE SET NULL
-);
-
--- Índices para equipos
-CREATE INDEX IF NOT EXISTS idx_equipos_sala ON equipos(sala_id);
-CREATE INDEX IF NOT EXISTS idx_equipos_codigo ON equipos(codigo);
-CREATE INDEX IF NOT EXISTS idx_equipos_estado ON equipos(estado);
-
--- =============================================================================
--- 3. TABLA: usuarios
--- Descripción: Usuarios del sistema (registro manual/autenticación custom)
--- =============================================================================
-CREATE TABLE IF NOT EXISTS usuarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT, -- Para autenticación local (si no usa Supabase Auth)
-    rol TEXT DEFAULT 'usuario', -- 'usuario', 'tecnico', 'admin'
-    activo BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- Índices para usuarios
-CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
-CREATE INDEX IF NOT EXISTS idx_usuarios_rol ON usuarios(rol);
-
--- =============================================================================
--- 4. TABLA: perfiles
--- Descripción: Perfiles vinculados a Supabase Auth (opcional, si se mantiene auth externa)
--- Nota: El ID corresponde al UUID de auth.users de Supabase
--- =============================================================================
-CREATE TABLE IF NOT EXISTS perfiles (
-    id TEXT PRIMARY KEY, -- UUID vinculado a auth.users
-    email TEXT,
-    nombre TEXT,
-    rol TEXT DEFAULT 'usuario',
-    activo BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX IF NOT EXISTS idx_perfiles_email ON perfiles(email);
-
--- =============================================================================
--- 5. TABLA: registros
--- Descripción: Historial de incidencias reportadas
--- =============================================================================
-CREATE TABLE IF NOT EXISTS registros (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    maquina_id INTEGER NOT NULL,
-    usuario_id INTEGER, -- Usuario que reporta (si está autenticado)
-    
-    -- Datos denormalizados para historial (no dependen de equipos actuales)
-    maquina_nombre TEXT,
-    sala_nombre TEXT,
-    operario_nombre TEXT NOT NULL, -- Nombre del operario que realizó el trabajo
-    operario_email TEXT, -- Email para trazabilidad
-    
-    tipo TEXT NOT NULL, -- 'Incidencia'
-    notas TEXT,
-    photos TEXT, -- JSON array de URLs de fotos
-    
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Gestión de incidencias
-    resuelta BOOLEAN DEFAULT 0,
-    comentario_resolucion TEXT,
-    en_seguimiento BOOLEAN DEFAULT 0,
-    
-    FOREIGN KEY (maquina_id) REFERENCES equipos(id) ON DELETE CASCADE,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
-);
-
--- Índices para registros
-CREATE INDEX IF NOT EXISTS idx_registros_maquina ON registros(maquina_id);
-CREATE INDEX IF NOT EXISTS idx_registros_usuario ON registros(usuario_id);
-CREATE INDEX IF NOT EXISTS idx_registros_tipo ON registros(tipo);
-CREATE INDEX IF NOT EXISTS idx_registros_timestamp ON registros(timestamp);
-CREATE INDEX IF NOT EXISTS idx_registros_resuelta ON registros(resuelta);
-CREATE INDEX IF NOT EXISTS idx_registros_seguimiento ON registros(en_seguimiento);
-
--- =============================================================================
--- 6. TABLA: operarios
--- Descripción: Operarios con PIN para acceso rápido en el taller
--- =============================================================================
-CREATE TABLE IF NOT EXISTS operarios (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pin TEXT UNIQUE NOT NULL,
-    nombre TEXT,
-    activo BOOLEAN DEFAULT 1,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX IF NOT EXISTS idx_operarios_pin ON operarios(pin);
-
--- =============================================================================
--- 7. TABLA: seguimientos
--- Descripción: Notas de seguimiento para incidencias en curso
--- =============================================================================
-CREATE TABLE IF NOT EXISTS seguimientos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    incidencia_id INTEGER NOT NULL,
-    nota TEXT NOT NULL,
-    usuario_nombre TEXT DEFAULT 'Administrador',
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (incidencia_id) REFERENCES registros(id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_seguimientos_incidencia ON seguimientos(incidencia_id);
-
--- =============================================================================
--- VISTAS ÚTILES
--- =============================================================================
-
--- Vista de equipos con información de sala
-CREATE VIEW IF NOT EXISTS v_equipos_completo AS
-SELECT 
-    e.*,
-    s.nombre as sala_nombre
-FROM equipos e
-LEFT JOIN salas s ON e.sala_id = s.id;
-
--- Vista de incidencias pendientes (no resueltas)
-CREATE VIEW IF NOT EXISTS v_incidencias_pendientes AS
-SELECT * FROM registros 
-WHERE tipo = 'Incidencia' AND resuelta = 0;
-
-
--- =============================================================================
--- DATOS INICIALES (Opcional - descomentar si se necesitan)
--- =============================================================================
-
--- Insertar sala por defecto
--- INSERT INTO salas (nombre) VALUES ('Sala Principal');
-
--- Insertar usuario admin por defecto (password: admin123)
--- Nota: En producción usar bcrypt u otro hash seguro
--- INSERT INTO usuarios (nombre, email, password_hash, rol, activo) 
--- VALUES ('Administrador', 'admin@example.com', '$2y$10$...', 'admin', 1);
-
--- =============================================================================
--- TRIGGERS PARA ACTUALIZAR updated_at
--- =============================================================================
-
-CREATE TRIGGER IF NOT EXISTS trg_equipos_updated_at 
-AFTER UPDATE ON equipos
-BEGIN
-    UPDATE equipos SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;
-
-CREATE TRIGGER IF NOT EXISTS trg_usuarios_updated_at 
-AFTER UPDATE ON usuarios
-BEGIN
-    UPDATE usuarios SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;
-
-CREATE TRIGGER IF NOT EXISTS trg_perfiles_updated_at 
-AFTER UPDATE ON perfiles
-BEGIN
-    UPDATE perfiles SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;
-
--- =============================================================================
--- NOTAS SOBRE MIGRACIÓN DESDE SUPABASE
+-- NOTAS DE MAPEO CON EL CÓDIGO
 -- =============================================================================
 
 /*
-CAMBIOS IMPORTANTES AL MIGRAR A SQLITE:
+1. registros.usuario_id -> perfiles.id
+   No hay FK constraint, pero el código hace:
+   .from('registros').select('*, perfiles(nombre, rol)')
+   Esto funciona por coincidencia de valores UUID, no por integridad referencial.
+   Si un registro tiene usuario_id nulo o un UUID que no existe en perfiles,
+   el JOIN devuelve null y el fallback usa operario_nombre.
 
-1. UUID -> INTEGER: SQLite maneja mejor INTEGER PRIMARY KEY AUTOINCREMENT
-   Los UUIDs de Supabase pueden guardarse como TEXT si se quiere mantener compatibilidad
+2. registros.photos es ARRAY (no JSONB)
+   Supabase serializa arrays PostgreSQL como JSON arrays en la respuesta.
+   El código JS usa JSON.stringify/parse compatible.
 
-2. JSON/ARRAY -> TEXT: Las columnas JSON (como 'photos') se almacenan como TEXT
-   y se parsean en la aplicación con JSON.parse()/JSON.stringify()
+3. equipos tiene campos de dimensiones (ancho_mm, alto_mm, profundidad_mm)
+   y frecuencia_dias / ultimo_mantenimiento que aparecen en el formulario
+   de nueva máquina (dashboard-ui.js) pero no están en todas las queries.
 
-3. BOOLEAN -> INTEGER: SQLite no tiene tipo BOOLEAN nativo, se usa 0/1
+4. Tabla "operarios" (PIN de acceso rápido)
+   El código en checklist.js la usa, pero NO aparece en este dump.
+   Posiblemente:
+   - Está en otro schema (no public)
+   - El dump es parcial
+   - Fue eliminada en algún momento
+   Verificar en Supabase: Database -> Tables -> buscar "operarios"
 
-4. TIMESTAMP -> DATETIME: SQLite usa formato ISO8601 'YYYY-MM-DD HH:MM:SS'
+5. Sin tabla "usuarios" activa
+   Toda autenticación pasa por auth.users + perfiles.
+   usuarios_backup es una copia de seguridad.
 
-5. STORAGE/FOTOS: Las fotos en Supabase Storage deben migrarse a un sistema
-   de archivos local o a otro servicio de almacenamiento.
-
-6. AUTH: La autenticación de Supabase Auth debe reemplazarse por un sistema
-   propio (JWT, sesiones, etc.) o usar una biblioteca como Passport.js
-
-7. ÍNDICES: Se han añadido índices en las columnas más consultadas para
-   mantener el rendimiento.
-
-MIGRACIÓN DE DATOS:
-------------------
-Para exportar desde Supabase:
-1. SQL Editor -> New Query -> SELECT * FROM tabla
-2. Exportar como CSV o JSON
-3. Importar a SQLite usando scripts de conversión
-
-O usar la API de Supabase para leer y el connector de SQLite para escribir.
+6. Sin triggers de updated_at
+   Ninguna tabla tiene columna updated_at ni trigger automático.
+   Las actualizaciones de equipos/perfiles no registran "última modificación".
 */

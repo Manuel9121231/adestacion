@@ -1806,10 +1806,14 @@ async function apiFetch(url, options = {}) {
     }
 
     if (url.includes('/api/all-data')) {
-      const [salas, equipos, registros] = await Promise.all([
+      // Admin: carga perfiles aparte y hace match en JS (más rápido que JOIN en Supabase)
+      // Tecnico/usuario: solo registros, usa operario_nombre denormalizado
+      const esAdmin = rolActual === 'admin';
+      const [salas, equipos, registros, perfiles] = await Promise.all([
         client.from('salas').select('*').order('nombre'),
         client.from('equipos').select('*, salas(nombre)').order('nombre'),
-        client.from('registros').select('*, perfiles(nombre, rol)').order('timestamp', { ascending: false }).limit(500)
+        client.from('registros').select('*').order('timestamp', { ascending: false }).limit(500),
+        esAdmin ? client.from('perfiles').select('id, nombre, rol') : Promise.resolve({ data: [], error: null })
       ]);
 
       if (salas.error) throw salas.error;
@@ -1817,6 +1821,10 @@ async function apiFetch(url, options = {}) {
       if (registros.error) throw registros.error;
 
       const regs = registros.data || [];
+      const perfilesMap = esAdmin && perfiles.data
+        ? new Map(perfiles.data.map(p => [p.id, p]))
+        : new Map();
+
       const formattedMaquinas = (equipos.data || []).map(m => ({
         ...m,
         sala_nombre: m.salas ? m.salas.nombre : 'Sin sala'
@@ -1842,8 +1850,8 @@ async function apiFetch(url, options = {}) {
             id: r.id,
             maquina: r.maquina_nombre || 'Desconocida',
             sala: r.sala_nombre || 'Sin sala',
-            operario: r.perfiles?.nombre || r.operario_nombre || 'Anónimo',
-            rol: r.perfiles?.rol || r.usuario_rol || 'usuario',
+            operario: perfilesMap.get(r.usuario_id)?.nombre || r.operario_nombre || 'Anónimo',
+            rol: perfilesMap.get(r.usuario_id)?.rol || 'usuario',
             iniciado_en: r.timestamp,
             completado_en: r.timestamp,
             observaciones: r.notas || '',
@@ -1894,9 +1902,12 @@ async function apiFetch(url, options = {}) {
 
     if (url.includes('/api/sesion/') && url.includes('/detalle')) {
       const id = url.split('/')[3];
-      const { data: reg, error } = await client.from('registros').select('*, perfiles(nombre, rol)').eq('id', id).single();
+      const query = rolActual === 'admin'
+        ? client.from('registros').select('*, perfiles(nombre, rol)').eq('id', id).single()
+        : client.from('registros').select('*').eq('id', id).single();
+      const { data: reg, error } = await query;
       if (error) throw error;
-      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.maquina_nombre, sala: reg.sala_nombre, operario: reg.perfiles?.nombre || reg.operario_nombre || 'Anónimo', rol: reg.perfiles?.rol || reg.usuario_rol || 'usuario', iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
+      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.maquina_nombre, sala: reg.sala_nombre, operario: reg.perfiles?.nombre || reg.operario_nombre || 'Anónimo', rol: reg.perfiles?.rol || 'usuario', iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
     }
 
     if (url.includes('/api/incidencia/') && url.includes('/seguimientos')) {
