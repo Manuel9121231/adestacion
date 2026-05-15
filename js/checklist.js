@@ -387,14 +387,10 @@ async function apiFetch(url, options = {}) {
         photoUrls = await handlePhotoUploads(payload.fotos);
       }
 
-      // 2. Use the names from the global state to ensure they aren't null
+      // 2. Guardar registro con solo IDs (nombres se obtienen por JOIN)
       const registroPayload = {
         maquina_id: maquinaId,
         usuario_id: payload.usuario_id,
-        maquina_nombre: maquinaData?.nombre || 'Desconocida',
-        sala_nombre: maquinaData?.sala_nombre || 'Sin sala',
-        operario_nombre: payload.nombre_usuario || 'Anonimo',
-        operario_email: payload.email_usuario || 'desconocido@email.com', // Trazabilidad
         tipo: modoActual,
         notas: payload.observaciones,
         photos: photoUrls,
@@ -420,9 +416,7 @@ async function apiFetch(url, options = {}) {
     return { ok: false, error: 'Endpoint not implemented' };
   } catch (err) {
     console.error('🔴 Error apiFetch (Checklist):', err);
-    if (err.message && err.message.includes('maquina_nombre')) {
-      alert("Error Crítico: Falta la columna 'maquina_nombre' en la base de datos.");
-    }
+    // Errores de columna faltante ya no aplican con esquema normalizado
     return { ok: false, error: err.message };
   }
 }
@@ -542,10 +536,10 @@ async function cargarSeguimientoIncidencia() {
   
   const client = window.supabaseClient;
   
-  // Cargar datos de la incidencia
+  // Cargar datos de la incidencia (con JOIN a perfiles para nombre del operario)
   const { data: incidencia, error: incError } = await client
     .from('registros')
-    .select('*')
+    .select('*, perfiles(nombre)')
     .eq('id', incidenciaAbiertaId)
     .single();
     
@@ -562,7 +556,7 @@ async function cargarSeguimientoIncidencia() {
   
   // Mostrar descripción de la incidencia
   document.getElementById('incDescTexto').textContent = incidencia.observaciones || 'Sin descripción';
-  document.getElementById('incDescMeta').textContent = `Reportado por ${incidencia.usuario_nombre || 'Desconocido'} el ${new Date(incidencia.timestamp).toLocaleString('es-ES')}`;
+  document.getElementById('incDescMeta').textContent = `Reportado por ${incidencia.perfiles?.nombre || 'Desconocido'} el ${new Date(incidencia.timestamp).toLocaleString('es-ES')}`;
   
   // Cargar seguimientos
   const timeline = document.getElementById('seguimientoTimeline');
@@ -570,7 +564,7 @@ async function cargarSeguimientoIncidencia() {
   
   const { data: seguimientos, error: segError } = await client
     .from('seguimientos')
-    .select('*')
+    .select('*, perfiles(nombre)')
     .eq('incidencia_id', incidenciaAbiertaId)
     .order('timestamp', { ascending: true });
     
@@ -585,7 +579,7 @@ async function cargarSeguimientoIncidencia() {
     timeline.innerHTML = seguimientos.map(s => `
       <div style="margin-bottom:16px;padding:12px;background:rgba(79,142,247,0.05);border-radius:8px;border-left:3px solid var(--accent)">
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">
-          <strong>${s.usuario_nombre || 'Técnico'}</strong> · ${new Date(s.timestamp).toLocaleString('es-ES', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+          <strong>${s.perfiles?.nombre || 'Técnico'}</strong> · ${new Date(s.timestamp).toLocaleString('es-ES', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
         </div>
         <div style="font-size:14px;color:var(--text-primary)">${s.nota}</div>
       </div>
@@ -632,7 +626,6 @@ async function guardarNotaSeguimiento() {
       incidencia_id: incidenciaAbiertaId,
       nota: nota,
       usuario_id: usuarioId,
-      usuario_nombre: `${usuarioNombre} (${usuarioRol})`,
       timestamp: new Date().toISOString()
     });
     
@@ -771,7 +764,6 @@ async function resolverIncidencia() {
         incidencia_id: incidenciaAbiertaId,
         nota: `✅ RESUELTO: ${comentario}`,
         usuario_id: usuarioId,
-        usuario_nombre: usuarioNombre,
         timestamp: new Date().toISOString()
       });
       

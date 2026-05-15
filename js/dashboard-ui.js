@@ -24,16 +24,16 @@ const DASHBOARD_HTML = `
         <div class="nav-section">
           <div class="nav-item active" id="nav-dashboard" onclick="navigateTo('dashboard')">
             <span class="nav-icon"></span>
-            <span>Panel General</span>
+            <span>Resumen</span>
           </div>
           <div class="nav-item" id="nav-incidencias" onclick="navigateTo('incidencias')">
             <span class="nav-icon"></span>
-            <span>Panel de Incidencias</span>
+            <span>Incidencias</span>
             <span class="nav-badge" id="badge-incidencias" style="display:none">0</span>
           </div>
           <div class="nav-item" id="nav-maquinas" onclick="navigateTo('maquinas')">
             <span class="nav-icon"></span>
-            <span>Máquinas</span>
+            <span>Máquinas y Salas</span>
           </div>
           <div class="nav-item" id="nav-qrcodes" onclick="navigateTo('qrcodes')">
             <span class="nav-icon"></span>
@@ -62,7 +62,7 @@ const DASHBOARD_HTML = `
           <button class="btn btn-icon btn-outline" id="btnMenuMobile" onclick="toggleSidebar()"
             style="display:none">☰</button>
           <div>
-            <div class="topbar-title" id="topbarTitle">Panel General</div>
+            <div class="topbar-title" id="topbarTitle">Resumen</div>
             <div style="font-size:12px;color:var(--text-muted)" id="topbarSubtitle">Resumen del sistema</div>
           </div>
         </div>
@@ -184,8 +184,8 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-maquinas">
           <div class="section-header">
             <div>
-              <div class="section-title">Máquinas</div>
-              <div class="section-subtitle">Gestión y estado de todas las máquinas</div>
+              <div class="section-title">Máquinas y Salas</div>
+              <div class="section-subtitle">Gestión de máquinas y salas</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <div style="position:relative;display:flex;align-items:center">
@@ -209,7 +209,7 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-incidencias">
           <div class="section-header">
             <div>
-              <div class="section-title">Centro de Incidencias</div>
+              <div class="section-title">Incidencias</div>
               <div class="section-subtitle">Gestión de fallos técnicos y reparaciones</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">

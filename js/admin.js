@@ -486,9 +486,9 @@ async function renderIncidencias(filtro = 'todas') {
 
 // ── Navegación ────────────────────────────────────────────────────────────────
 const sectionTitles = {
-  dashboard: ['Panel General', 'Resumen del sistema'],
-  maquinas: ['Máquinas', 'Estado y gestión de todas las máquinas'],
-  incidencias: ['Centro de Incidencias', 'Gestión de fallos técnicos y reparaciones'],
+  dashboard: ['Resumen', 'Resumen del sistema'],
+  maquinas: ['Máquinas y Salas', 'Gestión de máquinas y salas'],
+  incidencias: ['Incidencias', 'Gestión de fallos técnicos y reparaciones'],
   qrcodes: ['Códigos QR', 'QR individuales para el operario móvil'],
   usuarios: ['Usuarios del Sistema', 'Gestión de accesos y privilegios de usuario']
 };
@@ -1358,10 +1358,8 @@ async function verDetalleSesion(id) {
         timeline.innerHTML = notas.map((n, index) => {
           const fechaCreado = formatFechaHora(n.timestamp);
           const esPrimera = index === notas.length - 1; // La más reciente
-          // Parsear formato "Nombre (Rol)" si existe
-          const match = (n.usuario_nombre || '').match(/^(.+?)\s*\(([^)]+)\)$/);
-          const nombreAutor = match ? match[1].trim() : (n.usuario_nombre || 'Técnico');
-          const rolAutor = match ? match[2].trim() : '';
+          const nombreAutor = n.perfiles?.nombre || 'Técnico';
+          const rolAutor = n.perfiles?.rol || '';
           
           return `
           <div class="timeline-item" id="seg-item-${n.id}">
@@ -1780,14 +1778,12 @@ async function apiFetch(url, options = {}) {
     }
 
     if (url.includes('/api/all-data')) {
-      // Admin: carga perfiles aparte y hace match en JS (más rápido que JOIN en Supabase)
-      // Tecnico/usuario: solo registros, usa operario_nombre denormalizado
-      const esAdmin = rolActual === 'admin';
+      // Carga paralela: salas, equipos, registros, perfiles. Match en JS para rendimiento.
       const [salas, equipos, registros, perfiles] = await Promise.all([
         client.from('salas').select('*').order('nombre'),
         client.from('equipos').select('*, salas(nombre)').order('nombre'),
         client.from('registros').select('*').order('timestamp', { ascending: false }).limit(500),
-        esAdmin ? client.from('perfiles').select('id, nombre, rol') : Promise.resolve({ data: [], error: null })
+        client.from('perfiles').select('id, nombre, rol, email')
       ]);
 
       if (salas.error) throw salas.error;
@@ -1795,9 +1791,11 @@ async function apiFetch(url, options = {}) {
       if (registros.error) throw registros.error;
 
       const regs = registros.data || [];
-      const perfilesMap = esAdmin && perfiles.data
-        ? new Map(perfiles.data.map(p => [p.id, p]))
-        : new Map();
+      const perfilesMap = new Map((perfiles.data || []).map(p => [p.id, p]));
+      const equiposMap = new Map((equipos.data || []).map(m => [m.id, {
+        nombre: m.nombre,
+        sala_nombre: m.salas ? m.salas.nombre : 'Sin sala'
+      }]));
 
       const formattedMaquinas = (equipos.data || []).map(m => ({
         ...m,
@@ -1810,8 +1808,9 @@ async function apiFetch(url, options = {}) {
           const dia = r.timestamp.split('T')[0];
           porDiaMap[dia] = (porDiaMap[dia] || 0) + 1;
         }
-        if (r.maquina_nombre) {
-          porMaquinaMap[r.maquina_nombre] = (porMaquinaMap[r.maquina_nombre] || 0) + 1;
+        const maq = equiposMap.get(r.maquina_id);
+        if (maq) {
+          porMaquinaMap[maq.nombre] = (porMaquinaMap[maq.nombre] || 0) + 1;
         }
       });
 
@@ -1820,22 +1819,26 @@ async function apiFetch(url, options = {}) {
         data: {
           salas: salas.data,
           maquinas: formattedMaquinas,
-          historial: regs.map(r => ({
-            id: r.id,
-            maquina: r.maquina_nombre || 'Desconocida',
-            sala: r.sala_nombre || 'Sin sala',
-            operario: perfilesMap.get(r.usuario_id)?.nombre || r.operario_nombre || 'Anónimo',
-            rol: perfilesMap.get(r.usuario_id)?.rol || 'usuario',
-            iniciado_en: r.timestamp,
-            completado_en: r.timestamp,
-            observaciones: r.notas || '',
-            tipo: r.tipo,
-            resuelta: r.resuelta || false,
-            en_seguimiento: r.en_seguimiento || false,
-            comentario_resolucion: r.comentario_resolucion,
-            fotos: r.photos || [],
-            tiene_fotos: (r.photos && r.photos.length > 0)
-          })),
+          historial: regs.map(r => {
+            const maq = equiposMap.get(r.maquina_id);
+            const perf = perfilesMap.get(r.usuario_id);
+            return {
+              id: r.id,
+              maquina: maq?.nombre || 'Desconocida',
+              sala: maq?.sala_nombre || 'Sin sala',
+              operario: perf?.nombre || 'Anónimo',
+              rol: perf?.rol || 'usuario',
+              iniciado_en: r.timestamp,
+              completado_en: r.timestamp,
+              observaciones: r.notas || '',
+              tipo: r.tipo,
+              resuelta: r.resuelta || false,
+              en_seguimiento: r.en_seguimiento || false,
+              comentario_resolucion: r.comentario_resolucion,
+              fotos: r.photos || [],
+              tiene_fotos: (r.photos && r.photos.length > 0)
+            };
+          }),
           dashboard: {
             hoy: regs.filter(r => r.timestamp && r.timestamp.startsWith(new Date().toISOString().split('T')[0])).length,
             semana: regs.filter(r => r.timestamp && new Date(r.timestamp) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length,
@@ -1876,12 +1879,13 @@ async function apiFetch(url, options = {}) {
 
     if (url.includes('/api/sesion/') && url.includes('/detalle')) {
       const id = url.split('/')[3];
-      const query = rolActual === 'admin'
-        ? client.from('registros').select('*, perfiles(nombre, rol)').eq('id', id).single()
-        : client.from('registros').select('*').eq('id', id).single();
-      const { data: reg, error } = await query;
+      const { data: reg, error } = await client
+        .from('registros')
+        .select('*, equipos(nombre, salas(nombre)), perfiles(nombre, email, rol)')
+        .eq('id', id)
+        .single();
       if (error) throw error;
-      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.maquina_nombre, sala: reg.sala_nombre, operario: reg.perfiles?.nombre || reg.operario_nombre || 'Anónimo', rol: reg.perfiles?.rol || 'usuario', iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
+      return { ok: true, data: { sesion: { id: reg.id, maquina: reg.equipos?.nombre || 'Desconocida', sala: reg.equipos?.salas?.nombre || 'Sin sala', operario: reg.perfiles?.nombre || 'Anónimo', rol: reg.perfiles?.rol || 'usuario', iniciado_en: reg.timestamp, completado_en: reg.timestamp, observaciones: reg.notas || '', tipo: reg.tipo, resuelta: reg.resuelta || false, comentario_resolucion: reg.comentario_resolucion, fotos: reg.photos || [] }, items: [] } };
     }
 
     if (url.includes('/api/incidencia/') && url.includes('/seguimientos')) {
@@ -1889,7 +1893,7 @@ async function apiFetch(url, options = {}) {
       if (method === 'GET') {
         const { data, error } = await client
           .from('seguimientos')
-          .select('*')
+          .select('*, perfiles(nombre, rol)')
           .eq('incidencia_id', id)
           .order('timestamp', { ascending: true });
 
@@ -1908,7 +1912,6 @@ async function apiFetch(url, options = {}) {
             incidencia_id: id,
             nota: payload.nota,
             usuario_id: usuario.id,
-            usuario_nombre: `${usuario.nombre} (${usuario.rol})`,
             timestamp: new Date().toISOString()
           })
           .select()
@@ -1932,10 +1935,7 @@ async function apiFetch(url, options = {}) {
     return { ok: false, error: 'Endpoint not implemented' };
   } catch (err) {
     console.error('Error apiFetch:', err);
-    // Si es un error de columna faltante, dar una pista clara
-    if (err.message && err.message.includes('maquina_nombre')) {
-      showFeedback('Error Critico', "La base de datos no tiene la columna 'maquina_nombre'. Por favor, ejecuta el script SQL de reparacion.", '');
-    }
+    // Errores de columna faltante ya no aplican con esquema normalizado
     return { ok: false, error: err.message };
   }
 }
@@ -1958,26 +1958,7 @@ async function intentarLogin() {
   errorEl.innerHTML = 'Verificando...';
   if (btn) btn.disabled = true;
 
-  // 1. Superadmin (Credenciales específicas del usuario)
-  if (username === 'adestacion' && password === '') {
-    const sessionData = {
-      type: 'superadmin',
-      username: 'adestacion',
-      nombre: 'Administrador Principal',
-      loginTime: new Date().getTime()
-    };
-    localStorage.setItem('sgi_admin_session', JSON.stringify(sessionData));
-    const pendingMaquinaIdSuperadmin = localStorage.getItem('sgi_pending_maquinaId');
-    if (pendingMaquinaIdSuperadmin) {
-      localStorage.removeItem('sgi_pending_maquinaId');
-      window.location.href = `operario.html?maquinaId=${pendingMaquinaIdSuperadmin}`;
-    } else {
-      location.reload();
-    }
-    return;
-  }
-
-  // 2. Supabase Auth + verificar rol admin en tabla perfiles
+  // Supabase Auth + verificar rol admin en tabla perfiles
   try {
     const client = window.supabaseClient;
     if (!client) throw new Error('Sin conexión al servidor');
@@ -2244,8 +2225,8 @@ function iniciarTour() {
       {
         element: '#nav-maquinas',
         popover: {
-          title: 'Máquinas',
-          description: 'Gestiona todo tu inventario de impresoras y su estado.'
+          title: 'Máquinas y Salas',
+          description: 'Gestiona todo tu inventario de impresoras, salas y su estado.'
         }
       },
       {
