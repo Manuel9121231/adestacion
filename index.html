@@ -524,7 +524,7 @@
   <!-- Login page header + card (visible when no session) -->
   <div class="login-page-header" id="loginPageHeader">
     <span class="login-page-logo">🖨️</span>
-    <h1>Portal Usuarios</h1>
+    <h1>Iniciar Sesión</h1>
     <p>Sistema de Gestión de Máquinas</p>
   </div>
 
@@ -551,11 +551,11 @@
           <div id="capsLoginPassword" style="display:none;margin-top:5px;font-size:12px;color:#f59e0b;display:none">⚠️ Bloq Mayús activado</div>
         </div>
 
-        <button class="btn-login" id="btnLogin" onclick="iniciarSesion()">Iniciar Sesión</button>
-
-        <div style="text-align:center; margin-top:12px; font-size:13px; color:var(--text-muted)">
-          <a href="#" onclick="mostrarRecuperacion(); return false;" style="color:var(--accent); text-decoration:none; font-weight:500">¿Has olvidado la contraseña? Haz clic aquí</a>
+        <div style="text-align:right; margin-bottom:6px; font-size:12px; color:var(--text-muted)">
+          <a href="#" onclick="mostrarRecuperacion(); return false;" style="color:var(--accent); text-decoration:none; font-weight:500">¿Has olvidado la contraseña?</a>
         </div>
+
+        <button class="btn-login" id="btnLogin" onclick="iniciarSesion()">Iniciar Sesión</button>
 
         <div style="text-align:center; margin-top:12px; font-size:13px; color:var(--text-muted); border-top:1px solid var(--border); padding-top:12px;">
           ¿No tienes una cuenta? <a href="registro.html" style="color:var(--accent); text-decoration:none; font-weight:600">Regístrate aquí</a>
