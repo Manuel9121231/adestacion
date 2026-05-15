@@ -400,31 +400,26 @@ async function renderIncidencias(filtro = 'todas') {
   // Guardar lista filtrada para exportación CSV
   incidenciasVisibles = lista;
 
-  // Cargar últimas notas de seguimiento para incidencias en seguimiento
+  // Cargar últimas notas de seguimiento para incidencias en seguimiento (no bloqueante)
   const incSeguimiento = lista.filter(r => !r.resuelta && r.en_seguimiento);
   let ultimasNotas = {};
-  
-  if (incSeguimiento.length > 0 && window.supabaseClient) {
-    try {
-      const ids = incSeguimiento.map(r => r.id);
-      const { data: seguimientos, error } = await window.supabaseClient
+  const seguimientosPromise = (incSeguimiento.length > 0 && window.supabaseClient)
+    ? window.supabaseClient
         .from('seguimientos')
         .select('incidencia_id, nota, timestamp')
-        .in('incidencia_id', ids)
-        .order('timestamp', { ascending: false });
-        
-      if (!error && seguimientos) {
-        // Tomar solo la última nota de cada incidencia
-        seguimientos.forEach(s => {
-          if (!ultimasNotas[s.incidencia_id]) {
-            ultimasNotas[s.incidencia_id] = s.nota;
+        .in('incidencia_id', incSeguimiento.map(r => r.id))
+        .order('timestamp', { ascending: false })
+        .then(({ data: seguimientos }) => {
+          if (seguimientos) {
+            const notas = {};
+            seguimientos.forEach(s => {
+              if (!notas[s.incidencia_id]) notas[s.incidencia_id] = s.nota;
+            });
+            return notas;
           }
-        });
-      }
-    } catch (e) {
-      console.error('Error cargando seguimientos:', e);
-    }
-  }
+          return {};
+        }).catch(() => ({}))
+    : Promise.resolve({});
 
   // Ordenar según criterio seleccionado
   const ordenSelect = document.getElementById('select-inc-orden');
@@ -444,6 +439,7 @@ async function renderIncidencias(filtro = 'todas') {
   }
 
   empty.style.display = 'none';
+  ultimasNotas = await seguimientosPromise;
   grid.innerHTML = lista.map(r => {
     const resuelta = r.resuelta || false;
     const esSeguimiento = !resuelta && r.en_seguimiento;
