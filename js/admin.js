@@ -1073,6 +1073,7 @@ async function eliminarMaquina(id) {
   if (!ok) return;
   const res = await apiFetch(`/api/maquina/${id}`, { method: 'DELETE' });
   if (res.ok) {
+    cerrarModal('modalMaquina');
     await cargarDatosBase();
     renderMaquinas();
     showFeedback('Máquina eliminada', 'La máquina y sus registros asociados han sido eliminados.', '');
