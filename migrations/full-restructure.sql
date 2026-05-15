@@ -4,6 +4,13 @@
 -- =============================================================================
 
 -- ═══════════════════════════════════════════════════════════════════
+-- PASO 0: Borrar datos antiguos PRIMERO (evita errores de FK)
+-- ⚠️ IRREVERSIBLE. Solo ejecutar si estás 100% seguro.
+-- ═══════════════════════════════════════════════════════════════════
+DELETE FROM public.seguimientos;
+DELETE FROM public.registros;
+
+-- ═══════════════════════════════════════════════════════════════════
 -- PASO 1: Política RLS en perfiles (PERMITIR lectura a todos los auth)
 -- ═══════════════════════════════════════════════════════════════════
 DO $$
@@ -43,17 +50,13 @@ ALTER TABLE public.registros
   DROP COLUMN IF EXISTS operario_nombre,
   DROP COLUMN IF EXISTS operario_email;
 
--- 3.2 Añadir FK constraint a perfiles (después de limpiar datos inválidos si los hay)
--- Nota: si hay registros con usuario_id que no existe en perfiles, esto fallará.
--- Si falla, ejecuta primero: UPDATE public.registros SET usuario_id = NULL WHERE usuario_id NOT IN (SELECT id FROM public.perfiles);
+-- 3.2 Añadir FK constraint a perfiles
 ALTER TABLE public.registros
   ADD CONSTRAINT registros_usuario_id_fkey
   FOREIGN KEY (usuario_id) REFERENCES public.perfiles(id)
   ON DELETE SET NULL;
 
 -- 3.3 Hacer maquina_id NOT NULL
--- Nota: si hay registros con maquina_id NULL, esto fallará.
--- Si falla, ejecuta primero: DELETE FROM public.registros WHERE maquina_id IS NULL;
 ALTER TABLE public.registros
   ALTER COLUMN maquina_id SET NOT NULL;
 
@@ -80,10 +83,3 @@ ALTER TABLE public.seguimientos
 -- PASO 5: Borrar tabla residual
 -- ═══════════════════════════════════════════════════════════════════
 DROP TABLE IF EXISTS public.usuarios_backup;
-
--- ═══════════════════════════════════════════════════════════════════
--- PASO 6: Borrar datos antiguos (registros y seguimientos)
--- ⚠️ IRREVERSIBLE. Solo ejecutar si estás 100% seguro.
--- ═══════════════════════════════════════════════════════════════════
-DELETE FROM public.seguimientos;
-DELETE FROM public.registros;
