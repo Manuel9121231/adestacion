@@ -724,9 +724,19 @@ function renderMaquinas() {
   }
 
   function seccionEspacio(idSala, titulo, icono, color, maquinas) {
+    const tieneMaquinas = maquinas.length > 0;
+    const gridHtml = tieneMaquinas
+      ? `<div class="grid-maquinas-inner" style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; display: grid;">
+           ${maquinas.map(tarjetaMaquina).join('')}
+         </div>`
+      : `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;gap:12px">
+           <div style="font-size:13px;color:var(--text-muted)">Sin máquinas en esta sala</div>
+           ${rolActual === 'admin' ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); abrirModalNuevaMaquina('${idSala}')" style="display:flex;align-items:center;gap:6px;padding:8px 16px">+ Añadir máquina</button>` : ''}
+         </div>`;
+
     return `
-      <div class="espacio-section drop-zone" 
-           ondragover="handleDragOver(event)" 
+      <div class="espacio-section drop-zone"
+           ondragover="handleDragOver(event)"
            ondragleave="handleDragLeave(event)"
            ondrop="handleDrop(event, '${idSala}')"
            style="margin-bottom:32px; padding:16px; border-radius:16px; border: 2px dashed transparent; background: ${color}">
@@ -737,9 +747,7 @@ function renderMaquinas() {
             <div style="font-size:12px;color:var(--text-muted)">${maquinas.length} máquina${maquinas.length !== 1 ? 's' : ''}</div>
           </div>
         </div>
-        <div class="grid-maquinas-inner" style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; display: grid;">
-          ${maquinas.map(tarjetaMaquina).join('')}
-        </div>
+        ${gridHtml}
       </div>
     `;
   }
@@ -958,7 +966,7 @@ async function guardarMaquina() {
   }
 }
 
-function abrirModalNuevaMaquina() {
+function abrirModalNuevaMaquina(salaId = '') {
   try {
     const nombreEl = document.getElementById('nuevoMaquinaNombre');
     const modeloEl = document.getElementById('nuevoMaquinaModelo');
@@ -988,6 +996,9 @@ function abrirModalNuevaMaquina() {
     // Poblar el select de salas si está vacío
     if (salaSelect && salaSelect.options.length <= 1) {
       poblarSelectsSalas();
+    }
+    if (salaSelect && salaId) {
+      salaSelect.value = salaId;
     }
 
     abrirModal('modalNuevaMaquina');
