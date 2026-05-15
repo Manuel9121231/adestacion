@@ -85,14 +85,14 @@ function getUsuarioActualInfo() {
     if (adminSession) {
       const nombre = adminSession.nombre || adminSession.username || 'Administrador';
       const rol = adminSession.type === 'superadmin' ? 'superadmin' : (adminSession.type || 'admin');
-      return { nombre, rol };
+      return { id: adminSession.userId, nombre, rol };
     }
     const userSession = JSON.parse(localStorage.getItem('sgi_user_session') || 'null');
     if (userSession) {
-      return { nombre: userSession.nombre || 'Usuario', rol: userSession.rol || 'usuario' };
+      return { id: userSession.userId, nombre: userSession.nombre || 'Usuario', rol: userSession.rol || 'usuario' };
     }
   } catch {}
-  return { nombre: 'Usuario', rol: 'usuario' };
+  return { id: null, nombre: 'Usuario', rol: 'usuario' };
 }
 
 
@@ -1935,6 +1935,7 @@ async function apiFetch(url, options = {}) {
           .insert({
             incidencia_id: id,
             nota: payload.nota,
+            usuario_id: usuario.id,
             usuario_nombre: `${usuario.nombre} (${usuario.rol})`,
             timestamp: new Date().toISOString()
           })
