@@ -6,10 +6,21 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- PASO 1: Política RLS en perfiles (PERMITIR lectura a todos los auth)
 -- ═══════════════════════════════════════════════════════════════════
-CREATE POLICY IF NOT EXISTS "perfiles_select_auth"
-  ON public.perfiles FOR SELECT
-  TO authenticated
-  USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'perfiles'
+      AND policyname = 'perfiles_select_auth'
+  ) THEN
+    CREATE POLICY "perfiles_select_auth"
+      ON public.perfiles FOR SELECT
+      TO authenticated
+      USING (true);
+  END IF;
+END
+$$;
 
 -- ═══════════════════════════════════════════════════════════════════
 -- PASO 2: Limpiar equipos (eliminar columnas sin uso)
