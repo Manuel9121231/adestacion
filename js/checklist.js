@@ -812,6 +812,11 @@ async function resolverIncidencia() {
     return;
   }
 
+  if (!incidenciaAbiertaId) {
+    showToast('No hay ninguna incidencia activa', 'error');
+    return;
+  }
+
   const comentario = document.getElementById('notaResolucion').value.trim();
   
   if (!comentario) {
