@@ -581,7 +581,7 @@
       background: var(--warn);
       border-color: var(--warn);
     }
-    .filter-btn[data-filter="con incidencia"].active {
+    .filter-btn[data-filter="sin resolver"].active {
       background: var(--err);
       border-color: var(--err);
     }
@@ -678,7 +678,7 @@
       <button class="filter-btn active" data-filter="all" onclick="filterByEstado('all')">Todos</button>
       <button class="filter-btn" data-filter="operativa" onclick="filterByEstado('operativa')">Operativas</button>
       <button class="filter-btn" data-filter="en seguimiento" onclick="filterByEstado('en seguimiento')">En Seguimiento</button>
-      <button class="filter-btn" data-filter="con incidencia" onclick="filterByEstado('con incidencia')">Con Incidencia</button>
+      <button class="filter-btn" data-filter="sin resolver" onclick="filterByEstado('sin resolver')">Sin Resolver</button>
       <button class="filter-btn" data-filter="inactiva" onclick="filterByEstado('inactiva')">Inactivas</button>
     </div>
   </div>
@@ -734,13 +734,13 @@
     }
     if (incidencia) {
       return {
-        texto: 'CON INCIDENCIA',
+        texto: 'SIN RESOLVER',
         clase: 'status-err',
         card: 'm-card down',
         badge: 'badge-err',
         color: 'var(--err)',
         bg: 'rgba(239,68,68,0.1)',
-        descripcion: 'Con incidencia sin resolver'
+        descripcion: 'Incidencia sin resolver'
       };
     }
     if (inactiva) {
@@ -984,8 +984,8 @@ function asegurarElementosDOM() {
             return estadoMaquina.texto === 'OPERATIVA';
           case 'en seguimiento':
             return estadoMaquina.texto === 'EN SEGUIMIENTO';
-          case 'con incidencia':
-            return estadoMaquina.texto === 'CON INCIDENCIA';
+          case 'sin resolver':
+            return estadoMaquina.texto === 'SIN RESOLVER';
           case 'inactiva':
             return estadoMaquina.texto === 'INACTIVA';
           default:
