@@ -30,7 +30,28 @@ function calcularEstadoUnificado(maquina) {
   const estadoOperativo = (maquina.estado || 'activa').toLowerCase().trim();
   const tieneIncidencia = maquina.tiene_incidencia || false;
   const enSeguimiento = maquina.incidencia_en_seguimiento || false;
-  
+
+  // Incidencia tiene prioridad sobre estado operativo
+  if (tieneIncidencia && enSeguimiento) {
+    return {
+      texto: 'EN SEGUIMIENTO',
+      clase: 'naranja',
+      color: 'var(--warning)',
+      bg: 'rgba(245, 158, 11, 0.1)',
+      descripcion: 'Con incidencia en seguimiento'
+    };
+  }
+
+  if (tieneIncidencia) {
+    return {
+      texto: 'SIN RESOLVER',
+      clase: 'rojo',
+      color: 'var(--danger)',
+      bg: 'rgba(239, 68, 68, 0.1)',
+      descripcion: 'Incidencia sin resolver'
+    };
+  }
+
   if (estadoOperativo === 'inactiva') {
     return {
       texto: 'INACTIVA',
@@ -40,33 +61,13 @@ function calcularEstadoUnificado(maquina) {
       descripcion: 'Fuera de servicio'
     };
   }
-  
-  if (!tieneIncidencia) {
-    return {
-      texto: 'OPERATIVA',
-      clase: 'ok',
-      color: 'var(--ok)',
-      bg: 'rgba(16, 185, 129, 0.1)',
-      descripcion: 'Funcionando correctamente'
-    };
-  }
-  
-  if (enSeguimiento) {
-    return {
-      texto: 'EN SEGUIMIENTO',
-      clase: 'naranja',
-      color: 'var(--warning)',
-      bg: 'rgba(245, 158, 11, 0.1)',
-      descripcion: 'Con incidencia en seguimiento'
-    };
-  }
-  
+
   return {
-    texto: 'CON INCIDENCIA',
-    clase: 'rojo',
-    color: 'var(--danger)',
-    bg: 'rgba(239, 68, 68, 0.1)',
-    descripcion: 'Con incidencia sin resolver'
+    texto: 'OPERATIVA',
+    clase: 'ok',
+    color: 'var(--ok)',
+    bg: 'rgba(16, 185, 129, 0.1)',
+    descripcion: 'Funcionando correctamente'
   };
 }
 

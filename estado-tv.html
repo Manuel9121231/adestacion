@@ -414,24 +414,30 @@
       if (!window.supabaseClient) { setTimeout(loadStatus, 600); return; }
       const c = window.supabaseClient;
 
-      const [mRes, iRes] = await Promise.all([
+      const [mRes, iResF, iResN] = await Promise.all([
         c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,salas(nombre)').order('nombre'),
-        c.from('registros').select('maquina_id').eq('tipo','Incidencia').eq('resuelta',false)
+        c.from('registros').select('maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta',false),
+        c.from('registros').select('maquina_id,en_seguimiento').eq('tipo','Incidencia').is('resuelta',null)
       ]);
       if (mRes.error) throw mRes.error;
-      if (iRes.error) throw iRes.error;
 
-      const enRep = new Set((iRes.data||[]).map(i => i.maquina_id));
+      const incidencias = [...(iResF.data||[]), ...(iResN.data||[])];
+      const enRep = new Set(incidencias.map(i => i.maquina_id));
+      const incidenciaPorMaquina = {};
+      incidencias.forEach(inc => { incidenciaPorMaquina[inc.maquina_id] = inc; });
       const bySala = {};
       let totOk = 0, totErr = 0;
 
       (mRes.data||[]).forEach(m => {
         const sala = m.salas?.nombre || 'Sin sala';
         if (!bySala[sala]) bySala[sala] = { ok:[], err:[] };
-        const inactiva   = (m.estado||'').toLowerCase().trim() !== 'activa';
+        const inactiva   = (m.estado||'').toLowerCase().trim() === 'inactiva';
         const incidencia = enRep.has(m.id);
+        const enSeguimiento = !!(incidenciaPorMaquina[m.id]?.en_seguimiento);
         const down       = inactiva || incidencia;
-        const motivo = incidencia ? 'Incidencia' : (m.estado || 'Inactiva');
+        const motivo = incidencia
+          ? (enSeguimiento ? 'EN SEGUIMIENTO' : 'SIN RESOLVER')
+          : 'INACTIVA';
         const entry  = {
           nombre: m.nombre||'—',
           tipo: m.tipo||'', notas: m.notas||'',
