@@ -770,8 +770,9 @@ function asegurarElementosDOM() {
 // ── Función auxiliar para calcular estado unificado ─────────────────────────────
   function calcularEstadoUnificado(maquina) {
     const estadoOperativo = (maquina.estado || 'activa').toLowerCase().trim();
-    const tieneIncidencia = maquina.incidencia || false;
-    const enSeguimiento = maquina.enSeguimiento || false;
+    // Usar las mismas propiedades que admin.js
+    const tieneIncidencia = maquina.tiene_incidencia || false;
+    const enSeguimiento = maquina.incidencia_en_seguimiento || false;
     
     if (estadoOperativo === 'inactiva') {
       return {
@@ -840,14 +841,37 @@ function asegurarElementosDOM() {
       const c = window.supabaseClient;
 
       // 1. Cargar máquinas y obtener IDs de incidencias abiertas con en_seguimiento
+      console.log('Iniciando carga de datos desde Supabase...');
       const [mRes, iRes] = await Promise.all([
         c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,salas(nombre)').order('nombre'),
         c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta',false)
       ]);
 
-      if (mRes.error) throw mRes.error;
+      console.log('Resultados de Supabase:', {
+        maquinas: { error: !!mRes.error, data: mRes.data?.length || 0 },
+        incidencias: { error: !!iRes.error, data: iRes.data?.length || 0 }
+      });
+
+      if (mRes.error) {
+        console.error('Error cargando máquinas:', mRes.error);
+        throw mRes.error;
+      }
+      if (iRes.error) {
+        console.error('Error cargando incidencias:', iRes.error);
+        throw iRes.error;
+      }
       const incidencias = iRes.data || [];
       const enRep = new Set(incidencias.map(i => i.maquina_id));
+      
+      console.log('=== DEPURACIÓN DE DATOS EN ESTADO.HTML ===');
+      console.log('Máquinas cargadas:', mRes.data?.length || 0);
+      console.log('Incidencias cargadas:', incidencias.length);
+      console.log('Incidencias detalladas:', incidencias.map(inc => ({
+        id: inc.id,
+        maquina_id: inc.maquina_id,
+        en_seguimiento: inc.en_seguimiento,
+        resuelta: inc.resuelta
+      })));
       
       // Mapa de maquina_id -> datos de incidencia (incluyendo en_seguimiento)
       const incidenciaPorMaquina = {};
@@ -886,9 +910,25 @@ function asegurarElementosDOM() {
           down,
           motivo,
           inactiva,
-          incidencia,
-          enSeguimiento,
+          // Usar las mismas propiedades que admin.js
+          incidencia: incidencia, // Para compatibilidad temporal
+          enSeguimiento, // Para compatibilidad temporal
+          tiene_incidencia: incidencia,
+          incidencia_en_seguimiento: enSeguimiento
         };
+
+        // Depuración de cada máquina
+        if (incidencia || enSeguimiento) {
+          console.log(`Máquina con incidencia/seguimiento:`, {
+            nombre: m.nombre,
+            id: m.id,
+            incidencia,
+            enSeguimiento,
+            tiene_incidencia: entry.tiene_incidencia,
+            incidencia_en_seguimiento: entry.incidencia_en_seguimiento,
+            datosIncidencia: incData
+          });
+        }
 
         bySala[sala].push(entry);
         rawMachines.push(entry);
