@@ -1912,6 +1912,19 @@ async function editarNombreUsuario(userId, nombreActual) {
     const { error: errPerfil } = await client.from('perfiles').update({ nombre: nombreLimpio }).eq('id', userId);
     if (errPerfil) throw errPerfil;
 
+    // 2. Si es el propio usuario logueado, actualizar localStorage para reflejar el cambio
+    const session = window.sgiAdminSession || {};
+    if (session.userId === userId) {
+      session.nombre = nombreLimpio;
+      window.sgiAdminSession = session;
+      localStorage.setItem('sgi_admin_session', JSON.stringify(session));
+      // Actualizar nombre visible en sidebar y dropdown sin recargar
+      const dropdownName = document.getElementById('dropdownUserName');
+      if (dropdownName) dropdownName.textContent = nombreLimpio;
+      const footerEl = document.querySelector('.sidebar-footer div strong');
+      if (footerEl) footerEl.textContent = nombreLimpio;
+    }
+
     showFeedback('Nombre actualizado', 'El nombre del usuario se ha cambiado correctamente.', '');
     await recargarTodo();
     renderUsuarios();
