@@ -2559,18 +2559,30 @@ function renderSelectTipos(selectId, valorSeleccionado = '') {
   addOpt.value = '__NUEVO__';
   addOpt.textContent = '➕ Añadir otro tipo...';
   sel.appendChild(addOpt);
+  // Opción para eliminar tipo
+  const delOpt = document.createElement('option');
+  delOpt.value = '__ELIMINAR__';
+  delOpt.textContent = '🗑️ Eliminar un tipo...';
+  sel.appendChild(delOpt);
   // Seleccionar el valor actual si existe (coincidencia exacta o case-insensitive)
   const match = todos.find(t => t.toLowerCase() === (valorSeleccionado || '').toLowerCase());
   if (match) sel.value = match;
 }
 
 function primerTipoValido(sel) {
-  return Array.from(sel.options).find(o => o.value !== '__NUEVO__')?.value || '';
+  return Array.from(sel.options).find(o => o.value !== '__NUEVO__' && o.value !== '__ELIMINAR__')?.value || '';
 }
 
 async function handleNuevoTipo(selectId) {
   const sel = document.getElementById(selectId);
-  if (!sel || sel.value !== '__NUEVO__') return;
+  if (!sel) return;
+
+  if (sel.value === '__ELIMINAR__') {
+    await handleEliminarTipo(selectId);
+    return;
+  }
+
+  if (sel.value !== '__NUEVO__') return;
   if (rolActual !== 'admin') {
     showFeedback('Acceso denegado', 'Solo los administradores pueden crear nuevos tipos.', '');
     sel.value = primerTipoValido(sel);
@@ -2591,7 +2603,7 @@ async function handleNuevoTipo(selectId) {
   const nombreLower = nombre.toLowerCase();
 
   // Buscar si ya existe (ignorando mayúsculas/minúsculas)
-  const existente = Array.from(sel.options).find(o => o.value !== '__NUEVO__' && o.value.toLowerCase() === nombreLower);
+  const existente = Array.from(sel.options).find(o => o.value !== '__NUEVO__' && o.value !== '__ELIMINAR__' && o.value.toLowerCase() === nombreLower);
   if (existente) {
     sel.value = existente.value;
     showFeedback('Tipo existente', `El tipo "${existente.value}" ya existe y ha sido seleccionado.`, '');
@@ -2605,6 +2617,72 @@ async function handleNuevoTipo(selectId) {
   sel.insertBefore(opt, addOpt);
   sel.value = nombre;
   showFeedback('Tipo creado', `Se ha añadido "${nombre}" como nuevo tipo de máquina.`, '✅');
+}
+
+async function handleEliminarTipo(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  if (rolActual !== 'admin') {
+    showFeedback('Acceso denegado', 'Solo los administradores pueden eliminar tipos.', '');
+    sel.value = primerTipoValido(sel);
+    return;
+  }
+
+  const tiposBase = ['Impresora FDM', 'Impresora Resina', 'CNC / Fresadora', 'Cortadora Láser'];
+  const tiposEliminables = Array.from(sel.options).filter(
+    o => o.value !== '__NUEVO__' && o.value !== '__ELIMINAR__' && !tiposBase.includes(o.value)
+  );
+
+  if (tiposEliminables.length === 0) {
+    showFeedback('Sin tipos personalizados', 'No hay tipos personalizados que eliminar. Los tipos base no se pueden borrar.', '');
+    sel.value = primerTipoValido(sel);
+    return;
+  }
+
+  // Construir lista de tipos eliminables para mostrar en el prompt
+  const listaTexto = tiposEliminables.map((o, i) => `${i + 1}. ${o.value}`).join('\n');
+  const respuesta = await customPrompt(
+    'Eliminar tipo',
+    `Escribe el nombre exacto del tipo a eliminar:\n${listaTexto}`
+  );
+
+  if (!respuesta || !respuesta.trim()) {
+    sel.value = primerTipoValido(sel);
+    return;
+  }
+
+  const nombreBuscado = respuesta.trim().toLowerCase();
+  const optAEliminar = tiposEliminables.find(o => o.value.toLowerCase() === nombreBuscado);
+
+  if (!optAEliminar) {
+    showFeedback('Tipo no encontrado', `No se encontró el tipo "${respuesta.trim()}" entre los tipos personalizados.`, '');
+    sel.value = primerTipoValido(sel);
+    return;
+  }
+
+  const enUso = datosMaquinas.some(m => m.tipo && m.tipo.toLowerCase() === optAEliminar.value.toLowerCase());
+  if (enUso) {
+    const ok = await customConfirm(
+      'Tipo en uso',
+      `El tipo "${optAEliminar.value}" está asignado a alguna máquina. ¿Eliminar igualmente de la lista? (No afecta a las máquinas existentes.)`,
+      '⚠️'
+    );
+    if (!ok) {
+      sel.value = primerTipoValido(sel);
+      return;
+    }
+  }
+
+  // Eliminar la opción de todos los selects de tipo activos en el DOM
+  ['nuevoMaquinaTipo', 'editTipo'].forEach(id => {
+    const s = document.getElementById(id);
+    if (!s) return;
+    const opt = Array.from(s.options).find(o => o.value.toLowerCase() === optAEliminar.value.toLowerCase());
+    if (opt) s.removeChild(opt);
+    if (s.value === optAEliminar.value || s.value === '') s.value = primerTipoValido(s);
+  });
+
+  showFeedback('Tipo eliminado', `El tipo "${optAEliminar.value}" ha sido eliminado de la lista.`, '🗑️');
 }
 
 // ── Helpers de UI (Nuevos) ───────────────────────────────────────────────────
