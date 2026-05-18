@@ -1061,7 +1061,7 @@ function asegurarElementosDOM() {
         </div>
         <div class="maquina-info">
           <span style="color: var(--accent); font-weight: 600">${m.sala}</span>
-          <span>${m.notas || 'Sin notas adicionales'}</span>
+          ${m.notas ? `<span>${esc(m.notas)}</span>` : ''}
         </div>
         ${incBadgeHTML ? `<div class="m-details">${incBadgeHTML}</div>` : ''}
       </div>
