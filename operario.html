@@ -531,8 +531,8 @@
         
         <div class="photo-upload-section" style="margin-top:20px">
           <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="onPhotoSelected()">
-          <button class="btn-photo" type="button" onclick="document.getElementById('photoInput').click()">
-            <span id="photoIcon">📷</span> <span id="photoText">Añadir foto de evidencia</span>
+          <button class="btn-photo" id="btnAddPhoto" type="button" onclick="document.getElementById('photoInput').click()">
+            <span id="photoIcon">📷</span> <span id="photoText">Añadir foto de evidencia (máx. 5)</span>
           </button>
           <div id="photoPreviewsGrid" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:16px;">
             <!-- Las miniaturas se inyectarán aquí por JS -->

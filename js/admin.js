@@ -598,6 +598,49 @@ function actualizarVistaDashboard() {
   const incPendientes = historial.filter(r => r.tipo === 'Incidencia' && !r.resuelta);
   renderIncPendientesDashboard(incPendientes.slice(0, 5));
 
+  actualizarSubtitulosSecciones();
+}
+
+function actualizarSubtitulosSecciones() {
+  // Subtítulo Máquinas y Salas
+  const elMaq = document.getElementById('subtitle-maquinas');
+  if (elMaq) {
+    const totalMaq = datosMaquinas.length;
+    const totalSalas = datosSalas.length;
+    const inactivas = datosMaquinas.filter(m => m.estado === 'inactiva').length;
+    const partes = [
+      `${totalMaq} máquina${totalMaq !== 1 ? 's' : ''}`,
+      `${totalSalas} sala${totalSalas !== 1 ? 's' : ''}`,
+    ];
+    if (inactivas > 0) partes.push(`${inactivas} inactiva${inactivas !== 1 ? 's' : ''}`);
+    elMaq.textContent = partes.join(' · ');
+  }
+
+  // Subtítulo Incidencias
+  const elInc = document.getElementById('subtitle-incidencias');
+  if (elInc) {
+    const incidencias = datosHistorial.filter(r => r.tipo === 'Incidencia');
+    const sinResolver = incidencias.filter(r => !r.resuelta && !r.en_seguimiento).length;
+    const enSeg = incidencias.filter(r => !r.resuelta && r.en_seguimiento).length;
+    const resueltas = incidencias.filter(r => r.resuelta).length;
+    const partes = [];
+    if (sinResolver > 0) partes.push(`${sinResolver} sin resolver`);
+    if (enSeg > 0) partes.push(`${enSeg} en seguimiento`);
+    partes.push(`${resueltas} resuelta${resueltas !== 1 ? 's' : ''}`);
+    elInc.textContent = partes.join(' · ');
+  }
+
+  // Subtítulo Usuarios
+  const elUsr = document.getElementById('subtitle-usuarios');
+  if (elUsr) {
+    const total = datosUsuarios.length;
+    const admins = datosUsuarios.filter(u => u.rol === 'admin').length;
+    const tecnicos = datosUsuarios.filter(u => u.rol === 'tecnico').length;
+    const partes = [`${total} usuario${total !== 1 ? 's' : ''}`];
+    if (admins > 0) partes.push(`${admins} admin${admins !== 1 ? 's' : ''}`);
+    if (tecnicos > 0) partes.push(`${tecnicos} técnico${tecnicos !== 1 ? 's' : ''}`);
+    elUsr.textContent = partes.join(' · ');
+  }
 }
 
 function renderIncPendientesDashboard(lista) {
