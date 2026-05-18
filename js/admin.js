@@ -25,6 +25,51 @@ async function detectarServidor() {
 
 let rolActual = 'admin'; // Se actualiza al cargar la sesión
 
+// ── Función auxiliar para calcular estado unificado ─────────────────────────────
+function calcularEstadoUnificado(maquina) {
+  const estadoOperativo = (maquina.estado || 'activa').toLowerCase().trim();
+  const tieneIncidencia = maquina.tiene_incidencia || false;
+  const enSeguimiento = maquina.incidencia_en_seguimiento || false;
+  
+  if (estadoOperativo === 'inactiva') {
+    return {
+      texto: 'INACTIVA',
+      clase: 'gris',
+      color: '#6b7280',
+      bg: 'rgba(107, 114, 128, 0.1)',
+      descripcion: 'Fuera de servicio'
+    };
+  }
+  
+  if (!tieneIncidencia) {
+    return {
+      texto: 'OPERATIVA',
+      clase: 'ok',
+      color: 'var(--ok)',
+      bg: 'rgba(16, 185, 129, 0.1)',
+      descripcion: 'Funcionando correctamente'
+    };
+  }
+  
+  if (enSeguimiento) {
+    return {
+      texto: 'EN SEGUIMIENTO',
+      clase: 'naranja',
+      color: 'var(--warning)',
+      bg: 'rgba(245, 158, 11, 0.1)',
+      descripcion: 'Con incidencia en seguimiento'
+    };
+  }
+  
+  return {
+    texto: 'CON INCIDENCIA',
+    clase: 'rojo',
+    color: 'var(--danger)',
+    bg: 'rgba(239, 68, 68, 0.1)',
+    descripcion: 'Con incidencia sin resolver'
+  };
+}
+
 // ── Cargar rol del usuario desde sesión ──
 async function cargarRolUsuario() {
   try {
@@ -135,11 +180,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     isCargando = true;
+    console.log('Iniciando carga del dashboard...');
 
     // Inyectar interfaz de forma segura
     const container = document.getElementById('dashboardContent');
+    console.log('Container encontrado:', !!container);
+    
     if (container) {
+      console.log('Inyectando HTML del dashboard...');
       container.innerHTML = DASHBOARD_HTML;
+      console.log('HTML inyectado correctamente');
+    } else {
+      console.error('No se encontró el container dashboardContent');
+      return;
     }
 
     // Mostrar nombre y rol en sidebar footer y dropdown Cuenta
@@ -227,22 +280,53 @@ function skeletonTabla(cols = 5) {
 
 async function cargarDatosBase() {
   console.time('Carga Inicial Bundled');
+  console.log('Iniciando carga de datos...');
+  
   // Una sola llamada para traerlo TODO
   const res = await apiFetch('/api/all-data');
   console.timeEnd('Carga Inicial Bundled');
 
   if (res.ok && res.data) {
+    console.log('Datos recibidos:', {
+      salas: res.data.salas?.length || 0,
+      maquinas: res.data.maquinas?.length || 0,
+      usuarios: res.data.usuarios?.length || 0,
+      historial: res.data.historial?.length || 0
+    });
+    
     const d = res.data;
     datosSalas = d.salas || [];
     datosMaquinas = d.maquinas || [];
     datosUsuarios = d.usuarios || [];
     datosHistorial = d.historial || [];
 
+    // Enriquecer datos de máquinas con información de incidencias
+    const incidenciasAbiertas = datosHistorial.filter(r => r.tipo === 'Incidencia' && !r.resuelta);
+    console.log('Incidencias abiertas:', incidenciasAbiertas.length);
+    
+    datosMaquinas.forEach(maquina => {
+      const incidenciasMaquina = incidenciasAbiertas.filter(inc => inc.maquina_id === maquina.id);
+      const incidenciaEnSeguimiento = incidenciasMaquina.find(inc => inc.en_seguimiento);
+      
+      maquina.tiene_incidencia = incidenciasMaquina.length > 0;
+      maquina.incidencia_en_seguimiento = !!incidenciaEnSeguimiento;
+      maquina.numero_incidencias = incidenciasMaquina.length;
+    });
+    
+    console.log('Maquinas enriquecidas:', datosMaquinas.map(m => ({
+      nombre: m.nombre,
+      estado: m.estado,
+      tiene_incidencia: m.tiene_incidencia,
+      incidencia_en_seguimiento: m.incidencia_en_seguimiento
+    })));
+
     // Invalidar cache de seguimientos al recargar datos (nuevas notas podrían haberse añadido)
     cacheSeguimientosNotas = null;
 
     // Poblar dashboard con los datos ya recibidos
     actualizarVistaDashboard();
+  } else {
+    console.error('Error al cargar datos:', res);
   }
 
   // Actualizar la vista actual ahora que los datos están listos
@@ -570,27 +654,53 @@ function actualizarVistaDashboard() {
 
   // KPI Sin resolver y En seguimiento
   const sinResolver = historial.filter(r => r.tipo === 'Incidencia' && !r.resuelta && !r.en_seguimiento).length;
-  const enSeguimiento = historial.filter(r => r.tipo === 'Incidencia' && !r.resuelta && r.en_seguimiento).length;
+  const incidenciasEnSeguimiento = historial.filter(r => r.tipo === 'Incidencia' && !r.resuelta && r.en_seguimiento).length;
   const kpiSinResolver = document.getElementById('kpi-sin-resolver');
   if (kpiSinResolver) kpiSinResolver.textContent = sinResolver;
   const kpiSeg = document.getElementById('kpi-en-seguimiento-dash');
-  if (kpiSeg) kpiSeg.textContent = enSeguimiento;
+  if (kpiSeg) kpiSeg.textContent = incidenciasEnSeguimiento;
 
-  // KPI Máquinas
-  const maqActivas = datosMaquinas.filter(m => m.estado === 'activa').length;
-  const listaMaqInactivas = datosMaquinas.filter(m => m.estado === 'inactiva');
+  // KPI Máquinas con nuevo sistema de estados
+  const operativas = datosMaquinas.filter(m => {
+    const estado = calcularEstadoUnificado(m);
+    return estado.texto === 'OPERATIVA';
+  }).length;
+  
+  const maquinasEnSeguimiento = datosMaquinas.filter(m => {
+    const estado = calcularEstadoUnificado(m);
+    return estado.texto === 'EN SEGUIMIENTO';
+  }).length;
+  
+  const conIncidencia = datosMaquinas.filter(m => {
+    const estado = calcularEstadoUnificado(m);
+    return estado.texto === 'CON INCIDENCIA';
+  }).length;
+  
+  const inactivas = datosMaquinas.filter(m => {
+    const estado = calcularEstadoUnificado(m);
+    return estado.texto === 'INACTIVA';
+  }).length;
+
   const kpiMaqAct = document.getElementById('kpi-maq-activas');
-  if (kpiMaqAct) kpiMaqAct.textContent = maqActivas;
+  if (kpiMaqAct) kpiMaqAct.textContent = operativas;
   const kpiMaqInact = document.getElementById('kpi-maq-inactivas');
-  if (kpiMaqInact) kpiMaqInact.textContent = listaMaqInactivas.length;
-  if (kpiMaqInact) kpiMaqInact.style.color = 'var(--text-muted)';
+  if (kpiMaqInact) kpiMaqInact.textContent = inactivas + maquinasEnSeguimiento + conIncidencia;
+  
   const maqInactivasEl = document.getElementById('dashboardMaqInactivas');
   if (maqInactivasEl) {
-    maqInactivasEl.innerHTML = listaMaqInactivas.length
-      ? listaMaqInactivas.map(m => `
-          <div onclick="navigateTo('maquinas', '${m.id}')" style="cursor:pointer;padding:5px 8px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.nombre} · ${m.sala_nombre}">
+    const maqConProblemas = datosMaquinas.filter(m => {
+      const estado = calcularEstadoUnificado(m);
+      return estado.texto !== 'OPERATIVA';
+    });
+    
+    maqInactivasEl.innerHTML = maqConProblemas.length
+      ? maqConProblemas.map(m => {
+          const estado = calcularEstadoUnificado(m);
+          return `
+          <div onclick="navigateTo('maquinas', '${m.id}')" style="cursor:pointer;padding:5px 8px;background:${estado.bg};border:1px solid ${estado.color}40;border-radius:6px;font-size:11px;color:${estado.color};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.nombre} · ${m.sala_nombre} - ${estado.descripcion}">
             ${m.nombre} · ${m.sala_nombre}
-          </div>`).join('')
+          </div>`;
+        }).join('')
       : `<div style="font-size:11px;color:var(--success);text-align:center;padding:4px">Todas operativas</div>`;
   }
 
@@ -736,20 +846,22 @@ function renderMaquinas() {
     const selectedId = localStorage.getItem('sgi_selected_machine');
     const isSelected = selectedId === String(m.id);
     const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : '';
+    
+    const estado = calcularEstadoUnificado(m);
 
     return `
         <div class="maquina-card fade-in"
              draggable="true"
              ondragstart="handleDragStart(event, '${m.id}')"
              onclick="verDetalleMaquina('${m.id}')"
-             style="cursor:grab;${highlightStyle}" title="Haz clic para ver detalles">
+             style="cursor:grab;${highlightStyle}" title="${estado.descripcion}">
         <div class="maquina-header">
           <div>
             <div class="maquina-nombre">${m.nombre}</div>
             <div class="maquina-tipo" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
               <span>${m.tipo}</span>
-              <span class="estado-badge ${m.estado === 'activa' ? 'ok' : (m.estado === 'inactiva' ? 'gris' : 'naranja')}" style="font-size:9px; padding:1px 6px">
-                ${m.estado || 'activa'}
+              <span class="estado-badge ${estado.clase}" style="font-size:9px; padding:1px 6px; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">
+                ${estado.texto}
               </span>
             </div>
           </div>
