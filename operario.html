@@ -470,6 +470,17 @@
         <span id="statusIcon">🟢</span> <span id="statusText">Máquina Activa</span>
       </div>
 
+      <!-- AVISO INCIDENCIA ACTIVA (oculto por defecto) -->
+      <div id="incidenciaActivaBanner" style="display:none; margin-bottom:14px; padding:12px 16px; background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.25); border-radius:12px; max-width:920px; margin-left:auto; margin-right:auto; width:100%; box-sizing:border-box;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:11px; font-weight:700; color:rgba(239,68,68,0.9); text-transform:uppercase; letter-spacing:.05em; margin-bottom:3px;" id="incBannerLabel">⚠️ Incidencia activa</div>
+            <div style="font-size:13px; color:var(--text-primary); opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="incBannerDesc">–</div>
+          </div>
+          <button onclick="showScreen('incidencia-seguimiento')" style="flex-shrink:0; background:none; border:none; color:rgba(239,68,68,0.8); font-size:12px; font-weight:600; cursor:pointer; padding:2px 0; white-space:nowrap;">Ver →</button>
+        </div>
+      </div>
+
       <div class="portal-grid" style="max-width: 920px; margin: 0 auto; width: 100%;">
         <div class="portal-card incident" onclick="seleccionarModo('incidencia')" style="background: rgba(255, 71, 87, 0.1); border: 1px solid var(--accent-inc);">
           <div class="portal-card-icon">⚡</div>
@@ -587,7 +598,7 @@
         </div>
 
         <!-- Añadir nueva nota -->
-        <div class="form-panel" style="background: rgba(79, 142, 247, 0.05); border: 1px solid var(--accent); border-radius: 16px; padding: 20px;">
+        <div id="panelNuevaNota" class="form-panel" style="background: rgba(79, 142, 247, 0.05); border: 1px solid var(--accent); border-radius: 16px; padding: 20px;">
           <div class="reporte-label" style="margin-bottom: 12px;">AÑADIR NOTA DE SEGUIMIENTO</div>
           <textarea id="nuevaNotaSeguimiento" class="reporte-textarea" style="margin-bottom: 12px;"></textarea>
           <button id="btnGuardarNota" onclick="guardarNotaSeguimiento()" style="width:100%; padding:12px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
@@ -596,7 +607,7 @@
         </div>
 
         <!-- Cambiar estado de la máquina (solo técnicos/admins) -->
-        <div class="form-panel" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px;">
+        <div id="panelEstadoMaquina" class="form-panel" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px;">
           <div class="reporte-label" style="margin-bottom: 12px;">ESTADO DE LA MÁQUINA</div>
           <div style="display:flex;gap:10px;margin-bottom:12px">
             <button id="btnEstadoActiva" onclick="cambiarEstadoMaquina('activa')" style="flex:1;padding:10px;border:2px solid var(--success);background:rgba(16,185,129,0.1);border-radius:8px;color:var(--success);font-weight:600;cursor:pointer">
@@ -610,7 +621,7 @@
         </div>
 
         <!-- Marcar incidencia como resuelta -->
-        <div class="form-panel" style="background: rgba(16, 185, 129, 0.05); border: 1px solid var(--success); border-radius: 16px; padding: 20px;">
+        <div id="panelResolverIncidencia" class="form-panel" style="background: rgba(16, 185, 129, 0.05); border: 1px solid var(--success); border-radius: 16px; padding: 20px;">
           <div class="reporte-label" style="color: var(--success); margin-bottom: 12px;">MARCAR COMO RESUELTA</div>
           <textarea id="notaResolucion" class="reporte-textarea" style="margin-bottom: 12px;"></textarea>
           <button onclick="resolverIncidencia()" style="width:100%; padding:12px; background: var(--success); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">
