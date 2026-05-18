@@ -1010,15 +1010,11 @@ function asegurarElementosDOM() {
     let totalVisible = 0;
     
     console.log('Filtrando por estado:', estado);
-    console.log('Datos disponibles:', Object.keys(allData));
     
     Object.keys(allData).forEach(sala => {
       const machines = allData[sala].filter(m => {
         if (estado === 'all') return true;
         const estadoMaquina = calcularEstadoUnificado(m);
-        
-        // Depuración: mostrar estado de cada máquina
-        console.log(`Máquina ${m.nombre}: estado=${m.estado}, incidencia=${m.incidencia}, enSeguimiento=${m.enSeguimiento} -> ${estadoMaquina.texto}`);
         
         // Comparación exacta según el filtro seleccionado
         switch(estado) {
@@ -1035,16 +1031,14 @@ function asegurarElementosDOM() {
         }
       });
       
-      console.log(`Sala ${sala}: ${machines.length} máquinas después del filtro`);
-      
       if (machines.length > 0) {
+        console.log(`Sala ${sala}: ${machines.length} máquinas con estado "${estado}"`);
         filteredData[sala] = machines;
         totalVisible += machines.length;
       }
     });
 
-    console.log('Datos filtrados:', filteredData);
-    console.log('Total visible:', totalVisible);
+    console.log(`Total de máquinas "${estado}": ${totalVisible}`);
 
     // Mostrar resumen del filtro
     const filtroResumen = document.getElementById('filtroResumen');
