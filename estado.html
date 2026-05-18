@@ -578,12 +578,12 @@
       border-color: var(--ok);
     }
     .filter-btn[data-filter="en seguimiento"].active {
-      background: var(--warning);
-      border-color: var(--warning);
+      background: var(--warn);
+      border-color: var(--warn);
     }
     .filter-btn[data-filter="con incidencia"].active {
-      background: var(--danger);
-      border-color: var(--danger);
+      background: var(--err);
+      border-color: var(--err);
     }
     .filter-btn[data-filter="inactiva"].active {
       background: var(--inactive);
@@ -700,19 +700,6 @@
     <p>Consultando base de datos...</p>
   </div>
 
-  <!-- Filtros de máquinas -->
-  <div id="filtrosContainer" style="display:none; padding: 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);">
-    <div style="max-width: 1200px; margin: 0 auto; display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
-      <span style="font-weight: 600; color: var(--text-primary); font-size: 14px;">Filtros:</span>
-      
-      <select id="filtroEstado" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 14px; cursor: pointer;">
-      
-      <button id="btnResetFiltros" style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: all 0.2s;">
-        Restablecer
-      </button>
-    </div>
-  </div>
-
   <div class="layout" id="layoutContainer" style="display:none">
     <aside class="sidebar" id="sidebarSalas"></aside>
     <div class="content" id="contentArea"></div>
@@ -725,6 +712,57 @@
   let scrollSpyEnabled = true;
   let loadStatusRetries = 0;
   const MAX_RETRIES = 5;
+
+  // ── Estado unificado (local, independiente de admin.js) ──────────────────────
+  function calcularEstadoUnificado(m) {
+    const estadoOp = (m.estado || 'activa').toLowerCase().trim();
+    const inactiva = estadoOp === 'inactiva' || m.inactiva;
+    const incidencia = m.incidencia || false;
+    const enSeguimiento = m.enSeguimiento || false;
+
+    if (inactiva) {
+      return {
+        texto: 'INACTIVA',
+        clase: 'status-inactive',
+        card: 'm-card inactive',
+        badge: 'badge-inactive',
+        color: '#6b7280',
+        bg: 'rgba(107,114,128,0.1)',
+        descripcion: 'Fuera de servicio'
+      };
+    }
+    if (!incidencia) {
+      return {
+        texto: 'OPERATIVA',
+        clase: 'status-ok',
+        card: 'm-card',
+        badge: 'badge-ok',
+        color: 'var(--ok)',
+        bg: 'rgba(16,185,129,0.1)',
+        descripcion: 'Funcionando correctamente'
+      };
+    }
+    if (enSeguimiento) {
+      return {
+        texto: 'EN SEGUIMIENTO',
+        clase: 'status-warn',
+        card: 'm-card warn',
+        badge: 'badge-warn',
+        color: 'var(--warn)',
+        bg: 'rgba(245,158,11,0.1)',
+        descripcion: 'Con incidencia en seguimiento'
+      };
+    }
+    return {
+      texto: 'CON INCIDENCIA',
+      clase: 'status-err',
+      card: 'm-card down',
+      badge: 'badge-err',
+      color: 'var(--err)',
+      bg: 'rgba(239,68,68,0.1)',
+      descripcion: 'Con incidencia sin resolver'
+    };
+  }
 
   // ── Función para asegurar que los elementos del DOM existan ─────────────────────
 function asegurarElementosDOM() {
@@ -766,59 +804,6 @@ function asegurarElementosDOM() {
 
   return true;
 }
-
-// ── Función auxiliar para calcular estado unificado ─────────────────────────────
-  function calcularEstadoUnificado(maquina) {
-    const estadoOperativo = (maquina.estado || 'activa').toLowerCase().trim();
-    const tieneIncidencia = maquina.incidencia || false;
-    const enSeguimiento = maquina.enSeguimiento || false;
-    
-    if (estadoOperativo === 'inactiva') {
-      return {
-        texto: 'INACTIVA',
-        clase: 'status-inactive',
-        badge: 'badge-inactive',
-        card: 'm-card inactive',
-        color: 'var(--inactive)',
-        bg: 'rgba(107, 114, 128, 0.1)',
-        descripcion: 'Fuera de servicio'
-      };
-    }
-    
-    if (!tieneIncidencia) {
-      return {
-        texto: 'OPERATIVA',
-        clase: 'status-ok',
-        badge: 'badge-ok',
-        card: 'm-card',
-        color: 'var(--ok)',
-        bg: 'rgba(16, 185, 129, 0.1)',
-        descripcion: 'Funcionando correctamente'
-      };
-    }
-    
-    if (enSeguimiento) {
-      return {
-        texto: 'EN SEGUIMIENTO',
-        clase: 'status-warn',
-        badge: 'badge-warn',
-        card: 'm-card warn',
-        color: 'var(--warn)',
-        bg: 'rgba(245, 158, 11, 0.1)',
-        descripcion: 'Con incidencia en seguimiento'
-      };
-    }
-    
-    return {
-      texto: 'CON INCIDENCIA',
-      clase: 'status-err',
-      badge: 'badge-err',
-      card: 'm-card down',
-      color: 'var(--err)',
-      bg: 'rgba(239, 68, 68, 0.1)',
-      descripcion: 'Con incidencia sin resolver'
-    };
-  }
 
   async function loadStatus() {
     try {
@@ -954,19 +939,11 @@ function asegurarElementosDOM() {
         </div>
       `;
       
-      // Mostrar contenedor de filtros
-      const filtrosContainer = document.getElementById('filtrosContainer');
-      if (filtrosContainer) filtrosContainer.style.display = 'block';
-      
       return;
     }
 
     loader.style.display = 'none';
     layoutContainer.style.display = 'flex';
-
-    // Mostrar contenedor de filtros
-    const filtrosContainer = document.getElementById('filtrosContainer');
-    if (filtrosContainer) filtrosContainer.style.display = 'block';
 
     // Render sidebar
     sidebar.innerHTML = sortedSalas.map(sala => {
