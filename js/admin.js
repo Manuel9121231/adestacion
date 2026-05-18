@@ -871,12 +871,26 @@ function renderMaquinas() {
              style="cursor:grab;${highlightStyle}" title="${estado.descripcion}">
         <div class="maquina-header">
           <div>
-            <div class="maquina-nombre">${m.nombre}</div>
+            <div class="maquina-nombre" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+              <span>${m.nombre}</span>
+              ${(function() {
+                const estOp = (m.estado || 'activa').toLowerCase().trim();
+                const isActiva = estOp !== 'inactiva';
+                const bgOp = isActiva ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)';
+                const colorOp = isActiva ? 'var(--ok)' : '#6b7280';
+                const textOp = isActiva ? 'ACTIVA' : 'INACTIVA';
+                const claseOp = isActiva ? 'ok' : 'gris';
+                return `<span class="estado-badge ${claseOp}" style="font-size:9px; padding:1px 6px; background: ${bgOp}; color: ${colorOp}; border: 1px solid ${colorOp}20;">${textOp}</span>`;
+              })()}
+            </div>
             <div class="maquina-tipo" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
               <span>${m.tipo}</span>
-              <span class="estado-badge ${estado.clase}" style="font-size:9px; padding:1px 6px; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">
-                ${estado.texto}
-              </span>
+              ${(function() {
+                if (estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO') {
+                  return `<span class="estado-badge ${estado.clase}" style="font-size:9px; padding:1px 6px; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">${estado.texto}</span>`;
+                }
+                return '';
+              })()}
             </div>
           </div>
         </div>
