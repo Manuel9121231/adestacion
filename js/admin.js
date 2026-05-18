@@ -306,7 +306,10 @@ async function cargarDatosBase() {
     console.log('Incidencias abiertas:', incidenciasAbiertas.length);
     
     datosMaquinas.forEach(maquina => {
-      const incidenciasMaquina = incidenciasAbiertas.filter(inc => inc.maquina_id === maquina.id);
+      const incidenciasMaquina = incidenciasAbiertas.filter(inc => 
+        String(inc.maquina_id) === String(maquina.id) || 
+        (inc.maquina && inc.maquina.trim().toLowerCase() === maquina.nombre.trim().toLowerCase())
+      );
       const incidenciaEnSeguimiento = incidenciasMaquina.find(inc => inc.en_seguimiento);
       
       maquina.tiene_incidencia = incidenciasMaquina.length > 0;
@@ -535,7 +538,10 @@ async function renderIncidencias(filtro = 'todas') {
     const statusText = resuelta ? 'Resuelta' : (esSeguimiento ? 'En Seguimiento' : 'Sin resolver');
 
     // Buscar estado actual de la máquina
-    const maq = datosMaquinas.find(m => m.id === r.maquina_id);
+    const maq = datosMaquinas.find(m => 
+      String(m.id) === String(r.maquina_id) || 
+      (r.maquina && m.nombre.trim().toLowerCase() === r.maquina.trim().toLowerCase())
+    );
     const maquinaEstado = maq ? maq.estado : 'activa';
 
     return `
@@ -846,9 +852,16 @@ function renderMaquinas() {
   function tarjetaMaquina(m) {
     const selectedId = localStorage.getItem('sgi_selected_machine');
     const isSelected = selectedId === String(m.id);
-    const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : '';
-    
     const estado = calcularEstadoUnificado(m);
+    
+    let baseBorder = '';
+    if (estado.texto === 'SIN RESOLVER') {
+      baseBorder = 'border: 2px solid var(--danger);';
+    } else if (estado.texto === 'EN SEGUIMIENTO') {
+      baseBorder = 'border: 2px solid var(--warning);';
+    }
+    
+    const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : baseBorder;
 
     return `
         <div class="maquina-card fade-in"
