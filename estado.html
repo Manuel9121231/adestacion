@@ -720,6 +720,29 @@
     const incidencia = m.incidencia || false;
     const enSeguimiento = m.enSeguimiento || false;
 
+    // Incidencia tiene prioridad sobre estado operativo
+    if (incidencia && enSeguimiento) {
+      return {
+        texto: 'EN SEGUIMIENTO',
+        clase: 'status-warn',
+        card: 'm-card warn',
+        badge: 'badge-warn',
+        color: 'var(--warn)',
+        bg: 'rgba(245,158,11,0.1)',
+        descripcion: 'Con incidencia en seguimiento'
+      };
+    }
+    if (incidencia) {
+      return {
+        texto: 'CON INCIDENCIA',
+        clase: 'status-err',
+        card: 'm-card down',
+        badge: 'badge-err',
+        color: 'var(--err)',
+        bg: 'rgba(239,68,68,0.1)',
+        descripcion: 'Con incidencia sin resolver'
+      };
+    }
     if (inactiva) {
       return {
         texto: 'INACTIVA',
@@ -731,36 +754,14 @@
         descripcion: 'Fuera de servicio'
       };
     }
-    if (!incidencia) {
-      return {
-        texto: 'OPERATIVA',
-        clase: 'status-ok',
-        card: 'm-card',
-        badge: 'badge-ok',
-        color: 'var(--ok)',
-        bg: 'rgba(16,185,129,0.1)',
-        descripcion: 'Funcionando correctamente'
-      };
-    }
-    if (enSeguimiento) {
-      return {
-        texto: 'EN SEGUIMIENTO',
-        clase: 'status-warn',
-        card: 'm-card warn',
-        badge: 'badge-warn',
-        color: 'var(--warn)',
-        bg: 'rgba(245,158,11,0.1)',
-        descripcion: 'Con incidencia en seguimiento'
-      };
-    }
     return {
-      texto: 'CON INCIDENCIA',
-      clase: 'status-err',
-      card: 'm-card down',
-      badge: 'badge-err',
-      color: 'var(--err)',
-      bg: 'rgba(239,68,68,0.1)',
-      descripcion: 'Con incidencia sin resolver'
+      texto: 'OPERATIVA',
+      clase: 'status-ok',
+      card: 'm-card',
+      badge: 'badge-ok',
+      color: 'var(--ok)',
+      bg: 'rgba(16,185,129,0.1)',
+      descripcion: 'Funcionando correctamente'
     };
   }
 
@@ -823,15 +824,34 @@ function asegurarElementosDOM() {
       
       if (!window.supabaseClient) { setTimeout(loadStatus, 500); return; }
       const c = window.supabaseClient;
+      console.log('[estado] supabaseClient OK, iniciando queries...');
 
-      // 1. Cargar máquinas y obtener IDs de incidencias abiertas con en_seguimiento
-      const [mRes, iRes] = await Promise.all([
-        c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,salas(nombre)').order('nombre'),
-        c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta',false)
-      ]);
+      // 1. Cargar máquinas
+      const mRes = await c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,salas(nombre)').order('nombre');
+      console.log('[estado] equipos:', mRes.data?.length, 'error:', mRes.error);
+
+      // 2. Cargar incidencias abiertas: resuelta=false O resuelta=null
+      const iResF = await c.from('registros').select('id,maquina_id,en_seguimiento,resuelta,tipo').eq('tipo','Incidencia').eq('resuelta', false);
+      const iResN = await c.from('registros').select('id,maquina_id,en_seguimiento,resuelta,tipo').eq('tipo','Incidencia').is('resuelta', null);
+      console.log('[estado] incidencias resuelta=false:', iResF.data?.length, 'error:', iResF.error);
+      console.log('[estado] incidencias resuelta=null:', iResN.data?.length, 'error:', iResN.error);
+      console.log('[estado] muestra resuelta=false:', iResF.data?.slice(0,2));
+      console.log('[estado] muestra resuelta=null:', iResN.data?.slice(0,2));
+
+      // Test: leer registros sin filtro para verificar RLS
+      const testRes = await c.from('registros').select('id,tipo,resuelta,en_seguimiento,maquina_id').limit(10);
+      console.log('[estado] TEST sin filtro:', testRes.data?.length, 'error:', testRes.error);
+      console.log('[estado] muestra TEST:', testRes.data?.slice(0,3));
 
       if (mRes.error) throw mRes.error;
-      const incidencias = iRes.data || [];
+      const incidencias = [...(iResF.data || []), ...(iResN.data || [])];
+
+      // Diagnóstico: comparar IDs
+      const equipoIds = (mRes.data || []).map(m => m.id);
+      console.log('[estado] IDs equipos (primeros 3):', equipoIds.slice(0,3), typeof equipoIds[0]);
+      console.log('[estado] maquina_id incidencias:', incidencias.map(i => i.maquina_id), typeof incidencias[0]?.maquina_id);
+      console.log('[estado] coincidencias:', incidencias.filter(i => equipoIds.includes(i.maquina_id)).length, 'de', incidencias.length);
+
       const enRep = new Set(incidencias.map(i => i.maquina_id));
       
       // Mapa de maquina_id -> datos de incidencia (incluyendo en_seguimiento)
@@ -848,13 +868,13 @@ function asegurarElementosDOM() {
         const sala = m.salas?.nombre || 'Sin sala';
         if (!bySala[sala]) bySala[sala] = [];
 
-        const inactiva = (m.estado||'').toLowerCase().trim() !== 'activa';
+        const inactiva = (m.estado||'').toLowerCase().trim() === 'inactiva';
         const incidencia = enRep.has(m.id);
         const down = inactiva || incidencia;
 
         // Determinar estado de seguimiento
         const incData = incidenciaPorMaquina[m.id];
-        const enSeguimiento = incData && incData.en_seguimiento;
+        const enSeguimiento = !!incData?.en_seguimiento;
 
         // Build status text: always show operational status + incident if applicable
         let statusParts = [m.estado || 'Activa'];
