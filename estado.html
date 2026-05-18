@@ -269,7 +269,7 @@
       padding: 12px 16px;
       border-radius: 10px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.15s, border-color 0.15s;
       margin-bottom: 4px;
       font-weight: 600;
       font-size: 14px;
@@ -286,10 +286,6 @@
     .sidebar-item:hover {
       background: rgba(79, 142, 247, 0.05);
       border-color: var(--accent);
-      transform: translateX(4px);
-    }
-    .sidebar-item:active {
-      transform: scale(0.98);
     }
     .sidebar-item.active {
       background: var(--accent);
@@ -353,62 +349,26 @@
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
+      cursor: default;
       padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      transition: all 0.2s;
       position: relative;
       box-shadow: var(--shadow);
-      cursor: pointer;
-    }
-    .m-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.15);
-      border-color: var(--accent);
-    }
-    .m-card:active {
-      transform: translateY(0px);
-      box-shadow: var(--shadow);
-      background: var(--card-bg) !important;
     }
     .m-card.warn {
       background: var(--card-bg);
       border-color: #f59e0b;
-    }
-    .m-card.warn:hover {
-      border-color: #f59e0b;
-      box-shadow: 0 8px 12px -2px rgba(245, 158, 11, 0.25);
-    }
-    .m-card.warn:active {
-      background: var(--card-bg) !important;
-      box-shadow: var(--shadow);
     }
     .m-card.inactive {
       background: var(--card-bg);
       border-color: #6b7280;
       opacity: 0.85;
     }
-    .m-card.inactive:hover {
-      opacity: 1;
-      border-color: #6b7280;
-      box-shadow: 0 8px 12px -2px rgba(107, 114, 128, 0.25);
-    }
-    .m-card.inactive:active {
-      background: var(--card-bg) !important;
-      box-shadow: var(--shadow);
-    }
     .m-card.down {
       background: var(--card-bg);
       border-color: #ef4444;
-    }
-    .m-card.down:hover {
-      border-color: #ef4444;
-      box-shadow: 0 8px 12px -2px rgba(239, 68, 68, 0.25);
-    }
-    .m-card.down:active {
-      background: var(--card-bg) !important;
-      box-shadow: var(--shadow);
     }
     
     .m-top {
@@ -866,7 +826,6 @@ function asegurarElementosDOM() {
       });
 
       allData = bySala;
-      rawMachines.filter(m => m.incidencia).forEach(m => console.log('[DEBUG inc]', m.nombre, {incidencia: m.incidencia, enSeguimiento: m.enSeguimiento, inactiva: m.inactiva}));
       document.getElementById('statsLabel').textContent = `${totOk} disponibles · ${totErr} fuera de servicio`;
       renderData(bySala);
 
@@ -958,18 +917,16 @@ function asegurarElementosDOM() {
 
   function setFiltroIncidencia(val) {
     _filtroIncidencia = val;
-    console.log('[setFiltroIncidencia] val=', val, 'allData keys=', Object.keys(allData));
     document.querySelectorAll('.filter-btn[data-group="incidencia"]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.filter === (val === 'all' ? 'all-incidencia' : val));
     });
-    const total = Object.values(allData).flat();
-    console.log('[setFiltroIncidencia] total maquinas=', total.length, 'con incidencia=', total.filter(m=>m.incidencia).length);
     applyFilters();
   }
 
   function applyFilters() {
     const filteredData = {};
     let totalVisible = 0;
+    const query = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
 
     Object.keys(allData).forEach(sala => {
       const machines = allData[sala].filter(m => {
@@ -982,6 +939,13 @@ function asegurarElementosDOM() {
         if (_filtroIncidencia === 'sin-incidencia'  && tieneIncidencia) return false;
         if (_filtroIncidencia === 'en seguimiento'  && !(tieneIncidencia && enSeg)) return false;
         if (_filtroIncidencia === 'sin resolver'    && !(tieneIncidencia && !enSeg)) return false;
+        // Filtro texto
+        if (query) {
+          return m.nombre.toLowerCase().includes(query) ||
+            m.tipo.toLowerCase().includes(query) ||
+            m.sala.toLowerCase().includes(query) ||
+            (m.notas && m.notas.toLowerCase().includes(query));
+        }
         return true;
       });
       if (machines.length > 0) {
@@ -1011,49 +975,9 @@ function asegurarElementosDOM() {
   }
 
   function filterMachines() {
-    const query = document.getElementById('searchInput').value.toLowerCase().trim();
-    if (!query) {
-      applyFilters();
-      return;
-    }
-
-    const filteredData = {};
-    let totalVisible = 0;
-
-    Object.keys(allData).forEach(sala => {
-      const machines = allData[sala].filter(m => {
-        // Aplicar filtros de grupo primero
-        const tieneIncidencia = m.incidencia === true;
-        const enSeg = m.enSeguimiento === true;
-        if (_filtroEquipo === 'activa'   && m.inactiva === true) return false;
-        if (_filtroEquipo === 'inactiva' && m.inactiva !== true) return false;
-        if (_filtroIncidencia === 'sin-incidencia'  && tieneIncidencia) return false;
-        if (_filtroIncidencia === 'en seguimiento'  && !(tieneIncidencia && enSeg)) return false;
-        if (_filtroIncidencia === 'sin resolver'    && !(tieneIncidencia && !enSeg)) return false;
-        // Luego búsqueda por texto
-        return m.nombre.toLowerCase().includes(query) ||
-          m.tipo.toLowerCase().includes(query) ||
-          m.sala.toLowerCase().includes(query) ||
-          (m.notas && m.notas.toLowerCase().includes(query));
-      });
-      
-      if (machines.length > 0) {
-        filteredData[sala] = machines;
-        totalVisible += machines.length;
-      }
-    });
-
-    // Mostrar resumen de búsqueda
-    const filtroResumen = document.getElementById('filtroResumen');
-    const filtroTexto = document.getElementById('filtroTexto');
-    const resultadoCount = document.getElementById('resultadoCount');
-    
-    filtroResumen.style.display = 'block';
-    filtroTexto.textContent = `Buscando: "${query}"`;
-    resultadoCount.textContent = totalVisible;
-
-    renderData(filteredData);
+    applyFilters();
   }
+
 
   function scrollToSala(salaName) {
     // Disable scroll spy during manual click
