@@ -824,34 +824,16 @@ function asegurarElementosDOM() {
       
       if (!window.supabaseClient) { setTimeout(loadStatus, 500); return; }
       const c = window.supabaseClient;
-      console.log('[estado] supabaseClient OK, iniciando queries...');
 
       // 1. Cargar máquinas
       const mRes = await c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,salas(nombre)').order('nombre');
-      console.log('[estado] equipos:', mRes.data?.length, 'error:', mRes.error);
 
-      // 2. Cargar incidencias abiertas: resuelta=false O resuelta=null
-      const iResF = await c.from('registros').select('id,maquina_id,en_seguimiento,resuelta,tipo').eq('tipo','Incidencia').eq('resuelta', false);
-      const iResN = await c.from('registros').select('id,maquina_id,en_seguimiento,resuelta,tipo').eq('tipo','Incidencia').is('resuelta', null);
-      console.log('[estado] incidencias resuelta=false:', iResF.data?.length, 'error:', iResF.error);
-      console.log('[estado] incidencias resuelta=null:', iResN.data?.length, 'error:', iResN.error);
-      console.log('[estado] muestra resuelta=false:', iResF.data?.slice(0,2));
-      console.log('[estado] muestra resuelta=null:', iResN.data?.slice(0,2));
-
-      // Test: leer registros sin filtro para verificar RLS
-      const testRes = await c.from('registros').select('id,tipo,resuelta,en_seguimiento,maquina_id').limit(10);
-      console.log('[estado] TEST sin filtro:', testRes.data?.length, 'error:', testRes.error);
-      console.log('[estado] muestra TEST:', testRes.data?.slice(0,3));
+      // 2. Cargar incidencias abiertas (resuelta=false o null)
+      const iResF = await c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta', false);
+      const iResN = await c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').is('resuelta', null);
 
       if (mRes.error) throw mRes.error;
       const incidencias = [...(iResF.data || []), ...(iResN.data || [])];
-
-      // Diagnóstico: comparar IDs
-      const equipoIds = (mRes.data || []).map(m => m.id);
-      console.log('[estado] IDs equipos (primeros 3):', equipoIds.slice(0,3), typeof equipoIds[0]);
-      console.log('[estado] maquina_id incidencias:', incidencias.map(i => i.maquina_id), typeof incidencias[0]?.maquina_id);
-      console.log('[estado] coincidencias:', incidencias.filter(i => equipoIds.includes(i.maquina_id)).length, 'de', incidencias.length);
-
       const enRep = new Set(incidencias.map(i => i.maquina_id));
       
       // Mapa de maquina_id -> datos de incidencia (incluyendo en_seguimiento)
