@@ -185,7 +185,7 @@ const DASHBOARD_HTML = `
           <div class="section-header">
             <div>
               <div class="section-title">Máquinas y Salas</div>
-              <div class="section-subtitle">Gestión de máquinas y salas</div>
+              <div class="section-subtitle" id="subtitle-maquinas">Cargando...</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <div style="position:relative;display:flex;align-items:center">
@@ -210,7 +210,7 @@ const DASHBOARD_HTML = `
           <div class="section-header">
             <div>
               <div class="section-title">Incidencias</div>
-              <div class="section-subtitle">Gestión de fallos técnicos y reparaciones</div>
+              <div class="section-subtitle" id="subtitle-incidencias">Cargando...</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <div id="filtro-incidencias-label" style="font-size:12px;color:var(--text-muted);font-weight:500;white-space:nowrap"></div>
@@ -266,7 +266,7 @@ const DASHBOARD_HTML = `
           <div class="section-header">
             <div>
               <div class="section-title">Usuarios del Sistema</div>
-              <div class="section-subtitle">Gestión de accesos y privilegios de usuario</div>
+              <div class="section-subtitle" id="subtitle-usuarios">Cargando...</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
               <div style="position:relative;display:inline-block">

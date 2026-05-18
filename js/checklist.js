@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       incidenciaAbiertaId = null;
       banner.className = 'status-banner status-operative';
       icon.textContent = '🟢';
-      text.textContent = 'Máquina Operativa';
+      text.textContent = 'Máquina Activa';
     }
 
     const pNm = document.getElementById('portalMaquinaNombre');
@@ -195,17 +195,51 @@ function actualizarBoton(texto) {
 }
 
 // ── Gestión de Fotos ─────────────────────────────────────────────────────────
+const MAX_PHOTOS = 5;
+const MAX_PHOTO_DIMENSION = 1200;
+const PHOTO_QUALITY = 0.82;
+
+function comprimirImagen(dataUrl) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > MAX_PHOTO_DIMENSION || height > MAX_PHOTO_DIMENSION) {
+        if (width > height) {
+          height = Math.round((height * MAX_PHOTO_DIMENSION) / width);
+          width = MAX_PHOTO_DIMENSION;
+        } else {
+          width = Math.round((width * MAX_PHOTO_DIMENSION) / height);
+          height = MAX_PHOTO_DIMENSION;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', PHOTO_QUALITY));
+    };
+    img.src = dataUrl;
+  });
+}
+
 function onPhotoSelected() {
   const file = document.getElementById('photoInput').files[0];
   if (!file) return;
 
+  if (selectedPhotos.length >= MAX_PHOTOS) {
+    alert(`Solo puedes adjuntar un máximo de ${MAX_PHOTOS} fotos por reporte.`);
+    document.getElementById('photoInput').value = '';
+    return;
+  }
+
   const reader = new FileReader();
-  reader.onload = (e) => {
-    selectedPhotos.push(e.target.result);
+  reader.onload = async (e) => {
+    const comprimida = await comprimirImagen(e.target.result);
+    selectedPhotos.push(comprimida);
     renderPhotoPreviews();
   };
   reader.readAsDataURL(file);
-  // Limpiar input para permitir seleccionar la misma foto o resetear el selector
   document.getElementById('photoInput').value = '';
 }
 
@@ -226,12 +260,21 @@ function renderPhotoPreviews() {
 
   const text = document.getElementById('photoText');
   const icon = document.getElementById('photoIcon');
-  if (selectedPhotos.length > 0) {
-    text.textContent = `Añadir otra foto (${selectedPhotos.length})`;
+  const btn = document.getElementById('btnAddPhoto');
+  const limitada = selectedPhotos.length >= MAX_PHOTOS;
+
+  if (limitada) {
+    text.textContent = `Límite alcanzado (${MAX_PHOTOS}/${MAX_PHOTOS})`;
+    icon.textContent = '🚫';
+    if (btn) btn.disabled = true;
+  } else if (selectedPhotos.length > 0) {
+    text.textContent = `Añadir otra foto (${selectedPhotos.length}/${MAX_PHOTOS})`;
     icon.textContent = '📸';
+    if (btn) btn.disabled = false;
   } else {
-    text.textContent = 'Añadir foto de evidencia';
+    text.textContent = `Añadir foto de evidencia (máx. ${MAX_PHOTOS})`;
     icon.textContent = '📷';
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -447,7 +490,7 @@ async function cargarEstadoMaquina() {
     btnActiva.style.borderWidth = '3px';
     btnInactiva.style.opacity = '0.5';
     btnInactiva.style.borderWidth = '1px';
-    msg.textContent = 'La máquina está operativa';
+    msg.textContent = 'La máquina está activa';
   } else {
     btnActiva.style.opacity = '0.5';
     btnActiva.style.borderWidth = '1px';

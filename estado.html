@@ -573,17 +573,17 @@
       color: white;
       border-color: var(--accent);
     }
-    .filter-btn[data-filter="operativa"].active {
+    .filter-btn[data-filter="activa"].active {
       background: var(--ok);
       border-color: var(--ok);
     }
     .filter-btn[data-filter="en seguimiento"].active {
-      background: var(--warning);
-      border-color: var(--warning);
+      background: var(--warn);
+      border-color: var(--warn);
     }
-    .filter-btn[data-filter="con incidencia"].active {
-      background: var(--danger);
-      border-color: var(--danger);
+    .filter-btn[data-filter="sin resolver"].active {
+      background: var(--err);
+      border-color: var(--err);
     }
     .filter-btn[data-filter="inactiva"].active {
       background: var(--inactive);
@@ -676,9 +676,9 @@
     </div>
     <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="filter-btn active" data-filter="all" onclick="filterByEstado('all')">Todos</button>
-      <button class="filter-btn" data-filter="operativa" onclick="filterByEstado('operativa')">Operativas</button>
+      <button class="filter-btn" data-filter="activa" onclick="filterByEstado('activa')">Activas</button>
       <button class="filter-btn" data-filter="en seguimiento" onclick="filterByEstado('en seguimiento')">En Seguimiento</button>
-      <button class="filter-btn" data-filter="con incidencia" onclick="filterByEstado('con incidencia')">Con Incidencia</button>
+      <button class="filter-btn" data-filter="sin resolver" onclick="filterByEstado('sin resolver')">Sin Resolver</button>
       <button class="filter-btn" data-filter="inactiva" onclick="filterByEstado('inactiva')">Inactivas</button>
     </div>
   </div>
@@ -700,19 +700,6 @@
     <p>Consultando base de datos...</p>
   </div>
 
-  <!-- Filtros de máquinas -->
-  <div id="filtrosContainer" style="display:none; padding: 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);">
-    <div style="max-width: 1200px; margin: 0 auto; display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
-      <span style="font-weight: 600; color: var(--text-primary); font-size: 14px;">Filtros:</span>
-      
-      <select id="filtroEstado" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 14px; cursor: pointer;">
-      
-      <button id="btnResetFiltros" style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: all 0.2s;">
-        Restablecer
-      </button>
-    </div>
-  </div>
-
   <div class="layout" id="layoutContainer" style="display:none">
     <aside class="sidebar" id="sidebarSalas"></aside>
     <div class="content" id="contentArea"></div>
@@ -725,6 +712,58 @@
   let scrollSpyEnabled = true;
   let loadStatusRetries = 0;
   const MAX_RETRIES = 5;
+
+  // ── Estado unificado (local, independiente de admin.js) ──────────────────────
+  function calcularEstadoUnificado(m) {
+    const estadoOp = (m.estado || 'activa').toLowerCase().trim();
+    const inactiva = estadoOp === 'inactiva' || m.inactiva;
+    const incidencia = m.incidencia || false;
+    const enSeguimiento = m.enSeguimiento || false;
+
+    // Incidencia tiene prioridad sobre estado operativo
+    if (incidencia && enSeguimiento) {
+      return {
+        texto: 'EN SEGUIMIENTO',
+        clase: 'status-warn',
+        card: 'm-card warn',
+        badge: 'badge-warn',
+        color: 'var(--warn)',
+        bg: 'rgba(245,158,11,0.1)',
+        descripcion: 'Con incidencia en seguimiento'
+      };
+    }
+    if (incidencia) {
+      return {
+        texto: 'SIN RESOLVER',
+        clase: 'status-err',
+        card: 'm-card down',
+        badge: 'badge-err',
+        color: 'var(--err)',
+        bg: 'rgba(239,68,68,0.1)',
+        descripcion: 'Incidencia sin resolver'
+      };
+    }
+    if (inactiva) {
+      return {
+        texto: 'INACTIVA',
+        clase: 'status-inactive',
+        card: 'm-card inactive',
+        badge: 'badge-inactive',
+        color: '#6b7280',
+        bg: 'rgba(107,114,128,0.1)',
+        descripcion: 'Fuera de servicio'
+      };
+    }
+    return {
+      texto: 'ACTIVA',
+      clase: 'status-ok',
+      card: 'm-card',
+      badge: 'badge-ok',
+      color: 'var(--ok)',
+      bg: 'rgba(16,185,129,0.1)',
+      descripcion: 'Funcionando correctamente'
+    };
+  }
 
   // ── Función para asegurar que los elementos del DOM existan ─────────────────────
 function asegurarElementosDOM() {
@@ -767,60 +806,6 @@ function asegurarElementosDOM() {
   return true;
 }
 
-// ── Función auxiliar para calcular estado unificado ─────────────────────────────
-  function calcularEstadoUnificado(maquina) {
-    const estadoOperativo = (maquina.estado || 'activa').toLowerCase().trim();
-    // Usar las mismas propiedades que admin.js
-    const tieneIncidencia = maquina.tiene_incidencia || false;
-    const enSeguimiento = maquina.incidencia_en_seguimiento || false;
-    
-    if (estadoOperativo === 'inactiva') {
-      return {
-        texto: 'INACTIVA',
-        clase: 'status-inactive',
-        badge: 'badge-inactive',
-        card: 'm-card inactive',
-        color: 'var(--inactive)',
-        bg: 'rgba(107, 114, 128, 0.1)',
-        descripcion: 'Fuera de servicio'
-      };
-    }
-    
-    if (!tieneIncidencia) {
-      return {
-        texto: 'OPERATIVA',
-        clase: 'status-ok',
-        badge: 'badge-ok',
-        card: 'm-card',
-        color: 'var(--ok)',
-        bg: 'rgba(16, 185, 129, 0.1)',
-        descripcion: 'Funcionando correctamente'
-      };
-    }
-    
-    if (enSeguimiento) {
-      return {
-        texto: 'EN SEGUIMIENTO',
-        clase: 'status-warn',
-        badge: 'badge-warn',
-        card: 'm-card warn',
-        color: 'var(--warn)',
-        bg: 'rgba(245, 158, 11, 0.1)',
-        descripcion: 'Con incidencia en seguimiento'
-      };
-    }
-    
-    return {
-      texto: 'CON INCIDENCIA',
-      clase: 'status-err',
-      badge: 'badge-err',
-      card: 'm-card down',
-      color: 'var(--err)',
-      bg: 'rgba(239, 68, 68, 0.1)',
-      descripcion: 'Con incidencia sin resolver'
-    };
-  }
-
   async function loadStatus() {
     try {
       // Asegurar que los elementos del DOM existan antes de continuar
@@ -840,38 +825,16 @@ function asegurarElementosDOM() {
       if (!window.supabaseClient) { setTimeout(loadStatus, 500); return; }
       const c = window.supabaseClient;
 
-      // 1. Cargar máquinas y obtener IDs de incidencias abiertas con en_seguimiento
-      console.log('Iniciando carga de datos desde Supabase...');
-      const [mRes, iRes] = await Promise.all([
-        c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,salas(nombre)').order('nombre'),
-        c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta',false)
-      ]);
+      // 1. Cargar máquinas
+      const mRes = await c.from('equipos').select('id,nombre,tipo,modelo,estado,notas,salas(nombre)').order('nombre');
 
-      console.log('Resultados de Supabase:', {
-        maquinas: { error: !!mRes.error, data: mRes.data?.length || 0 },
-        incidencias: { error: !!iRes.error, data: iRes.data?.length || 0 }
-      });
+      // 2. Cargar incidencias abiertas (resuelta=false o null)
+      const iResF = await c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').eq('resuelta', false);
+      const iResN = await c.from('registros').select('id,maquina_id,en_seguimiento').eq('tipo','Incidencia').is('resuelta', null);
 
-      if (mRes.error) {
-        console.error('Error cargando máquinas:', mRes.error);
-        throw mRes.error;
-      }
-      if (iRes.error) {
-        console.error('Error cargando incidencias:', iRes.error);
-        throw iRes.error;
-      }
-      const incidencias = iRes.data || [];
+      if (mRes.error) throw mRes.error;
+      const incidencias = [...(iResF.data || []), ...(iResN.data || [])];
       const enRep = new Set(incidencias.map(i => i.maquina_id));
-      
-      console.log('=== DEPURACIÓN DE DATOS EN ESTADO.HTML ===');
-      console.log('Máquinas cargadas:', mRes.data?.length || 0);
-      console.log('Incidencias cargadas:', incidencias.length);
-      console.log('Incidencias detalladas:', incidencias.map(inc => ({
-        id: inc.id,
-        maquina_id: inc.maquina_id,
-        en_seguimiento: inc.en_seguimiento,
-        resuelta: inc.resuelta
-      })));
       
       // Mapa de maquina_id -> datos de incidencia (incluyendo en_seguimiento)
       const incidenciaPorMaquina = {};
@@ -887,13 +850,13 @@ function asegurarElementosDOM() {
         const sala = m.salas?.nombre || 'Sin sala';
         if (!bySala[sala]) bySala[sala] = [];
 
-        const inactiva = (m.estado||'').toLowerCase().trim() !== 'activa';
+        const inactiva = (m.estado||'').toLowerCase().trim() === 'inactiva';
         const incidencia = enRep.has(m.id);
         const down = inactiva || incidencia;
 
         // Determinar estado de seguimiento
         const incData = incidenciaPorMaquina[m.id];
-        const enSeguimiento = incData && incData.en_seguimiento;
+        const enSeguimiento = !!incData?.en_seguimiento;
 
         // Build status text: always show operational status + incident if applicable
         let statusParts = [m.estado || 'Activa'];
@@ -910,25 +873,9 @@ function asegurarElementosDOM() {
           down,
           motivo,
           inactiva,
-          // Usar las mismas propiedades que admin.js
-          incidencia: incidencia, // Para compatibilidad temporal
-          enSeguimiento, // Para compatibilidad temporal
-          tiene_incidencia: incidencia,
-          incidencia_en_seguimiento: enSeguimiento
+          incidencia,
+          enSeguimiento,
         };
-
-        // Depuración de cada máquina
-        if (incidencia || enSeguimiento) {
-          console.log(`Máquina con incidencia/seguimiento:`, {
-            nombre: m.nombre,
-            id: m.id,
-            incidencia,
-            enSeguimiento,
-            tiene_incidencia: entry.tiene_incidencia,
-            incidencia_en_seguimiento: entry.incidencia_en_seguimiento,
-            datosIncidencia: incData
-          });
-        }
 
         bySala[sala].push(entry);
         rawMachines.push(entry);
@@ -937,23 +884,6 @@ function asegurarElementosDOM() {
 
       allData = bySala;
       document.getElementById('statsLabel').textContent = `${totOk} disponibles · ${totErr} fuera de servicio`;
-      
-      // Depuración: mostrar cuántas máquinas se cargaron y sus estados
-      console.log('Datos cargados:', {
-        totalMaquinas: rawMachines.length,
-        porSala: Object.keys(bySala).reduce((acc, sala) => {
-          acc[sala] = bySala[sala].length;
-          return acc;
-        }, {}),
-        muestraMaquinas: rawMachines.slice(0, 3).map(m => ({
-          nombre: m.nombre,
-          estado: m.estado,
-          incidencia: m.incidencia,
-          enSeguimiento: m.enSeguimiento,
-          estadoCalculado: calcularEstadoUnificado(m).texto
-        }))
-      });
-      
       renderData(bySala);
 
     } catch(e) {
@@ -994,19 +924,11 @@ function asegurarElementosDOM() {
         </div>
       `;
       
-      // Mostrar contenedor de filtros
-      const filtrosContainer = document.getElementById('filtrosContainer');
-      if (filtrosContainer) filtrosContainer.style.display = 'block';
-      
       return;
     }
 
     loader.style.display = 'none';
     layoutContainer.style.display = 'flex';
-
-    // Mostrar contenedor de filtros
-    const filtrosContainer = document.getElementById('filtrosContainer');
-    if (filtrosContainer) filtrosContainer.style.display = 'block';
 
     // Render sidebar
     sidebar.innerHTML = sortedSalas.map(sala => {
@@ -1058,12 +980,12 @@ function asegurarElementosDOM() {
         
         // Comparación exacta según el filtro seleccionado
         switch(estado) {
-          case 'operativa':
-            return estadoMaquina.texto === 'OPERATIVA';
+          case 'activa':
+            return estadoMaquina.texto === 'ACTIVA';
           case 'en seguimiento':
             return estadoMaquina.texto === 'EN SEGUIMIENTO';
-          case 'con incidencia':
-            return estadoMaquina.texto === 'CON INCIDENCIA';
+          case 'sin resolver':
+            return estadoMaquina.texto === 'SIN RESOLVER';
           case 'inactiva':
             return estadoMaquina.texto === 'INACTIVA';
           default:

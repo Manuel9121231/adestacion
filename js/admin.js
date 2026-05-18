@@ -30,7 +30,28 @@ function calcularEstadoUnificado(maquina) {
   const estadoOperativo = (maquina.estado || 'activa').toLowerCase().trim();
   const tieneIncidencia = maquina.tiene_incidencia || false;
   const enSeguimiento = maquina.incidencia_en_seguimiento || false;
-  
+
+  // Incidencia tiene prioridad sobre estado operativo
+  if (tieneIncidencia && enSeguimiento) {
+    return {
+      texto: 'EN SEGUIMIENTO',
+      clase: 'naranja',
+      color: 'var(--warning)',
+      bg: 'rgba(245, 158, 11, 0.1)',
+      descripcion: 'Con incidencia en seguimiento'
+    };
+  }
+
+  if (tieneIncidencia) {
+    return {
+      texto: 'SIN RESOLVER',
+      clase: 'rojo',
+      color: 'var(--danger)',
+      bg: 'rgba(239, 68, 68, 0.1)',
+      descripcion: 'Incidencia sin resolver'
+    };
+  }
+
   if (estadoOperativo === 'inactiva') {
     return {
       texto: 'INACTIVA',
@@ -40,33 +61,13 @@ function calcularEstadoUnificado(maquina) {
       descripcion: 'Fuera de servicio'
     };
   }
-  
-  if (!tieneIncidencia) {
-    return {
-      texto: 'OPERATIVA',
-      clase: 'ok',
-      color: 'var(--ok)',
-      bg: 'rgba(16, 185, 129, 0.1)',
-      descripcion: 'Funcionando correctamente'
-    };
-  }
-  
-  if (enSeguimiento) {
-    return {
-      texto: 'EN SEGUIMIENTO',
-      clase: 'naranja',
-      color: 'var(--warning)',
-      bg: 'rgba(245, 158, 11, 0.1)',
-      descripcion: 'Con incidencia en seguimiento'
-    };
-  }
-  
+
   return {
-    texto: 'CON INCIDENCIA',
-    clase: 'rojo',
-    color: 'var(--danger)',
-    bg: 'rgba(239, 68, 68, 0.1)',
-    descripcion: 'Con incidencia sin resolver'
+    texto: 'ACTIVA',
+    clase: 'ok',
+    color: 'var(--ok)',
+    bg: 'rgba(16, 185, 129, 0.1)',
+    descripcion: 'Funcionando correctamente'
   };
 }
 
@@ -663,7 +664,7 @@ function actualizarVistaDashboard() {
   // KPI Máquinas con nuevo sistema de estados
   const operativas = datosMaquinas.filter(m => {
     const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'OPERATIVA';
+    return estado.texto === 'ACTIVA';
   }).length;
   
   const maquinasEnSeguimiento = datosMaquinas.filter(m => {
@@ -673,7 +674,7 @@ function actualizarVistaDashboard() {
   
   const conIncidencia = datosMaquinas.filter(m => {
     const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'CON INCIDENCIA';
+    return estado.texto === 'SIN RESOLVER';
   }).length;
   
   const inactivas = datosMaquinas.filter(m => {
@@ -690,7 +691,7 @@ function actualizarVistaDashboard() {
   if (maqInactivasEl) {
     const maqConProblemas = datosMaquinas.filter(m => {
       const estado = calcularEstadoUnificado(m);
-      return estado.texto !== 'OPERATIVA';
+      return estado.texto !== 'ACTIVA';
     });
     
     maqInactivasEl.innerHTML = maqConProblemas.length
@@ -701,13 +702,56 @@ function actualizarVistaDashboard() {
             ${m.nombre} · ${m.sala_nombre}
           </div>`;
         }).join('')
-      : `<div style="font-size:11px;color:var(--success);text-align:center;padding:4px">Todas operativas</div>`;
+      : `<div style="font-size:11px;color:var(--success);text-align:center;padding:4px">Todas activas</div>`;
   }
 
   // Mini-lista incidencias sin resolver
   const incPendientes = historial.filter(r => r.tipo === 'Incidencia' && !r.resuelta);
   renderIncPendientesDashboard(incPendientes.slice(0, 5));
 
+  actualizarSubtitulosSecciones();
+}
+
+function actualizarSubtitulosSecciones() {
+  // Subtítulo Máquinas y Salas
+  const elMaq = document.getElementById('subtitle-maquinas');
+  if (elMaq) {
+    const totalMaq = datosMaquinas.length;
+    const totalSalas = datosSalas.length;
+    const inactivas = datosMaquinas.filter(m => m.estado === 'inactiva').length;
+    const partes = [
+      `${totalMaq} máquina${totalMaq !== 1 ? 's' : ''}`,
+      `${totalSalas} sala${totalSalas !== 1 ? 's' : ''}`,
+    ];
+    if (inactivas > 0) partes.push(`${inactivas} inactiva${inactivas !== 1 ? 's' : ''}`);
+    elMaq.textContent = partes.join(' · ');
+  }
+
+  // Subtítulo Incidencias
+  const elInc = document.getElementById('subtitle-incidencias');
+  if (elInc) {
+    const incidencias = datosHistorial.filter(r => r.tipo === 'Incidencia');
+    const sinResolver = incidencias.filter(r => !r.resuelta && !r.en_seguimiento).length;
+    const enSeg = incidencias.filter(r => !r.resuelta && r.en_seguimiento).length;
+    const resueltas = incidencias.filter(r => r.resuelta).length;
+    const partes = [];
+    if (sinResolver > 0) partes.push(`${sinResolver} sin resolver`);
+    if (enSeg > 0) partes.push(`${enSeg} en seguimiento`);
+    partes.push(`${resueltas} resuelta${resueltas !== 1 ? 's' : ''}`);
+    elInc.textContent = partes.join(' · ');
+  }
+
+  // Subtítulo Usuarios
+  const elUsr = document.getElementById('subtitle-usuarios');
+  if (elUsr) {
+    const total = datosUsuarios.length;
+    const admins = datosUsuarios.filter(u => u.rol === 'admin').length;
+    const tecnicos = datosUsuarios.filter(u => u.rol === 'tecnico').length;
+    const partes = [`${total} usuario${total !== 1 ? 's' : ''}`];
+    if (admins > 0) partes.push(`${admins} admin${admins !== 1 ? 's' : ''}`);
+    if (tecnicos > 0) partes.push(`${tecnicos} técnico${tecnicos !== 1 ? 's' : ''}`);
+    elUsr.textContent = partes.join(' · ');
+  }
 }
 
 function renderIncPendientesDashboard(lista) {
