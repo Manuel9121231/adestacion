@@ -273,54 +273,71 @@
       font-size: 14px;
       color: var(--text);
       background: var(--card-bg);
-      border: 2px solid var(--border);
+      border: 1px solid var(--border);
       box-shadow: var(--shadow);
       user-select: none;
       -webkit-tap-highlight-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
     .sidebar-item:hover {
-      background: #dbeafe;
-      border-color: #60a5fa;
+      background: rgba(79, 142, 247, 0.05);
+      border-color: var(--accent);
       transform: translateX(4px);
     }
     .sidebar-item:active {
       transform: scale(0.98);
     }
     .sidebar-item.active {
-      background: #3b82f6;
+      background: var(--accent);
       color: white;
-      border-color: #2563eb;
+      border-color: var(--accent);
     }
     .content {
       flex: 1;
       min-width: 0;
     }
 
-    .sala-section { margin-bottom: 40px; }
+    .sala-section { 
+      margin-bottom: 40px; 
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
     .sala-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--border);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
     }
-    .sala-header h2 { font-size: 20px; font-weight: 800; color: var(--text); }
+    .sala-header h2 { 
+      font-size: 18px; 
+      font-weight: 700; 
+      color: var(--text);
+      margin: 0;
+    }
     .sala-badge {
       font-size: 12px;
       font-weight: 600;
-      background: #3b82f6;
+      background: var(--bg);
+      color: var(--text-muted);
       padding: 4px 12px;
-      border-radius: 20px;
-      color: white;
+      border-radius: 12px;
+      border: 1px solid var(--border);
     }
     .sala-badge-ratio {
-      background: #3b82f6;
-      color: white;
+      background: rgba(79, 142, 247, 0.1);
+      color: var(--accent);
       padding: 4px 12px;
-      border-radius: 20px;
+      border-radius: 12px;
       font-size: 12px;
       font-weight: 600;
+      border: 1px solid rgba(79, 142, 247, 0.2);
     }
 
     .machine-grid {
@@ -331,67 +348,107 @@
 
     /* ══ TARJETA (CARD) ═══════════════════════════════════ */
     .m-card {
-      background: #dbeafe;
-      border: 1px solid #60a5fa;
-      border-radius: 16px;
-      padding: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: all 0.2s;
       position: relative;
-      box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.15);
-    }
-    .m-card.warn {
-      background: #fffbeb;
-      border-color: #fcd34d;
-      box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.15);
-    }
-    .m-card.inactive {
-      background: #f3f4f6;
-      border-color: #9ca3af;
-      box-shadow: 0 4px 6px -1px rgba(107, 114, 128, 0.15);
-      opacity: 0.85;
-    }
-    .m-card.down {
-      background: #fee2e2;
-      border-color: #f87171;
-      box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15);
+      box-shadow: var(--shadow);
+      cursor: pointer;
     }
     .m-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 12px -2px rgba(59, 130, 246, 0.25);
+      box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.15);
+      border-color: var(--accent);
+    }
+    .m-card:active {
+      transform: translateY(0px);
+      box-shadow: var(--shadow);
+      background: var(--card-bg) !important;
+    }
+    .m-card.warn {
+      background: var(--card-bg);
+      border-color: #f59e0b;
     }
     .m-card.warn:hover {
+      border-color: #f59e0b;
       box-shadow: 0 8px 12px -2px rgba(245, 158, 11, 0.25);
+    }
+    .m-card.warn:active {
+      background: var(--card-bg) !important;
+      box-shadow: var(--shadow);
+    }
+    .m-card.inactive {
+      background: var(--card-bg);
+      border-color: #6b7280;
+      opacity: 0.85;
     }
     .m-card.inactive:hover {
       opacity: 1;
+      border-color: #6b7280;
       box-shadow: 0 8px 12px -2px rgba(107, 114, 128, 0.25);
     }
+    .m-card.inactive:active {
+      background: var(--card-bg) !important;
+      box-shadow: var(--shadow);
+    }
+    .m-card.down {
+      background: var(--card-bg);
+      border-color: #ef4444;
+    }
     .m-card.down:hover {
+      border-color: #ef4444;
       box-shadow: 0 8px 12px -2px rgba(239, 68, 68, 0.25);
+    }
+    .m-card.down:active {
+      background: var(--card-bg) !important;
+      box-shadow: var(--shadow);
     }
     
     .m-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      margin-bottom: 8px;
     }
     .m-status-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
       margin-top: 6px;
+      flex-shrink: 0;
     }
-    .status-ok       { background: var(--ok);       box-shadow: 0 0 8px var(--ok); }
-    .status-warn     { background: var(--warn);     box-shadow: 0 0 8px var(--warn); }
+    .status-ok       { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+    .status-warn     { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
     .status-inactive { background: var(--inactive); box-shadow: 0 0 6px var(--inactive); }
-    .status-err      { background: var(--err);      box-shadow: 0 0 8px var(--err); }
+    .status-err      { background: var(--err); box-shadow: 0 0 8px var(--err); }
 
-    .m-info { flex: 1; padding: 0 10px; }
-    .m-name { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
-    .m-type { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .m-info { 
+      flex: 1; 
+      padding: 0 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .m-name { 
+      font-weight: 700; 
+      font-size: 16px; 
+      margin-bottom: 2px;
+      color: var(--text);
+    }
+    .m-type { 
+      font-size: 12px; 
+      color: var(--text-muted); 
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
     .m-badge {
       font-size: 11px;
@@ -407,12 +464,17 @@
 
     .m-details {
       padding-top: 12px;
-      border-top: 1px solid #f1f5f9;
+      border-top: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
-    .m-nota { font-size: 12px; color: var(--text-muted); font-style: italic; }
+    .m-nota { 
+      font-size: 12px; 
+      color: var(--text-muted); 
+      font-style: italic;
+      line-height: 1.4;
+    }
     .m-estado-sub {
       display: inline-block;
       font-size: 10px;
@@ -424,6 +486,45 @@
       padding: 1px 5px;
       margin-left: 4px;
       vertical-align: middle;
+    }
+
+    .maquina-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .maquina-info span:first-child {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Estado badges - igual que panel de administración */
+    .estado-badge {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.03em;
+    }
+    .estado-badge.ok {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--ok);
+    }
+    .estado-badge.gris {
+      background: rgba(107, 114, 128, 0.1);
+      color: var(--inactive);
+    }
+    .estado-badge.naranja {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warn);
+    }
+    .estado-badge.rojo {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--err);
     }
 
     .empty-state {
@@ -449,6 +550,45 @@
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Filtros */
+    .filter-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 2px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .filter-btn:hover {
+      border-color: var(--accent);
+      background: rgba(79, 142, 247, 0.05);
+    }
+    .filter-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    .filter-btn[data-filter="operativa"].active {
+      background: var(--ok);
+      border-color: var(--ok);
+    }
+    .filter-btn[data-filter="en seguimiento"].active {
+      background: var(--warning);
+      border-color: var(--warning);
+    }
+    .filter-btn[data-filter="con incidencia"].active {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+    .filter-btn[data-filter="inactiva"].active {
+      background: var(--inactive);
+      border-color: var(--inactive);
+    }
 
     @media (max-width: 600px) {
       .layout {
@@ -532,7 +672,14 @@
   <div class="search-container" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
     <div style="position:relative;flex:1;min-width:250px">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" id="searchInput" class="search-input" oninput="filterMachines()">
+      <input type="text" id="searchInput" class="search-input" oninput="filterMachines()" placeholder="Buscar equipos...">
+    </div>
+    <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="filter-btn active" data-filter="all" onclick="filterByEstado('all')">Todos</button>
+      <button class="filter-btn" data-filter="operativa" onclick="filterByEstado('operativa')">Operativas</button>
+      <button class="filter-btn" data-filter="en seguimiento" onclick="filterByEstado('en seguimiento')">En Seguimiento</button>
+      <button class="filter-btn" data-filter="con incidencia" onclick="filterByEstado('con incidencia')">Con Incidencia</button>
+      <button class="filter-btn" data-filter="inactiva" onclick="filterByEstado('inactiva')">Inactivas</button>
     </div>
   </div>
   <div id="filtroResumen" style="padding:8px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:none;max-width:1400px;margin:0 auto">
@@ -559,17 +706,6 @@
       <span style="font-weight: 600; color: var(--text-primary); font-size: 14px;">Filtros:</span>
       
       <select id="filtroEstado" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 14px; cursor: pointer;">
-        <option value="todos">Estado: Todos</option>
-        <option value="Activa">Activa</option>
-        <option value="Inactiva">Inactiva</option>
-      </select>
-      
-      <select id="filtroIncidencia" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 14px; cursor: pointer;">
-        <option value="todos">Máquinas: Todas</option>
-        <option value="sin_resolver">Sin resolver</option>
-        <option value="en_seguimiento">En seguimiento</option>
-        <option value="sin_errores">Sin errores (operativa)</option>
-      </select>
       
       <button id="btnResetFiltros" style="padding: 8px 16px; border-radius: 6px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font-size: 14px; cursor: pointer; transition: all 0.2s;">
         Restablecer
@@ -587,9 +723,119 @@
   let allData = {};
   let rawMachines = [];
   let scrollSpyEnabled = true;
+  let loadStatusRetries = 0;
+  const MAX_RETRIES = 5;
+
+  // ── Función para asegurar que los elementos del DOM existan ─────────────────────
+function asegurarElementosDOM() {
+  const main = document.querySelector('main');
+  if (!main) {
+    console.error('No se encuentra el elemento main');
+    return false;
+  }
+
+  // Verificar y crear elementos si no existen
+  let layoutContainer = document.getElementById('layoutContainer');
+  let sidebar = document.getElementById('sidebarSalas');
+  let contentArea = document.getElementById('contentArea');
+
+  if (!layoutContainer) {
+    layoutContainer = document.createElement('div');
+    layoutContainer.className = 'layout';
+    layoutContainer.id = 'layoutContainer';
+    layoutContainer.style.display = 'none';
+    main.appendChild(layoutContainer);
+    console.log('Creado layoutContainer dinámicamente');
+  }
+
+  if (!sidebar) {
+    sidebar = document.createElement('aside');
+    sidebar.className = 'sidebar';
+    sidebar.id = 'sidebarSalas';
+    layoutContainer.appendChild(sidebar);
+    console.log('Creado sidebarSalas dinámicamente');
+  }
+
+  if (!contentArea) {
+    contentArea = document.createElement('div');
+    contentArea.className = 'content';
+    contentArea.id = 'contentArea';
+    layoutContainer.appendChild(contentArea);
+    console.log('Creado contentArea dinámicamente');
+  }
+
+  return true;
+}
+
+// ── Función auxiliar para calcular estado unificado ─────────────────────────────
+  function calcularEstadoUnificado(maquina) {
+    const estadoOperativo = (maquina.estado || 'activa').toLowerCase().trim();
+    const tieneIncidencia = maquina.incidencia || false;
+    const enSeguimiento = maquina.enSeguimiento || false;
+    
+    if (estadoOperativo === 'inactiva') {
+      return {
+        texto: 'INACTIVA',
+        clase: 'status-inactive',
+        badge: 'badge-inactive',
+        card: 'm-card inactive',
+        color: 'var(--inactive)',
+        bg: 'rgba(107, 114, 128, 0.1)',
+        descripcion: 'Fuera de servicio'
+      };
+    }
+    
+    if (!tieneIncidencia) {
+      return {
+        texto: 'OPERATIVA',
+        clase: 'status-ok',
+        badge: 'badge-ok',
+        card: 'm-card',
+        color: 'var(--ok)',
+        bg: 'rgba(16, 185, 129, 0.1)',
+        descripcion: 'Funcionando correctamente'
+      };
+    }
+    
+    if (enSeguimiento) {
+      return {
+        texto: 'EN SEGUIMIENTO',
+        clase: 'status-warn',
+        badge: 'badge-warn',
+        card: 'm-card warn',
+        color: 'var(--warn)',
+        bg: 'rgba(245, 158, 11, 0.1)',
+        descripcion: 'Con incidencia en seguimiento'
+      };
+    }
+    
+    return {
+      texto: 'CON INCIDENCIA',
+      clase: 'status-err',
+      badge: 'badge-err',
+      card: 'm-card down',
+      color: 'var(--err)',
+      bg: 'rgba(239, 68, 68, 0.1)',
+      descripcion: 'Con incidencia sin resolver'
+    };
+  }
 
   async function loadStatus() {
     try {
+      // Asegurar que los elementos del DOM existan antes de continuar
+      if (!asegurarElementosDOM()) {
+        console.error('No se pueden crear los elementos del DOM');
+        return;
+      }
+      
+      const loader = document.getElementById('loader');
+      const layoutContainer = document.getElementById('layoutContainer');
+      const sidebar = document.getElementById('sidebarSalas');
+      const contentArea = document.getElementById('contentArea');
+      
+      // Resetear contador de reintentos si los elementos se encuentran
+      loadStatusRetries = 0;
+      
       if (!window.supabaseClient) { setTimeout(loadStatus, 500); return; }
       const c = window.supabaseClient;
 
@@ -651,6 +897,23 @@
 
       allData = bySala;
       document.getElementById('statsLabel').textContent = `${totOk} disponibles · ${totErr} fuera de servicio`;
+      
+      // Depuración: mostrar cuántas máquinas se cargaron y sus estados
+      console.log('Datos cargados:', {
+        totalMaquinas: rawMachines.length,
+        porSala: Object.keys(bySala).reduce((acc, sala) => {
+          acc[sala] = bySala[sala].length;
+          return acc;
+        }, {}),
+        muestraMaquinas: rawMachines.slice(0, 3).map(m => ({
+          nombre: m.nombre,
+          estado: m.estado,
+          incidencia: m.incidencia,
+          enSeguimiento: m.enSeguimiento,
+          estadoCalculado: calcularEstadoUnificado(m).texto
+        }))
+      });
+      
       renderData(bySala);
 
     } catch(e) {
@@ -665,10 +928,36 @@
     const sidebar = document.getElementById('sidebarSalas');
     const contentArea = document.getElementById('contentArea');
 
+    // Verificar que los elementos existen antes de continuar
+    if (!loader || !layoutContainer || !sidebar || !contentArea) {
+      console.error('Elementos del DOM no encontrados:', {
+        loader: !!loader,
+        layoutContainer: !!layoutContainer,
+        sidebar: !!sidebar,
+        contentArea: !!contentArea
+      });
+      return;
+    }
+
     const sortedSalas = Object.keys(data).sort();
 
     if (sortedSalas.length === 0) {
-      loader.innerHTML = `<div class="empty-state">No se encontraron equipos.</div>`;
+      loader.style.display = 'none';
+      layoutContainer.style.display = 'flex';
+      
+      // Mostrar mensaje de no resultados pero mantener la estructura
+      sidebar.innerHTML = '<div class="sidebar-item" style="opacity:0.5">Sin resultados</div>';
+      contentArea.innerHTML = `
+        <div style="padding:40px;text-align:center;color:var(--text-muted)">
+          <h3>No se encontraron equipos</h3>
+          <p>Intenta con otro filtro o busca por nombre</p>
+        </div>
+      `;
+      
+      // Mostrar contenedor de filtros
+      const filtrosContainer = document.getElementById('filtrosContainer');
+      if (filtrosContainer) filtrosContainer.style.display = 'block';
+      
       return;
     }
 
@@ -708,6 +997,106 @@
 
     // Setup scroll spy
     setupScrollSpy();
+  }
+
+  function filterByEstado(estado) {
+    // Actualizar botones activos
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === estado);
+    });
+
+    // Filtrar máquinas
+    const filteredData = {};
+    let totalVisible = 0;
+    
+    console.log('Filtrando por estado:', estado);
+    console.log('Datos disponibles:', Object.keys(allData));
+    
+    Object.keys(allData).forEach(sala => {
+      const machines = allData[sala].filter(m => {
+        if (estado === 'all') return true;
+        const estadoMaquina = calcularEstadoUnificado(m);
+        
+        // Depuración: mostrar estado de cada máquina
+        console.log(`Máquina ${m.nombre}: estado=${m.estado}, incidencia=${m.incidencia}, enSeguimiento=${m.enSeguimiento} -> ${estadoMaquina.texto}`);
+        
+        // Comparación exacta según el filtro seleccionado
+        switch(estado) {
+          case 'operativa':
+            return estadoMaquina.texto === 'OPERATIVA';
+          case 'en seguimiento':
+            return estadoMaquina.texto === 'EN SEGUIMIENTO';
+          case 'con incidencia':
+            return estadoMaquina.texto === 'CON INCIDENCIA';
+          case 'inactiva':
+            return estadoMaquina.texto === 'INACTIVA';
+          default:
+            return false;
+        }
+      });
+      
+      console.log(`Sala ${sala}: ${machines.length} máquinas después del filtro`);
+      
+      if (machines.length > 0) {
+        filteredData[sala] = machines;
+        totalVisible += machines.length;
+      }
+    });
+
+    console.log('Datos filtrados:', filteredData);
+    console.log('Total visible:', totalVisible);
+
+    // Mostrar resumen del filtro
+    const filtroResumen = document.getElementById('filtroResumen');
+    const filtroTexto = document.getElementById('filtroTexto');
+    const resultadoCount = document.getElementById('resultadoCount');
+    
+    if (estado !== 'all') {
+      filtroResumen.style.display = 'block';
+      filtroTexto.textContent = `Filtro: ${estado.charAt(0).toUpperCase() + estado.slice(1)}`;
+      resultadoCount.textContent = totalVisible;
+    } else {
+      filtroResumen.style.display = 'none';
+    }
+
+    // Renderizar datos filtrados
+    renderData(filteredData);
+  }
+
+  function filterMachines() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    if (!query) {
+      renderData(allData);
+      return;
+    }
+
+    const filteredData = {};
+    let totalVisible = 0;
+
+    Object.keys(allData).forEach(sala => {
+      const machines = allData[sala].filter(m => 
+        m.nombre.toLowerCase().includes(query) ||
+        m.tipo.toLowerCase().includes(query) ||
+        m.sala.toLowerCase().includes(query) ||
+        (m.notas && m.notas.toLowerCase().includes(query))
+      );
+      
+      if (machines.length > 0) {
+        filteredData[sala] = machines;
+        totalVisible += machines.length;
+      }
+    });
+
+    // Mostrar resumen de búsqueda
+    const filtroResumen = document.getElementById('filtroResumen');
+    const filtroTexto = document.getElementById('filtroTexto');
+    const resultadoCount = document.getElementById('resultadoCount');
+    
+    filtroResumen.style.display = 'block';
+    filtroTexto.textContent = `Buscando: "${query}"`;
+    resultadoCount.textContent = totalVisible;
+
+    renderData(filteredData);
   }
 
   function scrollToSala(salaName) {
@@ -763,71 +1152,31 @@
   }
 
   function machineHTML(m) {
-    let statusClass, badgeClass, cardClass, badgeText;
-
-    // Lógica de colores según el panel de administración:
-    // - Gris: Inactiva + Incidencia
-    // - Amarillo: Activa + Incidencia en seguimiento  
-    // - Rojo: Activa + Incidencia sin resolver
-    // - Verde: Activa sin incidencia
-    if (!m.inactiva && !m.incidencia) {
-      // Activa sin incidencia - verde
-      statusClass = 'status-ok';
-      badgeClass  = 'badge-ok';
-      badgeText   = 'Activa';
-      cardClass   = 'm-card';
-    } else if (!m.inactiva && m.incidencia && m.enSeguimiento) {
-      // Activa + en seguimiento - amarillo
-      statusClass = 'status-warn';
-      badgeClass  = 'badge-warn';
-      badgeText   = 'En Seguimiento';
-      cardClass   = 'm-card warn';
-    } else if (!m.inactiva && m.incidencia && !m.enSeguimiento) {
-      // Activa + sin resolver - rojo
-      statusClass = 'status-err';
-      badgeClass  = 'badge-err';
-      badgeText   = 'Sin Resolver';
-      cardClass   = 'm-card down';
-    } else if (m.inactiva && m.incidencia) {
-      // Inactiva + incidencia - gris
-      statusClass = 'status-inactive';
-      badgeClass  = 'badge-inactive';
-      badgeText   = 'Incidencia';
-      cardClass   = 'm-card inactive';
-    } else {
-      // Inactiva sin incidencia - gris
-      statusClass = 'status-inactive';
-      badgeClass  = 'badge-inactive';
-      badgeText   = m.estado || 'Inactiva';
-      cardClass   = 'm-card inactive';
-    }
-
+    const estado = calcularEstadoUnificado(m);
+    
     let detailsHTML = '';
     if (m.incidencia) {
-      // Color del badge según estado: gris=inactiva, amarillo=seguimiento, rojo=sin resolver
-      let badgeTipo = 'err'; // Por defecto rojo (sin resolver)
-      let badgeTexto = 'Incidencia';
-      if (m.inactiva) {
-        badgeTipo = 'inactive';
-        badgeTexto = 'Incidencia (Inactiva)';
-      } else if (m.enSeguimiento) {
-        badgeTipo = 'warn';
-        badgeTexto = 'En Seguimiento';
-      }
-      
-      detailsHTML += `<span class="m-badge badge-${badgeTipo}" style="align-self:flex-start">${badgeTexto}</span>`;
+      detailsHTML += `<span class="m-badge ${estado.badge}" style="align-self:flex-start; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">Incidencia</span>`;
     }
     if (m.notas && !m.incidencia) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
 
     return `
-      <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${badgeText.toLowerCase()}" data-tipo="${(m.tipo||'').toLowerCase()}">
+      <div class="${estado.card}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${estado.texto.toLowerCase()}" data-tipo="${(m.tipo||'').toLowerCase()}" title="${estado.descripcion}">
         <div class="m-top">
-          <div class="m-status-dot ${statusClass}"></div>
+          <div class="m-status-dot ${estado.clase}"></div>
           <div class="m-info">
             <div class="m-name">${esc(m.nombre)}</div>
-            <div class="m-type">${esc(m.tipo)}</div>
+            <div class="m-type">
+              <span>${esc(m.tipo)}</span>
+              <span class="estado-badge ${estado.clase === 'status-ok' ? 'ok' : (estado.clase === 'status-inactive' ? 'gris' : (estado.clase === 'status-warn' ? 'naranja' : 'rojo'))}" style="font-size:9px; padding:1px 6px; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">
+                ${estado.texto}
+              </span>
+            </div>
           </div>
-          <span class="m-badge ${badgeClass}">${badgeText}</span>
+        </div>
+        <div class="maquina-info">
+          <span style="color: var(--accent); font-weight: 600">${m.sala}</span>
+          <span>${m.notas || 'Sin notas adicionales'}</span>
         </div>
         ${detailsHTML ? `<div class="m-details">${detailsHTML}</div>` : ''}
       </div>
@@ -1043,8 +1392,11 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    loadStatus();
-    updateUserPanel();
+    // Pequeño retraso para asegurar que todos los elementos del DOM estén disponibles
+    setTimeout(() => {
+      loadStatus();
+      updateUserPanel();
+    }, 100);
   });
 </script>
 <script src="js/theme.js"></script>
