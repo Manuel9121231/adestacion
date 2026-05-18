@@ -884,23 +884,6 @@ function asegurarElementosDOM() {
 
       allData = bySala;
       document.getElementById('statsLabel').textContent = `${totOk} disponibles · ${totErr} fuera de servicio`;
-      
-      // Depuración: mostrar cuántas máquinas se cargaron y sus estados
-      console.log('Datos cargados:', {
-        totalMaquinas: rawMachines.length,
-        porSala: Object.keys(bySala).reduce((acc, sala) => {
-          acc[sala] = bySala[sala].length;
-          return acc;
-        }, {}),
-        muestraMaquinas: rawMachines.slice(0, 3).map(m => ({
-          nombre: m.nombre,
-          estado: m.estado,
-          incidencia: m.incidencia,
-          enSeguimiento: m.enSeguimiento,
-          estadoCalculado: calcularEstadoUnificado(m).texto
-        }))
-      });
-      
       renderData(bySala);
 
     } catch(e) {
