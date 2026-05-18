@@ -803,10 +803,28 @@
     }
   }
 
+  // Toggle dark mode
+  function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('sgi_dark_mode', isDark);
+    document.getElementById('btnThemeToggle').textContent = isDark ? 'Tema claro' : 'Tema oscuro';
+  }
+
+  // Load saved theme preference
+  function loadTheme() {
+    const savedTheme = localStorage.getItem('sgi_dark_mode');
+    if (savedTheme === 'true') {
+      document.body.classList.add('dark-mode');
+      document.getElementById('btnThemeToggle').textContent = 'Tema claro';
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     updateUserPanel();
     cargarUsuarioSesion();
     ajustarAlturaPanel();
+    loadTheme();
     window.addEventListener('resize', ajustarAlturaPanel);
   });
 </script>
