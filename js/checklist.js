@@ -88,18 +88,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       banner.className = 'status-banner status-repair';
       icon.textContent = '🔴';
       text.textContent = 'Máquina en Reparación / Parada';
-      if (incCard) {
-        incCard.removeAttribute('onclick');
-        incCard.onclick = function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          showScreen('incidencia-seguimiento');
-          return false;
-        };
-        const titleEl = incCard.querySelector('.portal-card-title');
-        const subEl = incCard.querySelector('.portal-card-sub');
-        if (titleEl) titleEl.textContent = 'Ver/Actualizar incidencia';
-        if (subEl) subEl.textContent = 'Hay una incidencia abierta - añade notas o resuélvela';
+
+      // Mostrar banner informativo sin bloquear creación de nueva incidencia
+      const incBanner = document.getElementById('incidenciaActivaBanner');
+      const incBannerLabel = document.getElementById('incBannerLabel');
+      const incBannerDesc = document.getElementById('incBannerDesc');
+      if (incBanner) {
+        incBanner.style.display = 'block';
+        if (openInc.length > 1) {
+          if (incBannerLabel) incBannerLabel.textContent = `⚠️ ${openInc.length} incidencias activas`;
+          const desc = openInc[0].notas ? openInc[0].notas.slice(0, 80) + (openInc[0].notas.length > 80 ? '…' : '') : 'Sin descripción';
+          if (incBannerDesc) incBannerDesc.textContent = `Más reciente: "${desc}"`;
+        } else {
+          if (incBannerLabel) incBannerLabel.textContent = '⚠️ Incidencia activa';
+          const desc = openInc[0].notas ? openInc[0].notas.slice(0, 80) + (openInc[0].notas.length > 80 ? '…' : '') : 'Sin descripción';
+          if (incBannerDesc) incBannerDesc.textContent = `"${desc}"`;
+        }
       }
     } else {
       incidenciaAbiertaId = null;
@@ -570,6 +574,20 @@ async function cambiarEstadoMaquina(nuevoEstado) {
 
 // ── Seguimiento de Incidencias ────────────────────────────────────────────────
 async function cargarSeguimientoIncidencia() {
+  // Determinar rol del usuario actual
+  const sessionStr = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
+  let rolActual = 'usuario';
+  if (sessionStr) {
+    try { const s = JSON.parse(sessionStr); rolActual = s.type || s.rol || 'usuario'; } catch(e) {}
+  }
+  const esTecnicoOAdmin = rolActual === 'tecnico' || rolActual === 'admin' || rolActual === 'superadmin';
+  // Ocultar paneles de acción si el usuario no tiene permisos
+  const mostrar = esTecnicoOAdmin ? '' : 'none';
+  ['panelNuevaNota', 'panelEstadoMaquina', 'panelResolverIncidencia'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = mostrar;
+  });
+
   console.log('🔄 Cargando seguimiento para incidencia:', incidenciaAbiertaId);
   
   if (!incidenciaAbiertaId) {
@@ -617,7 +635,7 @@ async function cargarSeguimientoIncidencia() {
   }
   
   if (!seguimientos || seguimientos.length === 0) {
-    timeline.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.5;font-size:13px">No hay notas de seguimiento aún.<br>Escribe una nota abajo.</div>';
+    timeline.innerHTML = `<div style="text-align:center;padding:20px;opacity:0.5;font-size:13px">No hay notas de seguimiento aún.${esTecnicoOAdmin ? '<br>Escribe una nota abajo.' : ''}</div>`;
   } else {
     timeline.innerHTML = seguimientos.map(s => `
       <div style="margin-bottom:16px;padding:12px;background:rgba(79,142,247,0.05);border-radius:8px;border-left:3px solid var(--accent)">
@@ -644,16 +662,21 @@ async function guardarNotaSeguimiento() {
   
   // Obtener usuario actual
   let usuarioNombre = 'Técnico';
-  let usuarioRol = 'tecnico';
+  let usuarioRol = 'usuario';
   let usuarioId = null;
   const sessionStr = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
   if (sessionStr) {
     try {
       const session = JSON.parse(sessionStr);
       usuarioNombre = session.nombre || session.username || 'Técnico';
-      usuarioRol = session.type || session.rol || 'tecnico';
+      usuarioRol = session.type || session.rol || 'usuario';
       usuarioId = session.userId || null;
     } catch(e) {}
+  }
+
+  if (usuarioRol !== 'tecnico' && usuarioRol !== 'admin' && usuarioRol !== 'superadmin') {
+    showToast('Solo técnicos y administradores pueden añadir notas de seguimiento', 'error');
+    return;
   }
   
   const btn = document.getElementById('btnGuardarNota');
@@ -778,6 +801,22 @@ function customConfirm(message, onConfirm, onCancel) {
 }
 
 async function resolverIncidencia() {
+  // Verificar rol
+  const sessionStr = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
+  let rolCheck = 'usuario';
+  if (sessionStr) {
+    try { const s = JSON.parse(sessionStr); rolCheck = s.type || s.rol || 'usuario'; } catch(e) {}
+  }
+  if (rolCheck !== 'tecnico' && rolCheck !== 'admin' && rolCheck !== 'superadmin') {
+    showToast('Solo técnicos y administradores pueden resolver incidencias', 'error');
+    return;
+  }
+
+  if (!incidenciaAbiertaId) {
+    showToast('No hay ninguna incidencia activa', 'error');
+    return;
+  }
+
   const comentario = document.getElementById('notaResolucion').value.trim();
   
   if (!comentario) {
