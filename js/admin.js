@@ -63,7 +63,7 @@ function calcularEstadoUnificado(maquina) {
   }
 
   return {
-    texto: 'OPERATIVA',
+    texto: 'ACTIVA',
     clase: 'ok',
     color: 'var(--ok)',
     bg: 'rgba(16, 185, 129, 0.1)',
@@ -664,7 +664,7 @@ function actualizarVistaDashboard() {
   // KPI Máquinas con nuevo sistema de estados
   const operativas = datosMaquinas.filter(m => {
     const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'OPERATIVA';
+    return estado.texto === 'ACTIVA';
   }).length;
   
   const maquinasEnSeguimiento = datosMaquinas.filter(m => {
@@ -674,7 +674,7 @@ function actualizarVistaDashboard() {
   
   const conIncidencia = datosMaquinas.filter(m => {
     const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'CON INCIDENCIA';
+    return estado.texto === 'SIN RESOLVER';
   }).length;
   
   const inactivas = datosMaquinas.filter(m => {
@@ -691,7 +691,7 @@ function actualizarVistaDashboard() {
   if (maqInactivasEl) {
     const maqConProblemas = datosMaquinas.filter(m => {
       const estado = calcularEstadoUnificado(m);
-      return estado.texto !== 'OPERATIVA';
+      return estado.texto !== 'ACTIVA';
     });
     
     maqInactivasEl.innerHTML = maqConProblemas.length
@@ -702,7 +702,7 @@ function actualizarVistaDashboard() {
             ${m.nombre} · ${m.sala_nombre}
           </div>`;
         }).join('')
-      : `<div style="font-size:11px;color:var(--success);text-align:center;padding:4px">Todas operativas</div>`;
+      : `<div style="font-size:11px;color:var(--success);text-align:center;padding:4px">Todas activas</div>`;
   }
 
   // Mini-lista incidencias sin resolver

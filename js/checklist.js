@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       incidenciaAbiertaId = null;
       banner.className = 'status-banner status-operative';
       icon.textContent = '🟢';
-      text.textContent = 'Máquina Operativa';
+      text.textContent = 'Máquina Activa';
     }
 
     const pNm = document.getElementById('portalMaquinaNombre');
@@ -490,7 +490,7 @@ async function cargarEstadoMaquina() {
     btnActiva.style.borderWidth = '3px';
     btnInactiva.style.opacity = '0.5';
     btnInactiva.style.borderWidth = '1px';
-    msg.textContent = 'La máquina está operativa';
+    msg.textContent = 'La máquina está activa';
   } else {
     btnActiva.style.opacity = '0.5';
     btnActiva.style.borderWidth = '1px';

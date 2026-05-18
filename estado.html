@@ -573,7 +573,7 @@
       color: white;
       border-color: var(--accent);
     }
-    .filter-btn[data-filter="operativa"].active {
+    .filter-btn[data-filter="activa"].active {
       background: var(--ok);
       border-color: var(--ok);
     }
@@ -676,7 +676,7 @@
     </div>
     <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="filter-btn active" data-filter="all" onclick="filterByEstado('all')">Todos</button>
-      <button class="filter-btn" data-filter="operativa" onclick="filterByEstado('operativa')">Operativas</button>
+      <button class="filter-btn" data-filter="activa" onclick="filterByEstado('activa')">Activas</button>
       <button class="filter-btn" data-filter="en seguimiento" onclick="filterByEstado('en seguimiento')">En Seguimiento</button>
       <button class="filter-btn" data-filter="sin resolver" onclick="filterByEstado('sin resolver')">Sin Resolver</button>
       <button class="filter-btn" data-filter="inactiva" onclick="filterByEstado('inactiva')">Inactivas</button>
@@ -755,7 +755,7 @@
       };
     }
     return {
-      texto: 'OPERATIVA',
+      texto: 'ACTIVA',
       clase: 'status-ok',
       card: 'm-card',
       badge: 'badge-ok',
@@ -980,8 +980,8 @@ function asegurarElementosDOM() {
         
         // Comparación exacta según el filtro seleccionado
         switch(estado) {
-          case 'operativa':
-            return estadoMaquina.texto === 'OPERATIVA';
+          case 'activa':
+            return estadoMaquina.texto === 'ACTIVA';
           case 'en seguimiento':
             return estadoMaquina.texto === 'EN SEGUIMIENTO';
           case 'sin resolver':
