@@ -632,13 +632,13 @@
           const user = data.session.user;
           const nombre = user.user_metadata?.nombre || user.email?.split('@')[0] || 'Usuario';
 
-          // Crear perfil con activo: false si no existe
+          // Crear perfil con activo: false y sin rol si no existe
           try {
             await client.from('perfiles').upsert({
               id: user.id,
               email: user.email,
               nombre: nombre,
-              rol: 'usuario',
+              rol: null, // Sin rol hasta que el admin lo active
               activo: false
             }, { onConflict: 'id', ignoreDuplicates: true });
           } catch(e) {}
@@ -823,7 +823,7 @@
               id: data.user.id,
               email: email,
               nombre: nombre,
-              rol: 'usuario',
+              rol: null, // Sin rol hasta que el admin lo active
               activo: false
             });
           } catch(e) {}

@@ -1740,7 +1740,7 @@ function exportarCSV() {
 }
 
 // ── Usuarios / Administradores ────────────────────────────────────────────────
-let filtroRolUsuarios = 'todos'; // Filtro actual: 'todos', 'admin', 'tecnico', 'usuario'
+let filtroRolUsuarios = 'todos'; // Filtro actual: 'todos', 'admin', 'tecnico', 'usuario', 'pendientes'
 
 function filtrarUsuarios(rol) {
   filtroRolUsuarios = rol;
@@ -1750,7 +1750,8 @@ function filtrarUsuarios(rol) {
     'todos': 'btnFiltroTodos',
     'admin': 'btnFiltroAdmin',
     'tecnico': 'btnFiltroTecnico',
-    'usuario': 'btnFiltroUsuario'
+    'usuario': 'btnFiltroUsuario',
+    'pendientes': 'btnFiltroPendientes'
   };
   
   Object.keys(botones).forEach(key => {
@@ -1819,14 +1820,19 @@ async function renderUsuarios() {
       return ordenA - ordenB;
     });
 
-    // Aplicar filtro por rol si no es 'todos'
+    // Aplicar filtro por rol o estado
     let perfilesFiltrados = perfiles;
-    if (filtroRolUsuarios !== 'todos') {
+    if (filtroRolUsuarios === 'pendientes') {
+      perfilesFiltrados = perfiles.filter(u => u.activo === false);
+    } else if (filtroRolUsuarios !== 'todos') {
       perfilesFiltrados = perfiles.filter(u => u.rol === filtroRolUsuarios);
     }
 
     if (!perfilesFiltrados.length) {
-      container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No hay usuarios con el rol "${formatearRol(filtroRolUsuarios)}"</td></tr>`;
+      const mensaje = filtroRolUsuarios === 'pendientes'
+        ? 'No hay usuarios pendientes de alta'
+        : `No hay usuarios con el rol "${formatearRol(filtroRolUsuarios)}"`;
+      container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">${mensaje}</td></tr>`;
       return;
     }
 
@@ -1834,7 +1840,7 @@ async function renderUsuarios() {
     const esAdmin = session.type === 'superadmin' || session.type === 'admin';
 
     container.innerHTML = perfilesFiltrados.map(u => {
-      const rol = ROL_BADGES[u.rol] || { label: u.rol || 'usuario', cls: '' };
+      const rol = u.rol ? (ROL_BADGES[u.rol] || { label: u.rol, cls: '' }) : { label: 'Sin rol', cls: '' };
       const fecha = u.creado_en ? new Date(u.creado_en).toLocaleDateString('es-ES') : '–';
       const activo = u.activo !== false; // Default to true if not set
       const estadoBadge = activo
@@ -1951,7 +1957,15 @@ async function toggleAltaUsuario(userId, nuevoEstado) {
 
   try {
     const client = window.supabaseClient;
-    const { error } = await client.from('perfiles').update({ activo: nuevoEstado }).eq('id', userId);
+    // Si estamos activando, asignar rol 'usuario' si no tiene rol
+    const updateData = { activo: nuevoEstado };
+    if (nuevoEstado) {
+      const { data: perfil } = await client.from('perfiles').select('rol').eq('id', userId).single();
+      if (perfil && !perfil.rol) {
+        updateData.rol = 'usuario';
+      }
+    }
+    const { error } = await client.from('perfiles').update(updateData).eq('id', userId);
     if (error) throw error;
     await recargarTodo();
     renderUsuarios();

@@ -681,12 +681,12 @@
       return;
     }
 
-    // Verificar si el usuario está activo (no pendiente de alta)
+    // Verificar si el usuario está activo y tiene rol (no pendiente de alta)
     if (user) {
       try {
         const session = JSON.parse(user);
-        if (session.activo === false) {
-          // Usuario no está activo, redirigir a index
+        if (session.activo === false || !session.rol) {
+          // Usuario no está activo o no tiene rol, redirigir a index
           window.location.replace('index.html');
           return;
         }

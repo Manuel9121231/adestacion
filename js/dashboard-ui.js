@@ -299,11 +299,12 @@ const DASHBOARD_HTML = `
 
           <!-- Filtros por Rol -->
           <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
-            <span style="font-size:13px;color:var(--text-muted);font-weight:600;">Filtrar por rol:</span>
+            <span style="font-size:13px;color:var(--text-muted);font-weight:600;">Filtrar:</span>
             <button id="btnFiltroTodos" class="btn btn-sm" onclick="filtrarUsuarios('todos')" style="background:var(--accent);color:white;padding:8px 16px;border-radius:20px;border:none;cursor:pointer;font-weight:600;font-size:13px;">Todos</button>
             <button id="btnFiltroAdmin" class="btn btn-outline btn-sm" onclick="filtrarUsuarios('admin')" style="padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-primary);cursor:pointer;font-weight:600;font-size:13px;">Administradores</button>
             <button id="btnFiltroTecnico" class="btn btn-outline btn-sm" onclick="filtrarUsuarios('tecnico')" style="padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-primary);cursor:pointer;font-weight:600;font-size:13px;">Técnicos</button>
             <button id="btnFiltroUsuario" class="btn btn-outline btn-sm" onclick="filtrarUsuarios('usuario')" style="padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-primary);cursor:pointer;font-weight:600;font-size:13px;">Usuarios</button>
+            <button id="btnFiltroPendientes" class="btn btn-outline btn-sm" onclick="filtrarUsuarios('pendientes')" style="padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text-primary);cursor:pointer;font-weight:600;font-size:13px;">Pendientes de alta</button>
           </div>
 
           <div class="table-wrap">
