@@ -628,6 +628,20 @@
   </div>
   </div><!-- /portalsWrapper -->
 
+  <!-- Pantalla de espera: cuenta pendiente de alta -->
+  <div id="pendienteAltaWrapper" style="display:none; width:100%; max-width:480px; margin:0 auto; text-align:center; padding:40px 20px;">
+    <div style="font-size:56px; margin-bottom:16px;">⏳</div>
+    <h2 style="margin-bottom:12px; font-size:22px; font-weight:700;">Cuenta pendiente de activación</h2>
+    <p style="color:var(--text-muted); font-size:14px; line-height:1.7; margin-bottom:24px;">
+      Tu cuenta ha sido creada correctamente, pero un <strong style="color:var(--text)">administrador</strong> debe darla de alta antes de que puedas acceder al sistema.
+      <br><br>
+      Contacta con tu responsable si necesitas acceso urgente.
+    </p>
+    <button onclick="cerrarSesion()" style="background:var(--accent); color:white; border:none; padding:12px 28px; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer;">
+      Cerrar sesión
+    </button>
+  </div>
+
   <div class="scroll-hint" id="scrollHint">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="6 9 12 15 18 9"/>
@@ -691,6 +705,15 @@
 
     }
 
+    function showPendienteAlta() {
+      document.getElementById('loginWrapper').style.display = 'none';
+      document.getElementById('estadoPublicoLink').style.display = 'none';
+      document.getElementById('loginPageHeader').style.display = 'none';
+      document.getElementById('portalsWrapper').style.display = 'none';
+      document.getElementById('pendienteAltaWrapper').style.display = 'block';
+      document.getElementById('accountBtn').style.display = 'block';
+    }
+
     function checkUserRole() {
       try {
         const sessionStr = localStorage.getItem('sgi_user_session');
@@ -727,6 +750,19 @@
         const rol = session.rol || 'usuario';
         const nombre = session.nombre || session.email || 'Usuario';
         const email = session.email || '';
+        const activo = session.activo !== false; // Default to true for existing sessions without this field
+
+        // Si no está activo, mostrar pantalla de espera
+        if (!activo) {
+          userNameEl.textContent = nombre;
+          userRoleEl.textContent = 'Pendiente de alta';
+          document.getElementById('dropdownUserName').textContent = nombre;
+          document.getElementById('dropdownUserRole').textContent = 'Pendiente de alta';
+          document.getElementById('dropdownUserEmail').textContent = email;
+          document.getElementById('accountBtn').style.display = 'block';
+          showPendienteAlta();
+          return;
+        }
 
         // Sincroniza admin_session para técnicos/admins (acceso directo al panel)
         if ((rol === 'admin' || rol === 'tecnico') && !adminSessionStr) {
@@ -947,10 +983,22 @@
 
         const rol = perfil?.rol || 'usuario';
         const nombre = perfil?.nombre || user.email;
+        const activo = perfil?.activo !== false; // Default to true if not set
 
         localStorage.setItem('sgi_user_session', JSON.stringify({
-          userId: user.id, email: user.email, nombre, rol
+          userId: user.id, email: user.email, nombre, rol, activo
         }));
+
+        // Si no está activo, mostrar pantalla de espera
+        if (!activo) {
+          document.getElementById('userName').textContent = nombre;
+          document.getElementById('userRole').textContent = 'Pendiente de alta';
+          document.getElementById('dropdownUserName').textContent = nombre;
+          document.getElementById('dropdownUserRole').textContent = 'Pendiente de alta';
+          document.getElementById('dropdownUserEmail').textContent = user.email;
+          showPendienteAlta();
+          return;
+        }
 
         // Verificar si hay maquinaId pendiente para redirigir (PRIORIDAD para todos los roles)
         const pendingMaquinaId = localStorage.getItem('sgi_pending_maquinaId');

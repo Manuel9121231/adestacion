@@ -667,6 +667,19 @@
         localStorage.setItem('sgi_pending_maquinaId', maquinaId);
       }
       window.location.replace('index.html');
+      return;
+    }
+
+    // Verificar si el usuario está activo (no pendiente de alta)
+    if (user) {
+      try {
+        const session = JSON.parse(user);
+        if (session.activo === false) {
+          // Usuario no está activo, redirigir a index
+          window.location.replace('index.html');
+          return;
+        }
+      } catch(e) {}
     }
   })();
 
