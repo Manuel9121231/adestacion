@@ -211,6 +211,8 @@
     .search-container {
       max-width: 1200px;
       margin: 0 auto;
+    }
+    .search-container > div:first-child {
       position: relative;
     }
     .search-input {
@@ -267,7 +269,7 @@
       padding: 12px 16px;
       border-radius: 10px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.15s, border-color 0.15s;
       margin-bottom: 4px;
       font-weight: 600;
       font-size: 14px;
@@ -284,10 +286,6 @@
     .sidebar-item:hover {
       background: rgba(79, 142, 247, 0.05);
       border-color: var(--accent);
-      transform: translateX(4px);
-    }
-    .sidebar-item:active {
-      transform: scale(0.98);
     }
     .sidebar-item.active {
       background: var(--accent);
@@ -351,62 +349,26 @@
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
+      cursor: default;
       padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      transition: all 0.2s;
       position: relative;
       box-shadow: var(--shadow);
-      cursor: pointer;
-    }
-    .m-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 12px -2px rgba(0, 0, 0, 0.15);
-      border-color: var(--accent);
-    }
-    .m-card:active {
-      transform: translateY(0px);
-      box-shadow: var(--shadow);
-      background: var(--card-bg) !important;
     }
     .m-card.warn {
       background: var(--card-bg);
       border-color: #f59e0b;
-    }
-    .m-card.warn:hover {
-      border-color: #f59e0b;
-      box-shadow: 0 8px 12px -2px rgba(245, 158, 11, 0.25);
-    }
-    .m-card.warn:active {
-      background: var(--card-bg) !important;
-      box-shadow: var(--shadow);
     }
     .m-card.inactive {
       background: var(--card-bg);
       border-color: #6b7280;
       opacity: 0.85;
     }
-    .m-card.inactive:hover {
-      opacity: 1;
-      border-color: #6b7280;
-      box-shadow: 0 8px 12px -2px rgba(107, 114, 128, 0.25);
-    }
-    .m-card.inactive:active {
-      background: var(--card-bg) !important;
-      box-shadow: var(--shadow);
-    }
     .m-card.down {
       background: var(--card-bg);
       border-color: #ef4444;
-    }
-    .m-card.down:hover {
-      border-color: #ef4444;
-      box-shadow: 0 8px 12px -2px rgba(239, 68, 68, 0.25);
-    }
-    .m-card.down:active {
-      background: var(--card-bg) !important;
-      box-shadow: var(--shadow);
     }
     
     .m-top {
@@ -573,7 +535,17 @@
       color: white;
       border-color: var(--accent);
     }
-    .filter-btn[data-filter="activa"].active {
+    .filter-btn[data-filter="activa"].active,
+    .filter-btn[data-filter="all-equipo"].active {
+      background: var(--ok);
+      border-color: var(--ok);
+    }
+    .filter-btn[data-filter="inactiva"].active {
+      background: var(--inactive, #6b7280);
+      border-color: var(--inactive, #6b7280);
+    }
+    .filter-btn[data-filter="all-incidencia"].active,
+    .filter-btn[data-filter="sin-incidencia"].active {
       background: var(--ok);
       border-color: var(--ok);
     }
@@ -584,10 +556,6 @@
     .filter-btn[data-filter="sin resolver"].active {
       background: var(--err);
       border-color: var(--err);
-    }
-    .filter-btn[data-filter="inactiva"].active {
-      background: var(--inactive);
-      border-color: var(--inactive);
     }
 
     @media (max-width: 600px) {
@@ -616,15 +584,6 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
-<script>
-  (function() {
-    const hasSession = localStorage.getItem('sgi_user_session') || localStorage.getItem('sgi_admin_session');
-    document.addEventListener('DOMContentLoaded', () => {
-      const ctaBanner = document.getElementById('ctaBanner');
-      if (ctaBanner) ctaBanner.style.display = hasSession ? 'none' : 'block';
-    });
-  })();
-</script>
 </head>
 <body>
 <script src="js/theme.js"></script>
@@ -669,17 +628,25 @@
       </div>
     </div>
   </div>
-  <div class="search-container" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-    <div style="position:relative;flex:1;min-width:250px">
+  <div class="search-container" style="display:flex;flex-direction:column;gap:10px">
+    <div style="position:relative">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       <input type="text" id="searchInput" class="search-input" oninput="filterMachines()" placeholder="Buscar equipos...">
     </div>
-    <div class="filters" style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="filter-btn active" data-filter="all" onclick="filterByEstado('all')">Todos</button>
-      <button class="filter-btn" data-filter="activa" onclick="filterByEstado('activa')">Activas</button>
-      <button class="filter-btn" data-filter="en seguimiento" onclick="filterByEstado('en seguimiento')">En Seguimiento</button>
-      <button class="filter-btn" data-filter="sin resolver" onclick="filterByEstado('sin resolver')">Sin Resolver</button>
-      <button class="filter-btn" data-filter="inactiva" onclick="filterByEstado('inactiva')">Inactivas</button>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;width:72px;flex-shrink:0">Equipo</span>
+        <button class="filter-btn active" data-group="equipo" data-filter="all-equipo" onclick="setFiltroEquipo('all')">Todos</button>
+        <button class="filter-btn" data-group="equipo" data-filter="activa" onclick="setFiltroEquipo('activa')">Activas</button>
+        <button class="filter-btn" data-group="equipo" data-filter="inactiva" onclick="setFiltroEquipo('inactiva')">Inactivas</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;width:72px;flex-shrink:0">Incidencia</span>
+        <button class="filter-btn active" data-group="incidencia" data-filter="all-incidencia" onclick="setFiltroIncidencia('all')">Todas</button>
+        <button class="filter-btn" data-group="incidencia" data-filter="sin-incidencia" onclick="setFiltroIncidencia('sin-incidencia')">Sin Incidencia</button>
+        <button class="filter-btn" data-group="incidencia" data-filter="en seguimiento" onclick="setFiltroIncidencia('en seguimiento')">En Seguimiento</button>
+        <button class="filter-btn" data-group="incidencia" data-filter="sin resolver" onclick="setFiltroIncidencia('sin resolver')">Sin Resolver</button>
+      </div>
     </div>
   </div>
   <div id="filtroResumen" style="padding:8px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);display:none;max-width:1400px;margin:0 auto">
@@ -687,12 +654,6 @@
   </div>
 </header>
 
-<!-- CTA banner: shown when no session -->
-<div id="ctaBanner" style="display:none; background:linear-gradient(135deg,rgba(79,142,247,0.12),rgba(124,58,237,0.08)); border-bottom:1px solid rgba(79,142,247,0.2); padding:10px 20px; text-align:center; font-size:13px; color:var(--text-muted)">
-  Estás viendo el estado público.
-  <a href="index.html" style="color:var(--accent); font-weight:600; text-decoration:none; margin:0 4px">Inicia sesión</a>
-  para reportar incidencias.
-</div>
 
 <main id="mainContent">
   <div id="loader">
@@ -714,55 +675,37 @@
   const MAX_RETRIES = 5;
 
   // ── Estado unificado (local, independiente de admin.js) ──────────────────────
-  function calcularEstadoUnificado(m) {
-    const estadoOp = (m.estado || 'activa').toLowerCase().trim();
-    const inactiva = estadoOp === 'inactiva' || m.inactiva;
-    const incidencia = m.incidencia || false;
-    const enSeguimiento = m.enSeguimiento || false;
-
-    // Incidencia tiene prioridad sobre estado operativo
-    if (incidencia && enSeguimiento) {
-      return {
-        texto: 'EN SEGUIMIENTO',
-        clase: 'status-warn',
-        card: 'm-card warn',
-        badge: 'badge-warn',
-        color: 'var(--warn)',
-        bg: 'rgba(245,158,11,0.1)',
-        descripcion: 'Con incidencia en seguimiento'
-      };
-    }
-    if (incidencia) {
-      return {
-        texto: 'SIN RESOLVER',
-        clase: 'status-err',
-        card: 'm-card down',
-        badge: 'badge-err',
-        color: 'var(--err)',
-        bg: 'rgba(239,68,68,0.1)',
-        descripcion: 'Incidencia sin resolver'
-      };
-    }
-    if (inactiva) {
-      return {
-        texto: 'INACTIVA',
-        clase: 'status-inactive',
-        card: 'm-card inactive',
-        badge: 'badge-inactive',
-        color: '#6b7280',
-        bg: 'rgba(107,114,128,0.1)',
-        descripcion: 'Fuera de servicio'
-      };
-    }
-    return {
-      texto: 'ACTIVA',
-      clase: 'status-ok',
-      card: 'm-card',
-      badge: 'badge-ok',
-      color: 'var(--ok)',
-      bg: 'rgba(16,185,129,0.1)',
-      descripcion: 'Funcionando correctamente'
+  // Estado operativo de la máquina (ACTIVA / INACTIVA)
+  function estadoOperativo(m) {
+    const inactiva = m.inactiva === true || (m.estado || '').toLowerCase().trim() === 'inactiva';
+    if (inactiva) return {
+      texto: 'INACTIVA', clase: 'status-inactive', color: '#6b7280',
+      bg: 'rgba(107,114,128,0.1)', descripcion: 'Fuera de servicio'
     };
+    return {
+      texto: 'ACTIVA', clase: 'status-ok', color: 'var(--ok)',
+      bg: 'rgba(16,185,129,0.1)', descripcion: 'Funcionando correctamente'
+    };
+  }
+
+  // Estado de incidencia (SIN RESOLVER / EN SEGUIMIENTO / null si no hay)
+  function estadoIncidencia(m) {
+    if (!m.incidencia) return null;
+    if (m.enSeguimiento) return {
+      texto: 'EN SEGUIMIENTO', clase: 'status-warn', color: 'var(--warn)',
+      bg: 'rgba(245,158,11,0.1)', card: 'm-card warn', descripcion: 'Incidencia en seguimiento'
+    };
+    return {
+      texto: 'SIN RESOLVER', clase: 'status-err', color: 'var(--err)',
+      bg: 'rgba(239,68,68,0.1)', card: 'm-card down', descripcion: 'Incidencia sin resolver'
+    };
+  }
+
+  // Compatibilidad con código existente: devuelve el estado más relevante para color/dot
+  function calcularEstadoUnificado(m) {
+    const inc = estadoIncidencia(m);
+    if (inc) return inc;
+    return estadoOperativo(m);
   }
 
   // ── Función para asegurar que los elementos del DOM existan ─────────────────────
@@ -961,99 +904,80 @@ function asegurarElementosDOM() {
     setupScrollSpy();
   }
 
-  function filterByEstado(estado) {
-    // Actualizar botones activos
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.filter === estado);
-    });
+  let _filtroEquipo = 'all';
+  let _filtroIncidencia = 'all';
 
-    // Filtrar máquinas
+  function setFiltroEquipo(val) {
+    _filtroEquipo = val;
+    document.querySelectorAll('.filter-btn[data-group="equipo"]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === (val === 'all' ? 'all-equipo' : val));
+    });
+    applyFilters();
+  }
+
+  function setFiltroIncidencia(val) {
+    _filtroIncidencia = val;
+    document.querySelectorAll('.filter-btn[data-group="incidencia"]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === (val === 'all' ? 'all-incidencia' : val));
+    });
+    applyFilters();
+  }
+
+  function applyFilters() {
     const filteredData = {};
     let totalVisible = 0;
-    
-    console.log('Filtrando por estado:', estado);
-    
+    const query = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
+
     Object.keys(allData).forEach(sala => {
       const machines = allData[sala].filter(m => {
-        if (estado === 'all') return true;
-        const estadoMaquina = calcularEstadoUnificado(m);
-        
-        // Comparación exacta según el filtro seleccionado
-        switch(estado) {
-          case 'activa':
-            return estadoMaquina.texto === 'ACTIVA';
-          case 'en seguimiento':
-            return estadoMaquina.texto === 'EN SEGUIMIENTO';
-          case 'sin resolver':
-            return estadoMaquina.texto === 'SIN RESOLVER';
-          case 'inactiva':
-            return estadoMaquina.texto === 'INACTIVA';
-          default:
-            return false;
+        const tieneIncidencia = m.incidencia === true;
+        const enSeg = m.enSeguimiento === true;
+        // Filtro equipo
+        if (_filtroEquipo === 'activa'   && m.inactiva === true) return false;
+        if (_filtroEquipo === 'inactiva' && m.inactiva !== true) return false;
+        // Filtro incidencia
+        if (_filtroIncidencia === 'sin-incidencia'  && tieneIncidencia) return false;
+        if (_filtroIncidencia === 'en seguimiento'  && !(tieneIncidencia && enSeg)) return false;
+        if (_filtroIncidencia === 'sin resolver'    && !(tieneIncidencia && !enSeg)) return false;
+        // Filtro texto
+        if (query) {
+          return m.nombre.toLowerCase().includes(query) ||
+            m.tipo.toLowerCase().includes(query) ||
+            m.sala.toLowerCase().includes(query) ||
+            (m.notas && m.notas.toLowerCase().includes(query));
         }
+        return true;
       });
-      
       if (machines.length > 0) {
-        console.log(`Sala ${sala}: ${machines.length} máquinas con estado "${estado}"`);
         filteredData[sala] = machines;
         totalVisible += machines.length;
       }
     });
-
-    console.log(`Total de máquinas "${estado}": ${totalVisible}`);
 
     // Mostrar resumen del filtro
     const filtroResumen = document.getElementById('filtroResumen');
     const filtroTexto = document.getElementById('filtroTexto');
     const resultadoCount = document.getElementById('resultadoCount');
-    
-    if (estado !== 'all') {
+    const hayFiltro = _filtroEquipo !== 'all' || _filtroIncidencia !== 'all';
+
+    if (hayFiltro) {
       filtroResumen.style.display = 'block';
-      filtroTexto.textContent = `Filtro: ${estado.charAt(0).toUpperCase() + estado.slice(1)}`;
+      const partes = [];
+      if (_filtroEquipo !== 'all') partes.push(_filtroEquipo.charAt(0).toUpperCase() + _filtroEquipo.slice(1));
+      if (_filtroIncidencia !== 'all') partes.push(_filtroIncidencia.charAt(0).toUpperCase() + _filtroIncidencia.slice(1).replace('-', ' '));
+      filtroTexto.textContent = `Filtro: ${partes.join(' + ')}`;
       resultadoCount.textContent = totalVisible;
     } else {
       filtroResumen.style.display = 'none';
     }
 
-    // Renderizar datos filtrados
     renderData(filteredData);
   }
 
   function filterMachines() {
-    const query = document.getElementById('searchInput').value.toLowerCase().trim();
-    if (!query) {
-      renderData(allData);
-      return;
-    }
-
-    const filteredData = {};
-    let totalVisible = 0;
-
-    Object.keys(allData).forEach(sala => {
-      const machines = allData[sala].filter(m => 
-        m.nombre.toLowerCase().includes(query) ||
-        m.tipo.toLowerCase().includes(query) ||
-        m.sala.toLowerCase().includes(query) ||
-        (m.notas && m.notas.toLowerCase().includes(query))
-      );
-      
-      if (machines.length > 0) {
-        filteredData[sala] = machines;
-        totalVisible += machines.length;
-      }
-    });
-
-    // Mostrar resumen de búsqueda
-    const filtroResumen = document.getElementById('filtroResumen');
-    const filtroTexto = document.getElementById('filtroTexto');
-    const resultadoCount = document.getElementById('resultadoCount');
-    
-    filtroResumen.style.display = 'block';
-    filtroTexto.textContent = `Buscando: "${query}"`;
-    resultadoCount.textContent = totalVisible;
-
-    renderData(filteredData);
+    applyFilters();
   }
+
 
   function scrollToSala(salaName) {
     // Disable scroll spy during manual click
@@ -1108,33 +1032,38 @@ function asegurarElementosDOM() {
   }
 
   function machineHTML(m) {
-    const estado = calcularEstadoUnificado(m);
-    
-    let detailsHTML = '';
-    if (m.incidencia) {
-      detailsHTML += `<span class="m-badge ${estado.badge}" style="align-self:flex-start; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">Incidencia</span>`;
+    const opState = estadoOperativo(m);
+    const incState = estadoIncidencia(m);
+    // El dot y borde de la tarjeta reflejan la incidencia si existe, si no el estado operativo
+    const mainState = incState || opState;
+    const cardClass = incState ? (incState.card || 'm-card down') : (opState.texto === 'INACTIVA' ? 'm-card inactive' : 'm-card');
+
+    const opBadgeClase = opState.texto === 'ACTIVA' ? 'ok' : 'gris';
+    const opBadgeHTML = `<span class="estado-badge ${opBadgeClase}" style="font-size:9px;padding:1px 6px;background:${opState.bg};color:${opState.color};border:1px solid ${opState.color}20;">${opState.texto}</span>`;
+
+    let incBadgeHTML = '';
+    if (incState) {
+      const incClase = incState.texto === 'EN SEGUIMIENTO' ? 'naranja' : 'rojo';
+      incBadgeHTML = `<span class="m-badge estado-badge ${incClase}" style="align-self:flex-start;background:${incState.bg};color:${incState.color};border:1px solid ${incState.color}20;">${incState.texto}</span>`;
     }
-    if (m.notas && !m.incidencia) detailsHTML += `<span class="m-nota">${esc(m.notas)}</span>`;
 
     return `
-      <div class="${estado.card}" data-nombre="${m.nombre.toLowerCase()}" data-badge="${estado.texto.toLowerCase()}" data-tipo="${(m.tipo||'').toLowerCase()}" title="${estado.descripcion}">
+      <div class="${cardClass}" data-nombre="${m.nombre.toLowerCase()}" data-tipo="${(m.tipo||'').toLowerCase()}" title="${mainState.descripcion}">
         <div class="m-top">
-          <div class="m-status-dot ${estado.clase}"></div>
+          <div class="m-status-dot ${mainState.clase}"></div>
           <div class="m-info">
             <div class="m-name">${esc(m.nombre)}</div>
-            <div class="m-type">
+            <div class="m-type" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <span>${esc(m.tipo)}</span>
-              <span class="estado-badge ${estado.clase === 'status-ok' ? 'ok' : (estado.clase === 'status-inactive' ? 'gris' : (estado.clase === 'status-warn' ? 'naranja' : 'rojo'))}" style="font-size:9px; padding:1px 6px; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">
-                ${estado.texto}
-              </span>
+              ${opBadgeHTML}
             </div>
           </div>
         </div>
         <div class="maquina-info">
           <span style="color: var(--accent); font-weight: 600">${m.sala}</span>
-          <span>${m.notas || 'Sin notas adicionales'}</span>
+          ${m.notas ? `<span>${esc(m.notas)}</span>` : ''}
         </div>
-        ${detailsHTML ? `<div class="m-details">${detailsHTML}</div>` : ''}
+        ${incBadgeHTML ? `<div class="m-details">${incBadgeHTML}</div>` : ''}
       </div>
     `;
   }
@@ -1147,137 +1076,6 @@ function asegurarElementosDOM() {
   function getCardState(card) {
     if (card.classList.contains('inactive') || card.classList.contains('down')) return 'inactiva';
     return 'activa';
-  }
-
-  // Filtros
-  let filtroEstado = 'todos'; // 'todos', 'activa', 'inactiva'
-  let filtroIncidencia = 'todos'; // 'todos', 'sin_errores', 'sin_resolver', 'en_seguimiento'
-
-  function toggleEstadoFilter() {
-    const btn = document.getElementById('btnEstado');
-    if (filtroEstado === 'todos') {
-      filtroEstado = 'activa';
-      btn.textContent = 'Activa';
-      btn.style.borderColor = 'var(--success)';
-      btn.style.background = 'rgba(16, 185, 129, 0.1)';
-    } else if (filtroEstado === 'activa') {
-      filtroEstado = 'inactiva';
-      btn.textContent = 'Inactiva';
-      btn.style.borderColor = 'var(--danger)';
-      btn.style.background = 'rgba(239, 68, 68, 0.1)';
-    } else {
-      filtroEstado = 'todos';
-      btn.textContent = 'Todas';
-      btn.style.borderColor = 'var(--border)';
-      btn.style.background = 'var(--card-bg)';
-    }
-    applyFilters();
-  }
-
-  function cycleIncidenciaFilter() {
-    const btn = document.getElementById('btnIncidencia');
-    if (filtroIncidencia === 'todos') {
-      filtroIncidencia = 'sin_resolver';
-      btn.textContent = 'Sin resolver';
-      btn.style.borderColor = 'var(--danger)';
-      btn.style.background = 'rgba(239, 68, 68, 0.1)';
-    } else if (filtroIncidencia === 'sin_resolver') {
-      filtroIncidencia = 'en_seguimiento';
-      btn.textContent = 'En seguimiento';
-      btn.style.borderColor = 'var(--warning)';
-      btn.style.background = 'rgba(245, 158, 11, 0.1)';
-    } else if (filtroIncidencia === 'en_seguimiento') {
-      filtroIncidencia = 'sin_errores';
-      btn.textContent = 'Sin errores';
-      btn.style.borderColor = 'var(--success)';
-      btn.style.background = 'rgba(16, 185, 129, 0.1)';
-    } else {
-      filtroIncidencia = 'todos';
-      btn.textContent = 'Todas';
-      btn.style.borderColor = 'var(--border)';
-      btn.style.background = 'var(--card-bg)';
-    }
-    applyFilters();
-  }
-
-  function resetFilters() {
-    filtroEstado = 'todos';
-    filtroIncidencia = 'todos';
-    document.getElementById('btnEstado').textContent = 'Todas';
-    document.getElementById('btnEstado').style.borderColor = 'var(--border)';
-    document.getElementById('btnEstado').style.background = 'var(--card-bg)';
-    document.getElementById('btnIncidencia').textContent = 'Todas';
-    document.getElementById('btnIncidencia').style.borderColor = 'var(--border)';
-    document.getElementById('btnIncidencia').style.background = 'var(--card-bg)';
-    document.getElementById('searchInput').value = '';
-    applyFilters();
-  }
-
-  function applyFilters() {
-    const q = document.getElementById('searchInput').value.toLowerCase().trim();
-    const normQ = normalize(q);
-    const sections = document.querySelectorAll('.sala-section');
-    let totalCount = 0;
-
-    sections.forEach(sec => {
-      const cards = sec.querySelectorAll('.m-card');
-      let hasVisible = false;
-
-      cards.forEach(card => {
-        const estado = getCardState(card);
-        const textFields = [card.dataset.nombre||'', sec.dataset.sala||''];
-        const badge = card.dataset.badge?.toLowerCase() || '';
-
-        // Filtro de texto
-        let textMatch = true;
-        if (q) {
-          textMatch = textFields.some(f => normalize(f).includes(normQ)) ||
-                      textFields.some(f => fuzzyMatch(q, f));
-        }
-
-        // Filtro de estado
-        let estadoMatch = true;
-        if (filtroEstado === 'activa' && estado !== 'activa') estadoMatch = false;
-        if (filtroEstado === 'inactiva' && estado !== 'inactiva') estadoMatch = false;
-
-        // Filtro de incidencia
-        let incidenciaMatch = true;
-        if (filtroIncidencia === 'sin_errores' && badge.includes('incidencia')) incidenciaMatch = false;
-        if (filtroIncidencia === 'sin_resolver' && !badge.includes('sin resolver')) incidenciaMatch = false;
-        if (filtroIncidencia === 'en_seguimiento' && !badge.includes('seguimiento')) incidenciaMatch = false;
-
-        const visible = textMatch && estadoMatch && incidenciaMatch;
-        card.style.display = visible ? 'flex' : 'none';
-        if (visible) { hasVisible = true; totalCount++; }
-      });
-
-      sec.style.display = hasVisible ? 'block' : 'none';
-    });
-
-    // Mostrar resumen
-    const resumenEl = document.getElementById('filtroResumen');
-    const filtroTextoEl = document.getElementById('filtroTexto');
-    const countEl = document.getElementById('resultadoCount');
-
-    const partes = [];
-    if (filtroEstado !== 'todos') partes.push(filtroEstado === 'activa' ? 'Activas' : 'Inactivas');
-    if (filtroIncidencia !== 'todos') {
-      const incText = {
-        'sin_errores': 'Sin incidencias',
-        'sin_resolver': 'Sin resolver',
-        'en_seguimiento': 'En seguimiento'
-      }[filtroIncidencia];
-      partes.push(incText);
-    }
-    if (q) partes.push(`Búsqueda: "${q}"`);
-
-    if (partes.length > 0) {
-      filtroTextoEl.textContent = partes.join(' + ');
-      countEl.textContent = totalCount;
-      resumenEl.style.display = 'block';
-    } else {
-      resumenEl.style.display = 'none';
-    }
   }
 
   function filterMachines() {

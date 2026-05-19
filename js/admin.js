@@ -306,7 +306,10 @@ async function cargarDatosBase() {
     console.log('Incidencias abiertas:', incidenciasAbiertas.length);
     
     datosMaquinas.forEach(maquina => {
-      const incidenciasMaquina = incidenciasAbiertas.filter(inc => inc.maquina_id === maquina.id);
+      const incidenciasMaquina = incidenciasAbiertas.filter(inc => 
+        String(inc.maquina_id) === String(maquina.id) || 
+        (inc.maquina && inc.maquina.trim().toLowerCase() === maquina.nombre.trim().toLowerCase())
+      );
       const incidenciaEnSeguimiento = incidenciasMaquina.find(inc => inc.en_seguimiento);
       
       maquina.tiene_incidencia = incidenciasMaquina.length > 0;
@@ -535,7 +538,10 @@ async function renderIncidencias(filtro = 'todas') {
     const statusText = resuelta ? 'Resuelta' : (esSeguimiento ? 'En Seguimiento' : 'Sin resolver');
 
     // Buscar estado actual de la máquina
-    const maq = datosMaquinas.find(m => m.id === r.maquina_id);
+    const maq = datosMaquinas.find(m => 
+      String(m.id) === String(r.maquina_id) || 
+      (r.maquina && m.nombre.trim().toLowerCase() === r.maquina.trim().toLowerCase())
+    );
     const maquinaEstado = maq ? maq.estado : 'activa';
 
     return `
@@ -848,9 +854,16 @@ function renderMaquinas() {
   function tarjetaMaquina(m) {
     const selectedId = localStorage.getItem('sgi_selected_machine');
     const isSelected = selectedId === String(m.id);
-    const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : '';
-    
     const estado = calcularEstadoUnificado(m);
+    
+    let baseBorder = '';
+    if (estado.texto === 'SIN RESOLVER') {
+      baseBorder = 'border: 2px solid var(--danger);';
+    } else if (estado.texto === 'EN SEGUIMIENTO') {
+      baseBorder = 'border: 2px solid var(--warning);';
+    }
+    
+    const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : baseBorder;
 
     return `
         <div class="maquina-card fade-in"
@@ -860,12 +873,26 @@ function renderMaquinas() {
              style="cursor:grab;${highlightStyle}" title="${estado.descripcion}">
         <div class="maquina-header">
           <div>
-            <div class="maquina-nombre">${m.nombre}</div>
+            <div class="maquina-nombre" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
+              <span>${m.nombre}</span>
+              ${(function() {
+                const estOp = (m.estado || 'activa').toLowerCase().trim();
+                const isActiva = estOp !== 'inactiva';
+                const bgOp = isActiva ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)';
+                const colorOp = isActiva ? 'var(--ok)' : '#6b7280';
+                const textOp = isActiva ? 'ACTIVA' : 'INACTIVA';
+                const claseOp = isActiva ? 'ok' : 'gris';
+                return `<span class="estado-badge ${claseOp}" style="font-size:9px; padding:1px 6px; background: ${bgOp}; color: ${colorOp}; border: 1px solid ${colorOp}20;">${textOp}</span>`;
+              })()}
+            </div>
             <div class="maquina-tipo" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
               <span>${m.tipo}</span>
-              <span class="estado-badge ${estado.clase}" style="font-size:9px; padding:1px 6px; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">
-                ${estado.texto}
-              </span>
+              ${(function() {
+                if (estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO') {
+                  return `<span class="estado-badge ${estado.clase}" style="font-size:9px; padding:1px 6px; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">${estado.texto}</span>`;
+                }
+                return '';
+              })()}
             </div>
           </div>
         </div>
@@ -1949,6 +1976,19 @@ async function editarNombreUsuario(userId, nombreActual) {
     // 1. Actualizar perfil
     const { error: errPerfil } = await client.from('perfiles').update({ nombre: nombreLimpio }).eq('id', userId);
     if (errPerfil) throw errPerfil;
+
+    // 2. Si es el propio usuario logueado, actualizar localStorage para reflejar el cambio
+    const session = window.sgiAdminSession || {};
+    if (session.userId === userId) {
+      session.nombre = nombreLimpio;
+      window.sgiAdminSession = session;
+      localStorage.setItem('sgi_admin_session', JSON.stringify(session));
+      // Actualizar nombre visible en sidebar y dropdown sin recargar
+      const dropdownName = document.getElementById('dropdownUserName');
+      if (dropdownName) dropdownName.textContent = nombreLimpio;
+      const footerEl = document.querySelector('.sidebar-footer div strong');
+      if (footerEl) footerEl.textContent = nombreLimpio;
+    }
 
     showFeedback('Nombre actualizado', 'El nombre del usuario se ha cambiado correctamente.', '');
     await recargarTodo();

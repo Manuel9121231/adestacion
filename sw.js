@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sgi-cache-v1';
+const CACHE_NAME = 'sgi-cache-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -12,6 +12,7 @@ const ASSETS = [
 
 // Instalación: Cachear activos estáticos
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
@@ -28,6 +29,7 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  self.clients.claim();
 });
 
 // Estrategia: Network First con fallback a Cache
