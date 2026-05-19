@@ -632,7 +632,7 @@
           const user = data.session.user;
           const nombre = user.user_metadata?.nombre || user.email?.split('@')[0] || 'Usuario';
 
-          // Crear perfil con activo: false y sin rol si no existe
+          // Crear/actualizar perfil con activo: false y sin rol
           try {
             await client.from('perfiles').upsert({
               id: user.id,
@@ -640,7 +640,7 @@
               nombre: nombre,
               rol: null, // Sin rol hasta que el admin lo active
               activo: false
-            }, { onConflict: 'id', ignoreDuplicates: true });
+            }, { onConflict: 'id' });
           } catch(e) {}
 
           // Cerrar sesión (el usuario debe esperar a ser dado de alta)

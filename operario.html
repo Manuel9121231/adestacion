@@ -685,7 +685,8 @@
     if (user) {
       try {
         const session = JSON.parse(user);
-        if (session.activo === false || !session.rol) {
+        // Solo permitir acceso si activo === true y tiene rol
+        if (session.activo !== true || !session.rol) {
           // Usuario no está activo o no tiene rol, redirigir a index
           window.location.replace('index.html');
           return;

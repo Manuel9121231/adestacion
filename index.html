@@ -750,7 +750,8 @@
         const rol = session.rol;
         const nombre = session.nombre || session.email || 'Usuario';
         const email = session.email || '';
-        const activo = session.activo !== false; // Default to true for existing sessions without this field
+        // Solo activo si activo === true explicitamente
+        const activo = session.activo === true;
 
         // Si no está activo o no tiene rol, mostrar pantalla de espera
         if (!activo || !rol) {
@@ -983,7 +984,8 @@
 
         const rol = perfil?.rol;
         const nombre = perfil?.nombre || user.email;
-        const activo = perfil?.activo !== false; // Default to true if not set
+        // Por defecto, si no existe perfil o no tiene activo definido, considerar NO activo
+        const activo = perfil ? (perfil.activo === true) : false;
 
         localStorage.setItem('sgi_user_session', JSON.stringify({
           userId: user.id, email: user.email, nombre, rol, activo
