@@ -108,6 +108,24 @@ const DASHBOARD_HTML = `
 
         <!-- ══════════ DASHBOARD ══════════ -->
         <div class="section active fade-in" id="section-dashboard">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--text-secondary)">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:12px;height:12px;border-radius:50%;background:var(--success);box-shadow:0 0 0 2px rgba(22,163,74,0.2);display:inline-block"></span>
+              <span><strong>Verde:</strong> Activa / Operativa</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:12px;height:12px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 2px rgba(220,38,38,0.2);display:inline-block"></span>
+              <span><strong>Rojo:</strong> Incidencia sin resolver</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:12px;height:12px;border-radius:50%;background:var(--warning);box-shadow:0 0 0 2px rgba(245,158,11,0.2);display:inline-block"></span>
+              <span><strong>Amarillo:</strong> En seguimiento</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:12px;height:12px;border-radius:50%;background:var(--text-muted);box-shadow:0 0 0 2px rgba(107,114,128,0.2);display:inline-block"></span>
+              <span><strong>Gris:</strong> Máquina inactiva</span>
+            </div>
+          </div>
           <!-- KPI Cards en fila horizontal -->
           <div class="kpi-grid" id="kpiGrid" style="margin-bottom:16px;grid-template-columns:1fr 1fr">
             <!-- Tarjeta unificada de Incidencias -->
