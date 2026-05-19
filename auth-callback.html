@@ -173,8 +173,24 @@
         
         if (hash.includes('access_token') || params.has('access_token')) {
           // Es un enlace de confirmación o recuperación
+          
+          // Forzar el perfil a activo: false y rol: null (para evitar que Supabase trigger lo deje activo)
+          try {
+            const { data: { user } } = await client.auth.getUser();
+            if (user) {
+              await client.from('perfiles').upsert({
+                id: user.id,
+                email: user.email,
+                activo: false,
+                rol: null
+              }, { onConflict: 'id' });
+              // Cerrar sesión para que no acceda hasta que el admin lo active
+              await client.auth.signOut();
+            }
+          } catch(e) { console.error('Error updating profile:', e); }
+          
           message.textContent = '¡Verificación completada!';
-          status.textContent = 'Tu email ha sido confirmado correctamente.';
+          status.textContent = 'Tu email ha sido confirmado, pero tu cuenta está pendiente de activación por un administrador.';
           status.className = 'status success';
           continueBtn.classList.add('show');
           
