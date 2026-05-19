@@ -704,7 +704,7 @@ function actualizarVistaDashboard() {
       ? maqConProblemas.map(m => {
           const estado = calcularEstadoUnificado(m);
           return `
-          <div onclick="navigateTo('maquinas', '${m.id}')" style="cursor:pointer;padding:5px 8px;background:${estado.bg};border:1px solid ${estado.color}40;border-radius:6px;font-size:11px;color:${estado.color};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.nombre} · ${m.sala_nombre} - ${estado.descripcion}">
+          <div class="dashboard-maq-inactiva" onclick="navigateTo('maquinas', '${m.id}')" style="cursor:pointer;padding:5px 8px;background:${estado.bg};border:1px solid ${estado.color}40;border-radius:6px;font-size:11px;color:${estado.color};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all 0.2s ease" title="${m.nombre} · ${m.sala_nombre} - ${estado.descripcion}">
             ${m.nombre} · ${m.sala_nombre}
           </div>`;
         }).join('')

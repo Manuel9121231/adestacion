@@ -295,6 +295,13 @@ a { color: var(--accent); text-decoration: none; }
   box-shadow: 0 2px 10px rgba(30,41,59,0.08);
 }
 .maquina-card:hover { border-color: var(--border-accent); transform: translateY(-2px); box-shadow: var(--shadow-glow); }
+
+.dashboard-maq-inactiva:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: currentColor !important;
+  opacity: 0.9;
+}
 .maquina-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
 .maquina-nombre { font-size: 15px; font-weight: 700; }
 .maquina-tipo { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
