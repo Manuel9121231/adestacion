@@ -573,12 +573,12 @@
 
         <!-- Step 3: Éxito -->
         <div class="step" id="regStep3">
-          <span class="success-icon">🎉</span>
-          <div class="step-title" style="text-align:center">¡Cuenta activada!</div>
+          <span class="success-icon">⏳</span>
+          <div class="step-title" style="text-align:center">¡Cuenta creada!</div>
           <div class="step-subtitle" style="text-align:center">
-            Tu cuenta ha sido registrada correctamente. Puedes iniciar sesión ahora.
+            Tu cuenta ha sido registrada correctamente, pero está <strong>pendiente de activación</strong>.
             <br><br>
-            <strong>Recuerda:</strong> Un administrador puede asignarte privilegios adicionales.
+            Un <strong>administrador</strong> debe dar de alta tu cuenta antes de que puedas acceder al sistema. Contacta con tu responsable si es urgente.
           </div>
           <button class="btn-primary" onclick="ocultarRegistro()">
             Iniciar sesión
@@ -632,25 +632,31 @@
           const user = data.session.user;
           const nombre = user.user_metadata?.nombre || user.email?.split('@')[0] || 'Usuario';
 
-          // Guardar sesión
-          localStorage.setItem('sgi_user_session', JSON.stringify({
-            userId: user.id,
-            email: user.email,
-            nombre: nombre,
-            rol: 'usuario'
-          }));
+          // Crear/actualizar perfil con activo: false y sin rol
+          try {
+            await client.from('perfiles').upsert({
+              id: user.id,
+              email: user.email,
+              nombre: nombre,
+              rol: null, // Sin rol hasta que el admin lo active
+              activo: false
+            }, { onConflict: 'id' });
+          } catch(e) {}
+
+          // Cerrar sesión (el usuario debe esperar a ser dado de alta)
+          await client.auth.signOut();
 
           // Actualizar mensaje
-          msgDiv.style.background = '#22c55e';
-          msgDiv.textContent = '¡Cuenta verificada correctamente! Redirigiendo...';
+          msgDiv.style.background = '#f59e0b';
+          msgDiv.textContent = '✅ Email verificado. Tu cuenta está pendiente de activación por un administrador.';
 
           // Limpiar URL
           window.history.replaceState({}, document.title, window.location.pathname);
 
-          // Redirigir al portal
+          // Redirigir al login
           setTimeout(() => {
-            window.location.href = 'operario.html';
-          }, 1500);
+            window.location.href = 'index.html';
+          }, 3000);
         }
       } catch (err) {
         console.error('Error en confirmación:', err);
@@ -817,8 +823,8 @@
               id: data.user.id,
               email: email,
               nombre: nombre,
-              rol: 'usuario',
-              activo: true
+              rol: null, // Sin rol hasta que el admin lo active
+              activo: false
             });
           } catch(e) {}
           await client.auth.signOut();

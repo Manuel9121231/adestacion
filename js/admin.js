@@ -753,9 +753,11 @@ function actualizarSubtitulosSecciones() {
     const total = datosUsuarios.length;
     const admins = datosUsuarios.filter(u => u.rol === 'admin').length;
     const tecnicos = datosUsuarios.filter(u => u.rol === 'tecnico').length;
+    const pendientes = datosUsuarios.filter(u => u.activo === false).length;
     const partes = [`${total} usuario${total !== 1 ? 's' : ''}`];
     if (admins > 0) partes.push(`${admins} admin${admins !== 1 ? 's' : ''}`);
     if (tecnicos > 0) partes.push(`${tecnicos} técnico${tecnicos !== 1 ? 's' : ''}`);
+    if (pendientes > 0) partes.push(`${pendientes} pendiente${pendientes !== 1 ? 's' : ''} de alta`);
     elUsr.textContent = partes.join(' · ');
   }
 }
@@ -1753,7 +1755,7 @@ function exportarCSV() {
 }
 
 // ── Usuarios / Administradores ────────────────────────────────────────────────
-let filtroRolUsuarios = 'todos'; // Filtro actual: 'todos', 'admin', 'tecnico', 'usuario'
+let filtroRolUsuarios = 'todos'; // Filtro actual: 'todos', 'admin', 'tecnico', 'usuario', 'pendientes'
 
 function filtrarUsuarios(rol) {
   filtroRolUsuarios = rol;
@@ -1763,7 +1765,8 @@ function filtrarUsuarios(rol) {
     'todos': 'btnFiltroTodos',
     'admin': 'btnFiltroAdmin',
     'tecnico': 'btnFiltroTecnico',
-    'usuario': 'btnFiltroUsuario'
+    'usuario': 'btnFiltroUsuario',
+    'pendientes': 'btnFiltroPendientes'
   };
   
   Object.keys(botones).forEach(key => {
@@ -1832,14 +1835,19 @@ async function renderUsuarios() {
       return ordenA - ordenB;
     });
 
-    // Aplicar filtro por rol si no es 'todos'
+    // Aplicar filtro por rol o estado
     let perfilesFiltrados = perfiles;
-    if (filtroRolUsuarios !== 'todos') {
+    if (filtroRolUsuarios === 'pendientes') {
+      perfilesFiltrados = perfiles.filter(u => u.activo === false);
+    } else if (filtroRolUsuarios !== 'todos') {
       perfilesFiltrados = perfiles.filter(u => u.rol === filtroRolUsuarios);
     }
 
     if (!perfilesFiltrados.length) {
-      container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">No hay usuarios con el rol "${formatearRol(filtroRolUsuarios)}"</td></tr>`;
+      const mensaje = filtroRolUsuarios === 'pendientes'
+        ? 'No hay usuarios pendientes de alta'
+        : `No hay usuarios con el rol "${formatearRol(filtroRolUsuarios)}"`;
+      container.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">${mensaje}</td></tr>`;
       return;
     }
 
@@ -1847,8 +1855,15 @@ async function renderUsuarios() {
     const esAdmin = session.type === 'superadmin' || session.type === 'admin';
 
     container.innerHTML = perfilesFiltrados.map(u => {
-      const rol = ROL_BADGES[u.rol] || { label: u.rol || 'usuario', cls: '' };
+      const rol = u.rol ? (ROL_BADGES[u.rol] || { label: u.rol, cls: '' }) : { label: 'Sin rol', cls: '' };
       const fecha = u.creado_en ? new Date(u.creado_en).toLocaleDateString('es-ES') : '–';
+      const activo = u.activo !== false; // Default to true if not set
+      const estadoBadge = activo
+        ? '<span class="estado-badge ok">Activo</span>'
+        : '<span class="estado-badge" style="background:#f59e0b20;color:#f59e0b">Pendiente de alta</span>';
+      const altaButton = activo
+        ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="toggleAltaUsuario('${u.id}', false)" title="Dar de baja">Dar de baja</button>`
+        : `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success);padding:4px 8px" onclick="toggleAltaUsuario('${u.id}', true)" title="Dar de alta">Dar de alta</button>`;
       return `
       <tr>
         <td data-label="Nombre">
@@ -1857,11 +1872,12 @@ async function renderUsuarios() {
           ${esAdmin ? `<button class="btn btn-text btn-sm" style="font-size:11px;padding:2px 0;color:var(--accent)" onclick="editarNombreUsuario('${u.id}','${(u.nombre || '').replace(/'/g, "\\'")}')">Editar nombre</button>` : ''}
         </td>
         <td data-label="Rol"><span class="estado-badge ${rol.cls}">${rol.label}</span></td>
-        <td data-label="Estado"><span class="estado-badge ok">Activo</span></td>
+        <td data-label="Estado">${estadoBadge}</td>
         <td data-label="Registro" style="font-size:11px">${fecha}</td>
         <td data-label="Acciones">
           ${esAdmin ? `
             <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${altaButton}
               ${u.rol !== 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--accent);border-color:var(--accent)" onclick="cambiarRolUsuario('${u.id}','admin')">Hacer Admin</button>` : ''}
               ${u.rol === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="cambiarRolUsuario('${u.id}','usuario')">Quitar Admin</button>` : ''}
               ${u.rol !== 'tecnico' ? `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success)" onclick="cambiarRolUsuario('${u.id}','tecnico')">Hacer Técnico</button>` : ''}
@@ -1935,6 +1951,42 @@ async function cambiarRolUsuario(userId, nuevoRol) {
     renderUsuarios();
   } catch (err) {
     showFeedback('Error de permisos', 'No se ha podido cambiar el rol: ' + err.message, '');
+  }
+}
+
+async function toggleAltaUsuario(userId, nuevoEstado) {
+  const session = window.sgiAdminSession || {};
+  if (session.type !== 'superadmin' && session.type !== 'admin') {
+    showFeedback('Acceso Denegado', 'Solo los administradores pueden activar/desactivar usuarios.', '');
+    return;
+  }
+  const actionLabel = nuevoEstado ? 'dar de alta' : 'dar de baja';
+  const ok = await customConfirm(
+    nuevoEstado ? 'Dar de alta usuario' : 'Dar de baja usuario',
+    nuevoEstado
+      ? '¿Confirmas que deseas dar de alta este usuario? Podrá acceder al sistema inmediatamente.'
+      : '¿Confirmas que deseas dar de baja este usuario? No podrá acceder al sistema hasta que vuelvas a darlo de alta.',
+    ''
+  );
+  if (!ok) return;
+
+  try {
+    const client = window.supabaseClient;
+    // Si estamos activando, asignar rol 'usuario' si no tiene rol
+    const updateData = { activo: nuevoEstado };
+    if (nuevoEstado) {
+      const { data: perfil } = await client.from('perfiles').select('rol').eq('id', userId).single();
+      if (perfil && !perfil.rol) {
+        updateData.rol = 'usuario';
+      }
+    }
+    const { error } = await client.from('perfiles').update(updateData).eq('id', userId);
+    if (error) throw error;
+    await recargarTodo();
+    renderUsuarios();
+    showFeedback('Estado actualizado', nuevoEstado ? 'Usuario dado de alta correctamente.' : 'Usuario dado de baja correctamente.', '');
+  } catch (err) {
+    showFeedback('Error', 'No se pudo actualizar el estado: ' + err.message, '');
   }
 }
 
