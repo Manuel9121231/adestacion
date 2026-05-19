@@ -861,6 +861,8 @@ function renderMaquinas() {
       baseBorder = 'border: 2px solid var(--danger);';
     } else if (estado.texto === 'EN SEGUIMIENTO') {
       baseBorder = 'border: 2px solid var(--warning);';
+    } else if (estado.texto === 'ACTIVA') {
+      baseBorder = 'border: 2px solid var(--success);';
     }
     
     const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : baseBorder;
@@ -1283,8 +1285,20 @@ function renderQRs() {
     return;
   }
 
-  grid.innerHTML = lista.map(m => `
-    <div class="maquina-card fade-in" style="cursor:pointer" onclick="verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">
+  grid.innerHTML = lista.map(m => {
+    const estado = calcularEstadoUnificado(m);
+    
+    let baseBorder = '';
+    if (estado.texto === 'SIN RESOLVER') {
+      baseBorder = 'border: 2px solid var(--danger);';
+    } else if (estado.texto === 'EN SEGUIMIENTO') {
+      baseBorder = 'border: 2px solid var(--warning);';
+    } else if (estado.texto === 'ACTIVA') {
+      baseBorder = 'border: 2px solid var(--success);';
+    }
+
+    return `
+    <div class="maquina-card fade-in" style="cursor:pointer;${baseBorder}" onclick="verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">
       <div class="maquina-header">
         <div>
           <div class="maquina-nombre">${m.nombre}</div>
@@ -1296,7 +1310,8 @@ function renderQRs() {
         Haz clic para ver el código QR
       </div>
     </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function filtrarQRs() { renderQRs(); }

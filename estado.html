@@ -359,16 +359,20 @@
     }
     .m-card.warn {
       background: var(--card-bg);
-      border-color: #f59e0b;
+      border: 2px solid #f59e0b;
     }
     .m-card.inactive {
       background: var(--card-bg);
-      border-color: #6b7280;
+      border: 1px solid #6b7280;
       opacity: 0.85;
     }
     .m-card.down {
       background: var(--card-bg);
-      border-color: #ef4444;
+      border: 2px solid #ef4444;
+    }
+    .m-card.ok {
+      background: var(--card-bg);
+      border: 2px solid var(--ok);
     }
     
     .m-top {
@@ -1036,7 +1040,7 @@ function asegurarElementosDOM() {
     const incState = estadoIncidencia(m);
     // El dot y borde de la tarjeta reflejan la incidencia si existe, si no el estado operativo
     const mainState = incState || opState;
-    const cardClass = incState ? (incState.card || 'm-card down') : (opState.texto === 'INACTIVA' ? 'm-card inactive' : 'm-card');
+    const cardClass = incState ? (incState.card || 'm-card down') : (opState.texto === 'INACTIVA' ? 'm-card inactive' : 'm-card ok');
 
     const opBadgeClase = opState.texto === 'ACTIVA' ? 'ok' : 'gris';
     const opBadgeHTML = `<span class="estado-badge ${opBadgeClase}" style="font-size:9px;padding:1px 6px;background:${opState.bg};color:${opState.color};border:1px solid ${opState.color}20;">${opState.texto}</span>`;
