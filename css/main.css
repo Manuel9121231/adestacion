@@ -653,8 +653,13 @@ tr:hover td { background: var(--bg-card-hover); }
 .section-subtitle { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .grid-maquinas-inner { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+}
+
 @media (max-width: 900px) {
   .chart-grid { grid-template-columns: 1fr; }
+  .grid-maquinas-inner { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 }
 
 @media (max-width: 768px) {
@@ -718,7 +723,7 @@ tr:hover td { background: var(--bg-card-hover); }
     text-align: right;
   }
   td:last-child { border-bottom: none; justify-content: flex-end; }
-  
+
   /* Insertar seudo-etiquetas con datos thead - Requiere el uso del atributo data-label en el HTML */
   td::before {
     content: attr(data-label);
@@ -757,6 +762,57 @@ tr:hover td { background: var(--bg-card-hover); }
 
   /* Botones en máquinas */
   .maquina-actions { flex-wrap: wrap; gap: 6px; }
+}
+
+@media (max-width: 480px) {
+  /* KPIs más compactos */
+  .kpi-grid { grid-template-columns: 1fr; gap: 8px; }
+  .kpi-value { font-size: 24px; }
+  .kpi-label { font-size: 11px; }
+
+  /* Títulos más pequeños */
+  .section-title { font-size: 16px; }
+  .topbar-title { font-size: 14px; }
+
+  /* Filtros una columna */
+  .filtros-bar { flex-direction: column; }
+  .filtro-item { width: 100%; min-width: auto; }
+
+  /* Máquinas cards más compactas */
+  .maquina-card { padding: 16px; }
+  .maquina-nombre { font-size: 14px; }
+
+  /* Botones más grandes para touch */
+  button, .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Modal con más padding inferior para safe area */
+  .modal {
+    padding: 20px 16px calc(32px + env(safe-area-inset-bottom));
+  }
+
+  /* Galería fotos */
+  .photo-gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* ── Tablet (768px - 1024px) ────────────────────────────────────────── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grid-maquinas-inner {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chart-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* 🖼️ GALERÍA DE FOTOS (ADMIN) */
