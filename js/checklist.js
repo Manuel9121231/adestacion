@@ -452,10 +452,13 @@ async function apiFetch(url, options = {}) {
 
       if (rError) throw rError;
 
-      // 3. Update machine state to inactive for incident
-      await client.from('equipos')
-        .update({ estado: 'inactiva' })
-        .eq('id', maquinaId);
+      // Si es una incidencia, marcar la máquina como inactiva automáticamente
+      if (modoActual === 'Incidencia') {
+        await client
+          .from('equipos')
+          .update({ estado: 'inactiva' })
+          .eq('id', maquinaId);
+      }
 
       return { ok: true, data: registro };
     }
@@ -862,6 +865,12 @@ async function resolverIncidencia() {
         showToast('Error al marcar como resuelta: ' + error.message, 'error');
         return;
       }
+
+      // Restaurar el estado de la máquina a activa al resolver la incidencia
+      await client
+        .from('equipos')
+        .update({ estado: 'activa' })
+        .eq('id', maquinaId);
       
       showToast('Incidencia marcada como resuelta', 'success');
       setTimeout(() => window.location.href = 'estado.html', 1500);
