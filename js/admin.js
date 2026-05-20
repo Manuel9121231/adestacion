@@ -551,6 +551,7 @@ async function renderIncidencias(filtro = 'todas') {
     const bgOp      = isActiva ? 'rgba(16,185,129,0.12)' : 'rgba(75,85,99,0.14)';
     const colorOp   = isActiva ? '#10b981' : '#374151';
     const textOp    = isActiva ? 'ACTIVA' : 'INACTIVA';
+    const mostrarMaquina = !resuelta;
 
     const seguimientoHtml = esSeguimiento ? `
       <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12px;color:var(--text-muted)">
@@ -578,11 +579,13 @@ async function renderIncidencias(filtro = 'todas') {
         </div>
         <!-- Footer -->
         <div style="display:flex;align-items:stretch;border-top:1px solid var(--border);margin-top:auto">
+          ${mostrarMaquina ? `
           <div style="flex:1;padding:10px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
             <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Máquina</div>
             <span style="background:${bgOp};color:${colorOp};border:1.5px solid ${colorOp};border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;letter-spacing:0.04em">${textOp}</span>
           </div>
           <div style="width:2px;background:${borderColor};margin:8px 0;flex-shrink:0"></div>
+          ` : ''}
           <div style="flex:1;padding:10px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
             <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Estado incidencia</div>
             <span style="font-size:12px;font-weight:700;color:${incColor};background:${incBg};border:1.5px solid ${incColor}40;border-radius:20px;padding:4px 14px">${incText}</span>
