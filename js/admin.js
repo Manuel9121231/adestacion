@@ -534,38 +534,59 @@ async function renderIncidencias(filtro = 'todas') {
   grid.innerHTML = lista.map(r => {
     const resuelta = r.resuelta || false;
     const esSeguimiento = !resuelta && r.en_seguimiento;
-    const statusClass = resuelta ? 'resuelto' : (esSeguimiento ? 'seguimiento' : 'urgente');
-    const statusText = resuelta ? 'Resuelta' : (esSeguimiento ? 'En Seguimiento' : 'Sin resolver');
 
-    // Buscar estado actual de la máquina
-    const maq = datosMaquinas.find(m => 
-      String(m.id) === String(r.maquina_id) || 
+    // Incident state
+    const incColor    = resuelta ? 'var(--ok)' : (esSeguimiento ? 'var(--warning)' : 'var(--danger)');
+    const incBg       = resuelta ? 'rgba(16,185,129,0.1)' : (esSeguimiento ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)');
+    const incText     = resuelta ? 'RESUELTA' : (esSeguimiento ? 'EN SEGUIMIENTO' : 'SIN RESOLVER');
+    const borderColor = resuelta ? 'var(--ok)' : (esSeguimiento ? 'var(--warning)' : 'var(--danger)');
+
+    // Machine operative state
+    const maq = datosMaquinas.find(m =>
+      String(m.id) === String(r.maquina_id) ||
       (r.maquina && m.nombre.trim().toLowerCase() === r.maquina.trim().toLowerCase())
     );
-    const maquinaEstado = maq ? maq.estado : 'activa';
+    const maquinaEstado = (maq ? maq.estado : 'activa').toLowerCase();
+    const isActiva  = maquinaEstado !== 'inactiva';
+    const bgOp      = isActiva ? 'rgba(16,185,129,0.12)' : 'rgba(75,85,99,0.14)';
+    const colorOp   = isActiva ? '#10b981' : '#374151';
+    const textOp    = isActiva ? 'ACTIVA' : 'INACTIVA';
+
+    const seguimientoHtml = esSeguimiento ? `
+      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12px;color:var(--text-muted)">
+        <b>Última actualización:</b> ${cacheSeguimientosNotas && r.id in cacheSeguimientosNotas ? truncate(cacheSeguimientosNotas[r.id], 100) : 'En seguimiento — sin notas aún'}
+      </div>
+    ` : '';
 
     return `
-      <div class="ticket-card ${statusClass} fade-in" onclick="verDetalleSesion('${r.id}')">
-        <div class="ticket-header">
-          <div style="display:flex; flex-direction:column; gap:2px">
-            <div class="ticket-machine-name">${r.maquina}</div>
-            <div style="font-size:10px; color:var(--text-muted)">Máquina: <span class="estado-badge ${maquinaEstado === 'activa' ? 'ok' : (maquinaEstado === 'inactiva' ? 'gris' : 'naranja')}" style="font-size:8px; padding:0 4px">${maquinaEstado || 'activa'}</span></div>
+      <div class="ticket-card fade-in" onclick="verDetalleSesion('${r.id}')"
+           style="cursor:pointer;border-left:4px solid ${borderColor};border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:var(--bg-card)">
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px 10px">
+          <div>
+            <div style="font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:2px">${r.maquina}</div>
+            <div style="font-size:11px;color:var(--text-muted)">Máquina: ${maq?.tipo || r.sala || 'sin tipo'}</div>
           </div>
-          <span class="estado-badge ${statusClass}">${statusText}</span>
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();verDetalleSesion('${r.id}')" style="font-size:12px;padding:5px 12px;flex-shrink:0;margin-left:8px">Gestionar</button>
         </div>
-        <div class="ticket-body">
-          <div class="ticket-sala">${r.sala}</div>
-          <div class="ticket-desc"><b>Incidencia:</b> ${truncate(r.observaciones || 'Sin descripción detallada', 120)}</div>
-          <div class="ticket-date">Reportado: ${formatFechaHora(r.completado_en)} · por ${r.operario} (${formatearRol(r.rol)})</div>
-          
-          ${esSeguimiento ? `
-            <div id="seguimiento-nota-${r.id}" style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); font-size:12px; color:var(--text-muted);">
-              <b>Última actualización:</b> ${cacheSeguimientosNotas && r.id in cacheSeguimientosNotas ? truncate(cacheSeguimientosNotas[r.id], 100) : 'En seguimiento - sin notas aún'}
-            </div>
-          ` : ''}
+        <!-- Body -->
+        <div style="padding:8px 16px 12px;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--accent);margin-bottom:5px">${r.sala}</div>
+          <div style="font-size:13px;color:var(--text-primary);margin-bottom:4px"><strong>Incidencia:</strong> ${truncate(r.observaciones || 'Sin descripción', 100)}</div>
+          <div style="font-size:11px;color:var(--text-muted)">Reportado: ${formatFechaHora(r.completado_en)} · por ${r.operario} (${formatearRol(r.rol)})</div>
+          ${seguimientoHtml}
         </div>
-        <div class="ticket-footer">
-          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); verDetalleSesion('${r.id}')">Gestionar</button>
+        <!-- Footer -->
+        <div style="display:flex;align-items:stretch;border-top:1px solid var(--border);margin-top:auto">
+          <div style="flex:1;padding:10px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+            <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Máquina</div>
+            <span style="background:${bgOp};color:${colorOp};border:1.5px solid ${colorOp};border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;letter-spacing:0.04em">${textOp}</span>
+          </div>
+          <div style="width:2px;background:${borderColor};margin:8px 0;flex-shrink:0"></div>
+          <div style="flex:1;padding:10px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+            <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Estado incidencia</div>
+            <span style="font-size:12px;font-weight:700;color:${incColor};background:${incBg};border:1.5px solid ${incColor}40;border-radius:20px;padding:4px 14px">${incText}</span>
+          </div>
         </div>
       </div>
     `;
