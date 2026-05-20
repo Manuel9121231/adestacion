@@ -856,6 +856,12 @@ function renderMaquinas() {
     const isSelected = selectedId === String(m.id);
     const estado = calcularEstadoUnificado(m);
     
+    // Determinar si la máquina está activa pero tiene incidencia sin resolver
+    const estOp = (m.estado || 'activa').toLowerCase().trim();
+    const isActiva = estOp !== 'inactiva';
+    const tieneIncidencia = estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO';
+    const activeIncClass = (isActiva && tieneIncidencia) ? 'active-inc' : '';
+    
     let baseBorder = '';
     if (estado.texto === 'SIN RESOLVER') {
       baseBorder = 'border: 2px solid var(--danger);';
@@ -868,7 +874,7 @@ function renderMaquinas() {
     const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : baseBorder;
 
     return `
-        <div class="maquina-card fade-in"
+        <div class="maquina-card fade-in ${activeIncClass}"
              draggable="true"
              ondragstart="handleDragStart(event, '${m.id}')"
              onclick="verDetalleMaquina('${m.id}')"
