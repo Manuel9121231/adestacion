@@ -47,7 +47,7 @@ const DASHBOARD_HTML = `
       </nav>
 
       <div class="sidebar-footer">
-        <div style="margin-bottom:8px">v3.1</div>
+        <div style="margin-bottom:8px"></div>
         <button class="btn btn-primary btn-sm btn-full" onclick="window.location.href='index.html'" style="margin-bottom:8px;font-size:11px;padding:6px">Volver al Inicio</button>
         <button class="btn btn-outline btn-sm btn-full" onclick="window.location.href='estado.html'" style="margin-bottom:8px;font-size:11px;padding:6px">Estado de Equipos</button>
         <button class="btn btn-outline btn-sm btn-full" onclick="cerrarSesionAdmin()" style="font-size:11px;padding:6px">Cerrar Sesión</button>
