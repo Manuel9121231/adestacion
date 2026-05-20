@@ -452,8 +452,13 @@ async function apiFetch(url, options = {}) {
 
       if (rError) throw rError;
 
-      // No cambiar el estado de la máquina automáticamente al reportar incidencia
-      // La máquina debe mantener su estado actual
+      // Al reportar incidencia, asegurar que la máquina esté activa
+      if (modoActual === 'Incidencia') {
+        await client
+          .from('equipos')
+          .update({ estado: 'activa' })
+          .eq('id', maquinaId);
+      }
 
       return { ok: true, data: registro };
     }
