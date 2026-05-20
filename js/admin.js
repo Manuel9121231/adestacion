@@ -580,7 +580,7 @@ const sectionTitles = {
   dashboard: ['Resumen', 'Resumen del sistema'],
   maquinas: ['Máquinas y Salas', 'Gestión de máquinas y salas'],
   incidencias: ['Incidencias', 'Gestión de fallos técnicos y reparaciones'],
-  qrcodes: ['Códigos QR', 'QR individuales para el operario móvil'],
+  qrcodes: ['Códigos QR', 'QR individuales para el usuario móvil'],
   usuarios: ['Usuarios del Sistema', 'Gestión de accesos y privilegios de usuario']
 };
 
@@ -2507,21 +2507,21 @@ function iniciarTour() {
       {
         popover: {
           title: 'Estados de una Incidencia',
-          description: '<strong style="color:#dc2626">● Sin resolver</strong> — el operario ha reportado el problema y aún no se ha atendido.<br><br><strong style="color:#d97706">● En seguimiento</strong> — un técnico o admin está trabajando en ello y ha dejado notas de progreso.<br><br><strong style="color:#16a34a">● Resuelta</strong> — la incidencia ha sido cerrada y la máquina vuelve a estar operativa.'
+          description: '<strong style="color:#dc2626">● Sin resolver</strong> — el usuario ha reportado el problema y aún no se ha atendido.<br><br><strong style="color:#d97706">● En seguimiento</strong> — un técnico o admin está trabajando en ello y ha dejado notas de progreso.<br><br><strong style="color:#16a34a">● Resuelta</strong> — la incidencia ha sido cerrada y la máquina vuelve a estar operativa.'
         }
       },
       /* ── 4. Estados de máquina ──────────────────────────────────────── */
       {
         popover: {
           title: 'Estados de una Máquina',
-          description: '<strong style="color:#16a34a">● Activa</strong> — la máquina está operativa y disponible para su uso.<br><br><strong style="color:#6b7280">● Inactiva</strong> — la máquina está desconectada, retirada o fuera de servicio de forma indefinida. No aparece como disponible en el portal del operario.'
+          description: '<strong style="color:#16a34a">● Activa</strong> — la máquina está operativa y disponible para su uso.<br><br><strong style="color:#6b7280">● Inactiva</strong> — la máquina está desconectada, retirada o fuera de servicio de forma indefinida. No aparece como disponible en el portal de reportes.'
         }
       },
       /* ── 5. Roles de usuario ────────────────────────────────────────── */
       {
         popover: {
           title: 'Roles de Usuario',
-          description: '<strong style="color:#dc2626">Usuario</strong> — solo puede reportar incidencias desde el portal del operario. Sin acceso al panel.<br><br><strong style="color:#16a34a">Técnico</strong> — accede al panel para ver máquinas e incidencias, añadir notas de seguimiento y cambiar el estado operativo de una máquina (activa/inactiva). No puede crear máquinas ni gestionar usuarios.<br><br><strong style="color:#3b82f6">Administrador</strong> — acceso completo: gestiona máquinas, salas, usuarios y toda la configuración del sistema.'
+          description: '<strong style="color:#dc2626">Usuario</strong> — solo puede reportar incidencias desde el portal de reportes. Sin acceso al panel.<br><br><strong style="color:#16a34a">Técnico</strong> — accede al panel para ver máquinas e incidencias, añadir notas de seguimiento y cambiar el estado operativo de una máquina (activa/inactiva). No puede crear máquinas ni gestionar usuarios.<br><br><strong style="color:#3b82f6">Administrador</strong> — acceso completo: gestiona máquinas, salas, usuarios y toda la configuración del sistema.'
         }
       },
       /* ── 2-4. Resumen (Dashboard) ───────────────────────────────────── */
@@ -2609,7 +2609,7 @@ function iniciarTour() {
         element: '#nav-qrcodes',
         popover: {
           title: 'Sección: Códigos QR',
-          description: 'Genera QRs individuales por máquina para que los operarios reporten incidencias escaneando desde el móvil.'
+          description: 'Genera QRs individuales por máquina para que los usuarios reporten incidencias escaneando desde el móvil.'
         },
         onHighlightStarted: () => navigateTo('qrcodes')
       },
@@ -2618,7 +2618,7 @@ function iniciarTour() {
         element: '#gridQRs',
         popover: {
           title: 'QRs de Máquinas',
-          description: 'Cada máquina tiene su propio QR único. Imprímelos y colócalos físicamente junto al equipo. Al escanear, la máquina queda preseleccionada en el formulario de reporte del operario.'
+          description: 'Cada máquina tiene su propio QR único. Imprímelos y colócalos físicamente junto al equipo. Al escanear, la máquina queda preseleccionada en el formulario de reporte del usuario.'
         },
         onHighlightStarted: () => refresco()
       },
