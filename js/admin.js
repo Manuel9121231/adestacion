@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rolLabel = formatearRol(rolActual);
     const footerVersion = container?.querySelector('.sidebar-footer div');
     if (footerVersion) {
-      footerVersion.innerHTML = `<strong>${adminName}</strong><br><span style="font-size:12px;opacity:1;color:var(--accent)">${rolLabel}</span>`;
+      footerVersion.innerHTML = `v3.1`;
     }
     const dropdownName = document.getElementById('dropdownUserName');
     const dropdownRole = document.getElementById('dropdownUserRole');
@@ -2012,11 +2012,9 @@ async function editarNombreUsuario(userId, nombreActual) {
       session.nombre = nombreLimpio;
       window.sgiAdminSession = session;
       localStorage.setItem('sgi_admin_session', JSON.stringify(session));
-      // Actualizar nombre visible en sidebar y dropdown sin recargar
+      // Actualizar nombre visible en dropdown sin recargar
       const dropdownName = document.getElementById('dropdownUserName');
       if (dropdownName) dropdownName.textContent = nombreLimpio;
-      const footerEl = document.querySelector('.sidebar-footer div strong');
-      if (footerEl) footerEl.textContent = nombreLimpio;
     }
 
     showFeedback('Nombre actualizado', 'El nombre del usuario se ha cambiado correctamente.', '');
