@@ -47,6 +47,24 @@ const DASHBOARD_HTML = `
         </div>
       </nav>
 
+      <div style="padding:12px 14px;border-top:1px solid var(--border);margin-bottom:4px">
+        <div style="font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">Leyenda</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
+            <span style="width:9px;height:9px;border-radius:50%;background:#10b981;flex-shrink:0"></span>Activa / Operativa
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
+            <span style="width:9px;height:9px;border-radius:50%;background:#6b7280;flex-shrink:0"></span>Máquina inactiva
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
+            <span style="width:9px;height:9px;border-radius:50%;background:var(--danger);flex-shrink:0"></span>Incidencia sin resolver
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
+            <span style="width:9px;height:9px;border-radius:50%;background:var(--warning);flex-shrink:0"></span>En seguimiento
+          </div>
+        </div>
+      </div>
+
       <div class="sidebar-footer">
         <div style="margin-bottom:8px"></div>
         <button class="btn btn-primary btn-sm btn-full" onclick="window.location.href='index.html'" style="margin-bottom:8px;font-size:11px;padding:6px">Volver al Inicio</button>
@@ -115,16 +133,16 @@ const DASHBOARD_HTML = `
               <span><strong>Verde:</strong> Activa / Operativa</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:12px;height:12px;border-radius:50%;background:var(--text-muted);box-shadow:0 0 0 2px rgba(107,114,128,0.2);display:inline-block"></span>
+              <span><strong>Gris:</strong> Máquina inactiva</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
               <span style="width:12px;height:12px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 2px rgba(220,38,38,0.2);display:inline-block"></span>
               <span><strong>Rojo:</strong> Incidencia sin resolver</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px">
               <span style="width:12px;height:12px;border-radius:50%;background:var(--warning);box-shadow:0 0 0 2px rgba(245,158,11,0.2);display:inline-block"></span>
               <span><strong>Amarillo:</strong> En seguimiento</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <span style="width:12px;height:12px;border-radius:50%;background:var(--text-muted);box-shadow:0 0 0 2px rgba(107,114,128,0.2);display:inline-block"></span>
-              <span><strong>Gris:</strong> Máquina inactiva</span>
             </div>
           </div>
           <!-- KPI Cards en fila horizontal -->
@@ -449,7 +467,7 @@ const DASHBOARD_HTML = `
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Notas / Especificaciones adicionales</label>
+          <label class="form-label">Descripcion / Especificaciones adicionales</label>
           <textarea class="form-control" id="editNotas" rows="2"></textarea>
         </div>
       </div>
@@ -497,7 +515,7 @@ const DASHBOARD_HTML = `
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Notas / Especificaciones adicionales</label>
+          <label class="form-label">Descripcion / Especificaciones adicionales</label>
           <textarea class="form-control" id="nuevoMaquinaNotas" rows="2"></textarea>
         </div>
       </div>
