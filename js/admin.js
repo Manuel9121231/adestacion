@@ -368,6 +368,24 @@ async function cargarDatosBase() {
     incBadge.textContent = pendientesCount;
     incBadge.style.display = pendientesCount > 0 ? 'inline-flex' : 'none';
   }
+
+  // Badge usuarios pendientes de alta
+  const usuariosPendientes = datosUsuarios.filter(u => u.activo === false).length;
+  const usuariosBadge = document.getElementById('badge-usuarios');
+  if (usuariosBadge) {
+    usuariosBadge.textContent = usuariosPendientes;
+    usuariosBadge.style.display = usuariosPendientes > 0 ? 'inline-flex' : 'none';
+  }
+
+  // Alerta en dashboard para usuarios pendientes
+  const alertCard = document.getElementById('kpi-usuarios-pendientes-card');
+  const alertCount = document.getElementById('kpi-usuarios-pendientes-count');
+  if (alertCard) {
+    alertCard.style.display = usuariosPendientes > 0 ? 'flex' : 'none';
+  }
+  if (alertCount) {
+    alertCount.textContent = usuariosPendientes;
+  }
 }
 
 // ── Incidencias ─────────────────────────────────────────────────────────────
@@ -2062,7 +2080,7 @@ async function apiFetch(url, options = {}) {
         client.from('salas').select('*').order('nombre'),
         client.from('equipos').select('*, salas(nombre)').order('nombre'),
         client.from('registros').select('*').order('timestamp', { ascending: false }).limit(500),
-        client.from('perfiles').select('id, nombre, rol, email')
+        client.from('perfiles').select('id, nombre, rol, email, activo')
       ]);
 
       if (salas.error) throw salas.error;

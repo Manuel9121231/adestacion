@@ -42,6 +42,7 @@ const DASHBOARD_HTML = `
           <div class="nav-item" id="nav-usuarios" onclick="navigateTo('usuarios')">
             <span class="nav-icon"></span>
             <span>Usuarios</span>
+            <span class="nav-badge" id="badge-usuarios" style="display:none;background:#f59e0b;color:#fff">0</span>
           </div>
         </div>
       </nav>
@@ -160,6 +161,16 @@ const DASHBOARD_HTML = `
               </div>
               <button onclick="navigateTo('maquinas')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ver máquinas →</button>
             </div>
+          </div>
+
+          <!-- Alerta usuarios pendientes de alta (visible solo cuando hay usuarios esperando) -->
+          <div id="kpi-usuarios-pendientes-card" style="display:none;margin-bottom:16px;padding:14px 18px;background:rgba(245,158,11,0.08);border:2px solid #f59e0b;border-radius:12px;align-items:center;gap:16px;cursor:pointer" onclick="navigateTo('usuarios'); setTimeout(()=>filtrarUsuarios('pendientes'),200)">
+            <span style="font-size:32px;flex-shrink:0">⏳</span>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700;color:#f59e0b;margin-bottom:2px">Usuarios pendientes de activación</div>
+              <div style="font-size:13px;color:var(--text-muted)"><span id="kpi-usuarios-pendientes-count">0</span> usuario(s) esperan ser dados de alta por un administrador.</div>
+            </div>
+            <button style="padding:6px 14px;background:#f59e0b;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">Gestionar →</button>
           </div>
 
           <!-- Layout dividido: usa el mismo grid de 3 columnas para alineación perfecta -->
