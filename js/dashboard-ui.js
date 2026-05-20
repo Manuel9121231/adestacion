@@ -272,9 +272,15 @@ const DASHBOARD_HTML = `
                 <option value="maquina">Por máquina</option>
               </select>
               <div style="width:1px;height:24px;background:var(--border);margin:0 2px"></div>
-              <input type="date" id="filtroIncDesde" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
-              <input type="date" id="filtroIncHasta" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
-              <button class="btn btn-outline btn-sm" onclick="exportarCSV()">Exportar CSV</button>
+              <div style="display:flex;align-items:center;gap:4px">
+                <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">Inicio:</span>
+                <input type="date" id="filtroIncDesde" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
+              </div>
+              <div style="display:flex;align-items:center;gap:4px">
+                <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">Fin:</span>
+                <input type="date" id="filtroIncHasta" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="exportarCSV()" title="Exporta solo las incidencias actualmente filtradas">Exportar CSV (filtrado)</button>
             </div>
           </div>
 
