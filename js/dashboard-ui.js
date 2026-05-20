@@ -245,6 +245,11 @@ const DASHBOARD_HTML = `
                 style="width:160px;padding:8px 12px;font-size:13px">
                 <option value="">Todas las salas</option>
               </select>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-outline btn-sm active" id="btn-maq-todas" onclick="filtrarEstadoMaquinas('todas')" style="border-radius:20px;padding:6px 12px">Todas</button>
+                <button class="btn btn-outline btn-sm" id="btn-maq-activas" onclick="filtrarEstadoMaquinas('activas')" style="border-radius:20px;padding:6px 12px;border-color:#10b981;color:#10b981">Activas</button>
+                <button class="btn btn-outline btn-sm" id="btn-maq-inactivas" onclick="filtrarEstadoMaquinas('inactivas')" style="border-radius:20px;padding:6px 12px;border-color:#6b7280;color:#6b7280">Inactivas</button>
+              </div>
               <button class="btn btn-outline" onclick="abrirModalGestionSalas()" id="btnGestionarSalas">Salas</button>
               <button class="btn btn-primary" onclick="abrirModalNuevaMaquina()" id="btnNuevaMaquina">+ Nueva máquina</button>
             </div>

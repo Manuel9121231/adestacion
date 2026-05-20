@@ -709,45 +709,32 @@ function actualizarVistaDashboard() {
   const kpiSeg = document.getElementById('kpi-en-seguimiento-dash');
   if (kpiSeg) kpiSeg.textContent = incidenciasEnSeguimiento;
 
-  // KPI Máquinas con nuevo sistema de estados
-  const operativas = datosMaquinas.filter(m => {
-    const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'ACTIVA';
-  }).length;
-  
-  const maquinasEnSeguimiento = datosMaquinas.filter(m => {
-    const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'EN SEGUIMIENTO';
-  }).length;
-  
-  const conIncidencia = datosMaquinas.filter(m => {
-    const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'SIN RESOLVER';
-  }).length;
-  
-  const inactivas = datosMaquinas.filter(m => {
-    const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'INACTIVA';
-  }).length;
+  // KPI Máquinas — basado en estado físico (activa/inactiva)
+  const totalActivas   = datosMaquinas.filter(m => (m.estado || 'activa').toLowerCase().trim() !== 'inactiva').length;
+  const totalInactivas = datosMaquinas.filter(m => (m.estado || 'activa').toLowerCase().trim() === 'inactiva').length;
 
   const kpiMaqAct = document.getElementById('kpi-maq-activas');
-  if (kpiMaqAct) kpiMaqAct.textContent = operativas;
+  if (kpiMaqAct) kpiMaqAct.textContent = totalActivas;
   const kpiMaqInact = document.getElementById('kpi-maq-inactivas');
-  if (kpiMaqInact) kpiMaqInact.textContent = inactivas + maquinasEnSeguimiento + conIncidencia;
+  if (kpiMaqInact) kpiMaqInact.textContent = totalInactivas;
   
   const maqInactivasEl = document.getElementById('dashboardMaqInactivas');
   if (maqInactivasEl) {
     const maqConProblemas = datosMaquinas.filter(m => {
-      const estado = calcularEstadoUnificado(m);
-      return estado.texto !== 'ACTIVA';
+      return (m.estado || 'activa').toLowerCase().trim() === 'inactiva';
     });
     
     maqInactivasEl.innerHTML = maqConProblemas.length
       ? maqConProblemas.map(m => {
           const estado = calcularEstadoUnificado(m);
+          const tieneIncidencia = estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO';
           return `
-          <div class="dashboard-maq-inactiva" onclick="navigateTo('maquinas', '${m.id}')" style="cursor:pointer;padding:5px 8px;background:${estado.bg};border:1px solid ${estado.color}40;border-radius:6px;font-size:11px;color:${estado.color};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all 0.2s ease" title="${m.nombre} · ${m.sala_nombre} - ${estado.descripcion}">
-            ${m.nombre} · ${m.sala_nombre}
+          <div class="dashboard-maq-inactiva" onclick="navigateTo('maquinas', '${m.id}')" style="cursor:pointer;padding:5px 10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;font-size:11px;transition:all 0.2s ease;display:flex;align-items:center;justify-content:space-between;gap:8px" title="${m.nombre} · ${m.sala_nombre}">
+            <span style="color:var(--text-primary);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nombre} · ${m.sala_nombre}</span>
+            <div style="display:flex;gap:4px;flex-shrink:0">
+              <span style="font-size:9px;font-weight:700;color:#4b5563;background:rgba(107,114,128,0.1);border:1px solid rgba(107,114,128,0.3);border-radius:4px;padding:1px 5px">INACTIVA</span>
+              ${tieneIncidencia ? `<span style="font-size:9px;font-weight:700;color:${estado.color};background:${estado.bg};border:1px solid ${estado.color}30;border-radius:4px;padding:1px 5px">${estado.texto}</span>` : ''}
+            </div>
           </div>`;
         }).join('')
       : `<div style="font-size:11px;color:var(--success);text-align:center;padding:4px">Todas activas</div>`;
@@ -766,10 +753,12 @@ function actualizarSubtitulosSecciones() {
   if (elMaq) {
     const totalMaq = datosMaquinas.length;
     const totalSalas = datosSalas.length;
-    const inactivas = datosMaquinas.filter(m => m.estado === 'inactiva').length;
+    const activas   = datosMaquinas.filter(m => (m.estado || 'activa').toLowerCase().trim() !== 'inactiva').length;
+    const inactivas = totalMaq - activas;
     const partes = [
       `${totalMaq} máquina${totalMaq !== 1 ? 's' : ''}`,
       `${totalSalas} sala${totalSalas !== 1 ? 's' : ''}`,
+      `${activas} activa${activas !== 1 ? 's' : ''}`,
     ];
     if (inactivas > 0) partes.push(`${inactivas} inactiva${inactivas !== 1 ? 's' : ''}`);
     elMaq.textContent = partes.join(' · ');
@@ -888,6 +877,12 @@ function renderMaquinas() {
     lista = filtered;
   }
 
+  if (filtroEstadoMaquinasActual === 'activas') {
+    lista = lista.filter(m => (m.estado || 'activa').toLowerCase().trim() !== 'inactiva');
+  } else if (filtroEstadoMaquinasActual === 'inactivas') {
+    lista = lista.filter(m => (m.estado || 'activa').toLowerCase().trim() === 'inactiva');
+  }
+
   if (!lista.length) {
     grid.innerHTML = '<div class="empty-state"><div class="icon"></div><p>No hay máquinas registradas</p></div>';
     return;
@@ -961,7 +956,7 @@ function renderMaquinas() {
           <span style="font-size:22px">${icono}</span>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--text-primary)">${titulo}</div>
-            <div style="font-size:12px;color:var(--text-muted)">${maquinas.length} máquina${maquinas.length !== 1 ? 's' : ''}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${(() => { const act = maquinas.filter(m => (m.estado||'activa').toLowerCase().trim() !== 'inactiva').length; const inact = maquinas.length - act; const p = [`${maquinas.length} máquina${maquinas.length!==1?'s':''}`]; if(act>0) p.push(`${act} activa${act!==1?'s':''}`); if(inact>0) p.push(`${inact} inactiva${inact!==1?'s':''}`); return p.join(' · '); })()}</div>
           </div>
         </div>
         ${gridHtml}
@@ -1044,6 +1039,17 @@ async function handleDrop(e, idSalaDestino) {
 }
 
 function filtrarMaquinas() { renderMaquinas(); }
+
+let filtroEstadoMaquinasActual = 'todas';
+
+function filtrarEstadoMaquinas(filtro) {
+  filtroEstadoMaquinasActual = filtro;
+  ['todas','activas','inactivas'].forEach(f => {
+    const btn = document.getElementById(`btn-maq-${f}`);
+    if (btn) btn.classList.toggle('active', f === filtro);
+  });
+  renderMaquinas();
+}
 
 async function verDetalleMaquina(id) {
   const maq = datosMaquinas.find(m => m.id === id);
