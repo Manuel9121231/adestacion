@@ -670,14 +670,20 @@
   (function checkSession() {
     const user  = localStorage.getItem('sgi_user_session');
     const admin = localStorage.getItem('sgi_admin_session');
+    
+    // Si no hay ninguna sesión, guardar maquinaId y redirigir a login
     if (!user && !admin) {
-      // Guardar maquinaId para redirigir después del login
       const params = new URLSearchParams(window.location.search);
       const maquinaId = params.get('maquinaId');
       if (maquinaId) {
         localStorage.setItem('sgi_pending_maquinaId', maquinaId);
       }
       window.location.replace('index.html');
+      return;
+    }
+
+    // Si hay sesión de admin, permitir acceso directamente
+    if (admin) {
       return;
     }
 
