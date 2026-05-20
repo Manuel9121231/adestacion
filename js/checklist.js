@@ -452,6 +452,9 @@ async function apiFetch(url, options = {}) {
 
       if (rError) throw rError;
 
+      // No cambiar el estado de la máquina automáticamente al reportar incidencia
+      // La máquina debe mantener su estado actual
+
       return { ok: true, data: registro };
     }
 
@@ -857,7 +860,10 @@ async function resolverIncidencia() {
         showToast('Error al marcar como resuelta: ' + error.message, 'error');
         return;
       }
-      
+
+      // No cambiar el estado de la máquina al resolver la incidencia
+      // El estado de la máquina debe gestionarse manualmente
+
       showToast('Incidencia marcada como resuelta', 'success');
       setTimeout(() => window.location.href = 'estado.html', 1500);
     }

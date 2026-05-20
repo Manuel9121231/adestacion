@@ -291,7 +291,7 @@ const DASHBOARD_HTML = `
                 <button class="btn btn-outline btn-sm" id="btnRolesHelp" onclick="toggleRolesHelp()" style="font-weight:700;padding:6px 12px">Roles</button>
                 <div id="rolesHelpPopover" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:200;width:300px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.15);padding:18px 20px;font-size:13px;line-height:1.6">
                   <div style="font-weight:700;margin-bottom:12px;font-size:14px">Roles del sistema</div>
-                  <div style="margin-bottom:10px"><span style="background:rgba(239,68,68,0.1);color:#dc2626;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Usuario</span><br><span style="color:var(--text-secondary)">Solo puede registrar reportes desde el portal de operario. Sin acceso al panel.</span></div>
+                  <div style="margin-bottom:10px"><span style="background:rgba(239,68,68,0.1);color:#dc2626;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Usuario</span><br><span style="color:var(--text-secondary)">Solo puede registrar reportes desde el portal de reportes. Sin acceso al panel.</span></div>
                   <div style="margin-bottom:10px"><span style="background:rgba(16,163,74,0.1);color:#16a34a;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Técnico</span><br><span style="color:var(--text-secondary)">Accede al panel para ver máquinas e incidencias. No puede editar máquinas ni gestionar usuarios.</span></div>
                   <div><span style="background:rgba(79,142,247,0.1);color:#3b82f6;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Administrador</span><br><span style="color:var(--text-secondary)">Acceso completo: crear/editar máquinas, gestionar usuarios y todas las secciones.</span></div>
                 </div>
@@ -348,7 +348,7 @@ const DASHBOARD_HTML = `
           <div class="section-header">
             <div>
               <div class="section-title">Códigos QR</div>
-              <div class="section-subtitle">QR individuales para cada máquina — escanear con el móvil del operario</div>
+              <div class="section-subtitle">QR individuales para cada máquina — escanear con el móvil del usuario</div>
             </div>
             <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
               <div style="position:relative;display:flex;align-items:center">
@@ -371,9 +371,9 @@ const DASHBOARD_HTML = `
               <div style="font-weight:600;margin-bottom:4px">Instrucciones de uso</div>
               <div style="font-size:13px;color:var(--text-secondary)">
                 1. Imprime o muestra en pantalla el QR de cada máquina.<br>
-                2. El operario escanea el QR con la cámara del móvil.<br>
+                2. El usuario escanea el QR con la cámara del móvil.<br>
                 3. La impresora queda <strong>pre-seleccionada automáticamente</strong>.<br>
-                4. El operario describe la incidencia y puede añadir fotos.<br>
+                4. El usuario describe la incidencia y puede añadir fotos.<br>
                 5. El registro queda guardado en la base de datos del sistema.
               </div>
             </div>

@@ -374,6 +374,11 @@
       background: var(--card-bg);
       border: 2px solid var(--ok);
     }
+    .m-card.active-inc {
+      background: var(--card-bg);
+      border: 2px solid var(--ok);
+      box-shadow: 0 0 0 1px var(--ok), 0 0 0 3px rgba(239, 68, 68, 0.3);
+    }
     .m-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 16px -4px rgb(0 0 0 / 0.15), 0 4px 8px -2px rgb(0 0 0 / 0.1);
@@ -1045,7 +1050,16 @@ function asegurarElementosDOM() {
     const incState = estadoIncidencia(m);
     // El dot y borde de la tarjeta reflejan la incidencia si existe, si no el estado operativo
     const mainState = incState || opState;
-    const cardClass = incState ? (incState.card || 'm-card down') : (opState.texto === 'INACTIVA' ? 'm-card inactive' : 'm-card ok');
+    
+    // Si la máquina está activa pero tiene incidencia sin resolver, usar borde verde
+    let cardClass;
+    if (incState && opState.texto === 'ACTIVA') {
+      cardClass = 'm-card active-inc';
+    } else if (incState) {
+      cardClass = incState.card || 'm-card down';
+    } else {
+      cardClass = opState.texto === 'INACTIVA' ? 'm-card inactive' : 'm-card ok';
+    }
 
     const opBadgeClase = opState.texto === 'ACTIVA' ? 'ok' : 'gris';
     const opBadgeHTML = `<span class="estado-badge ${opBadgeClase}" style="font-size:9px;padding:1px 6px;background:${opState.bg};color:${opState.color};border:1px solid ${opState.color}20;">${opState.texto}</span>`;
