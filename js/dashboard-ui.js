@@ -51,7 +51,7 @@ const DASHBOARD_HTML = `
         <div style="font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">Leyenda</div>
         <div style="display:flex;flex-direction:column;gap:5px">
           <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
-            <span style="width:9px;height:9px;border-radius:50%;background:#10b981;flex-shrink:0"></span>Activa / Operativa
+            <span style="width:9px;height:9px;border-radius:50%;background:#10b981;flex-shrink:0"></span>Máquina activa
           </div>
           <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
             <span style="width:9px;height:9px;border-radius:50%;background:#6b7280;flex-shrink:0"></span>Máquina inactiva
@@ -130,7 +130,7 @@ const DASHBOARD_HTML = `
           <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--text-secondary)">
             <div style="display:flex;align-items:center;gap:6px">
               <span style="width:12px;height:12px;border-radius:50%;background:var(--success);box-shadow:0 0 0 2px rgba(22,163,74,0.2);display:inline-block"></span>
-              <span><strong>Verde:</strong> Activa / Operativa</span>
+              <span><strong>Verde:</strong> Máquina activa</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px">
               <span style="width:12px;height:12px;border-radius:50%;background:var(--text-muted);box-shadow:0 0 0 2px rgba(107,114,128,0.2);display:inline-block"></span>
