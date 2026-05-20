@@ -452,10 +452,8 @@ async function apiFetch(url, options = {}) {
 
       if (rError) throw rError;
 
-      // 3. Update machine state to inactive for incident
-      await client.from('equipos')
-        .update({ estado: 'inactiva' })
-        .eq('id', maquinaId);
+      // Machine state remains unchanged when creating incident
+      // Machines with incidents (e.g., noise) should stay operational
 
       return { ok: true, data: registro };
     }

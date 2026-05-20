@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rolLabel = formatearRol(rolActual);
     const footerVersion = container?.querySelector('.sidebar-footer div');
     if (footerVersion) {
-      footerVersion.innerHTML = `v3.1`;
+      footerVersion.innerHTML = ``;
     }
     const dropdownName = document.getElementById('dropdownUserName');
     const dropdownRole = document.getElementById('dropdownUserRole');
