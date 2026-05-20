@@ -876,63 +876,45 @@ function renderMaquinas() {
     const selectedId = localStorage.getItem('sgi_selected_machine');
     const isSelected = selectedId === String(m.id);
     const estado = calcularEstadoUnificado(m);
-    
-    // Determinar si la máquina está activa pero tiene incidencia sin resolver
+
     const estOp = (m.estado || 'activa').toLowerCase().trim();
     const isActiva = estOp !== 'inactiva';
     const tieneIncidencia = estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO';
-    const activeIncClass = (isActiva && tieneIncidencia) ? 'active-inc' : '';
-    
-    let baseBorder = '';
-    if (estado.texto === 'SIN RESOLVER') {
-      baseBorder = 'border: 2px solid var(--danger);';
-    } else if (estado.texto === 'EN SEGUIMIENTO') {
-      baseBorder = 'border: 2px solid var(--warning);';
-    } else if (estado.texto === 'ACTIVA') {
-      baseBorder = 'border: 2px solid var(--success);';
-    }
-    
-    const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : baseBorder;
+
+    const highlightStyle = isSelected ? 'border:2px solid var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,0.15)' : '';
+
+    const bgOp    = isActiva ? 'rgba(16,185,129,0.1)' : 'rgba(107,114,128,0.1)';
+    const colorOp = isActiva ? '#10b981' : '#4b5563';
+    const textOp  = isActiva ? 'ACTIVA' : 'INACTIVA';
+
+    const incBadge = tieneIncidencia
+      ? `<span style="font-size:10px;font-weight:600;color:${estado.color};background:${estado.bg};border-radius:6px;padding:2px 7px;white-space:nowrap">${estado.texto}</span>`
+      : '';
 
     return `
-        <div class="maquina-card fade-in ${activeIncClass}"
-             draggable="true"
-             ondragstart="handleDragStart(event, '${m.id}')"
-             onclick="verDetalleMaquina('${m.id}')"
-             style="cursor:grab;${highlightStyle}" title="${estado.descripcion}">
+      <div class="maquina-card fade-in"
+           draggable="true"
+           ondragstart="handleDragStart(event, '${m.id}')"
+           onclick="verDetalleMaquina('${m.id}')"
+           style="cursor:grab;${highlightStyle}" title="${estado.descripcion}">
         <div class="maquina-header">
-          <div>
-            <div class="maquina-nombre" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
-              <span>${m.nombre}</span>
-              ${(function() {
-                const estOp = (m.estado || 'activa').toLowerCase().trim();
-                const isActiva = estOp !== 'inactiva';
-                const bgOp = isActiva ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)';
-                const colorOp = isActiva ? 'var(--ok)' : '#6b7280';
-                const textOp = isActiva ? 'ACTIVA' : 'INACTIVA';
-                const claseOp = isActiva ? 'ok' : 'gris';
-                return `<span class="estado-badge ${claseOp}" style="font-size:9px; padding:1px 6px; background: ${bgOp}; color: ${colorOp}; border: 1px solid ${colorOp}20;">${textOp}</span>`;
-              })()}
-            </div>
-            <div class="maquina-tipo" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
-              <span>${m.tipo}</span>
-              ${(function() {
-                if (estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO') {
-                  return `<span class="estado-badge ${estado.clase}" style="font-size:9px; padding:1px 6px; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">${estado.texto}</span>`;
-                }
-                return '';
-              })()}
-            </div>
+          <div style="flex:1;min-width:0">
+            <div class="maquina-nombre">${m.nombre}</div>
+            <div class="maquina-tipo">${m.tipo}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;margin-left:8px">
+            <span style="font-size:10px;font-weight:600;color:${colorOp};background:${bgOp};border:1px solid ${colorOp}30;border-radius:6px;padding:2px 7px;white-space:nowrap">${textOp}</span>
+            ${incBadge}
           </div>
         </div>
         <div class="maquina-info">
-          <span style="font-size:11px; color:var(--accent)">${m.sala_nombre || 'Sin sala'}</span>
+          <span style="font-size:11px;color:var(--accent)">${m.sala_nombre || 'Sin sala'}</span>
           <span>${m.modelo || 'Sin modelo'}</span>
         </div>
-          <div class="maquina-actions">
-            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); verDetalleMaquina('${m.id}')">Ver</button>
-            ${rolActual === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation(); eliminarMaquina('${m.id}')">Eliminar</button>` : ''}
-          </div>
+        <div class="maquina-actions">
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();verDetalleMaquina('${m.id}')">Ver</button>
+          ${rolActual === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation();eliminarMaquina('${m.id}')">Eliminar</button>` : ''}
+        </div>
       </div>
     `;
   }
