@@ -1317,24 +1317,29 @@ function renderQRs() {
 
   grid.innerHTML = lista.map(m => {
     const estado = calcularEstadoUnificado(m);
-    
-    let baseBorder = '';
-    if (estado.texto === 'SIN RESOLVER') {
-      baseBorder = 'border: 2px solid var(--danger);';
-    } else if (estado.texto === 'EN SEGUIMIENTO') {
-      baseBorder = 'border: 2px solid var(--warning);';
-    } else if (estado.texto === 'ACTIVA') {
-      baseBorder = 'border: 2px solid var(--success);';
-    }
+    const estOp = (m.estado || 'activa').toLowerCase().trim();
+    const isActiva = estOp !== 'inactiva';
+    const tieneIncidencia = estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO';
+
+    const bgOp    = isActiva ? 'rgba(16,185,129,0.1)' : 'rgba(107,114,128,0.1)';
+    const colorOp = isActiva ? '#10b981' : '#4b5563';
+    const textOp  = isActiva ? 'ACTIVA' : 'INACTIVA';
+
+    const incBadge = tieneIncidencia
+      ? `<span style="font-size:10px;font-weight:600;color:${estado.color};background:${estado.bg};border-radius:6px;padding:2px 7px;white-space:nowrap">${estado.texto}</span>`
+      : '';
 
     return `
-    <div class="maquina-card fade-in" style="cursor:pointer;${baseBorder}" onclick="verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">
+    <div class="maquina-card fade-in" style="cursor:pointer" onclick="verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">
       <div class="maquina-header">
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="maquina-nombre">${m.nombre}</div>
           <div class="maquina-tipo">${m.sala_nombre} · ${m.tipo}</div>
+          <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:600;color:${colorOp};background:${bgOp};border:1px solid ${colorOp}30;border-radius:6px;padding:2px 7px;white-space:nowrap">${textOp}</span>
+            ${incBadge}
+          </div>
         </div>
-        <span style="font-size:32px"></span>
       </div>
       <div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:13px">
         Haz clic para ver el código QR
