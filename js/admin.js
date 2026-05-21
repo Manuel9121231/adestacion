@@ -402,7 +402,7 @@ async function renderIncidencias(filtro = 'todas') {
   // Actualizar label de filtro activo
   const filtroLabelEl = document.getElementById('filtro-incidencias-label');
   if (filtroLabelEl) {
-    const nombresFiltro = { 'todas': 'Todas', 'pendientes': 'Sin resolver', 'seguimiento': 'En seguimiento', 'resueltas': 'Resueltas' };
+    const nombresFiltro = { 'todas': 'Abiertas', 'pendientes': 'Sin resolver', 'seguimiento': 'En seguimiento', 'resueltas': 'Resueltas' };
     filtroLabelEl.textContent = 'Filtrado por: ' + nombresFiltro[filtro];
   }
 
@@ -462,7 +462,7 @@ async function renderIncidencias(filtro = 'todas') {
   if (filtro === 'todas') {
     mostrarCard(cardPendientes, true);
     mostrarCard(cardSeguimiento, true);
-    mostrarCard(cardResueltas, true);
+    mostrarCard(cardResueltas, false);
   } else if (filtro === 'pendientes') {
     mostrarCard(cardPendientes, true);
     mostrarCard(cardSeguimiento, false);
@@ -937,6 +937,7 @@ function renderMaquinas() {
       <div class="maquina-card fade-in"
            draggable="true"
            ondragstart="handleDragStart(event, '${m.id}')"
+           ondragend="handleDragEnd(event)"
            onclick="verDetalleMaquina('${m.id}')"
            style="cursor:grab;${combinedBorderStyle}" title="${estado.descripcion}">
         <div class="maquina-header" style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
@@ -1034,6 +1035,10 @@ function handleDragStart(e, id) {
   e.currentTarget.style.opacity = '0.4';
 }
 
+function handleDragEnd(e) {
+  e.currentTarget.style.opacity = '1';
+}
+
 function handleDragOver(e) {
   e.preventDefault();
   e.currentTarget.style.borderColor = 'var(--accent)';
@@ -1052,6 +1057,24 @@ async function handleDrop(e, idSalaDestino) {
   e.currentTarget.style.background = '';
 
   if (!idMaquina) return;
+
+  const maquina = datosMaquinas.find(m => String(m.id) === idMaquina);
+  const salaDestino = datosSalas.find(s => String(s.id) === String(idSalaDestino));
+  const nombreMaquina = maquina?.nombre || 'Máquina';
+  const nombreSalaDestino = salaDestino?.nombre || (idSalaDestino ? 'Sin sala asignada' : 'Sin sala asignada');
+  const nombreSalaOrigen = maquina?.sala_nombre || 'Sin sala';
+
+  if (String(maquina?.sala_id) === String(idSalaDestino)) {
+    return; // Misma sala, no hacer nada
+  }
+
+  const confirmado = await customConfirm(
+    'Mover máquina',
+    `¿Quieres mover "${nombreMaquina}" de "${nombreSalaOrigen}" a "${nombreSalaDestino}"?`,
+    ''
+  );
+
+  if (!confirmado) return;
 
   try {
     const { error } = await window.supabaseClient
@@ -1850,7 +1873,7 @@ async function verHistorialMaquina(nombreMaquina) {
 }
 
 function exportarCSV() {
-  const rows = [['ID', 'Máquina', 'Sala', 'Operario', 'Fecha', 'Observaciones']];
+  const rows = [['ID', 'Máquina', 'Sala', 'Por', 'Fecha', 'Observaciones']];
   const datos = incidenciasVisibles.length ? incidenciasVisibles : datosHistorial.filter(r => r.tipo === 'Incidencia');
   datos.forEach(r => rows.push([r.id, r.maquina, r.sala, r.operario, r.completado_en, r.observaciones || '']));
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
