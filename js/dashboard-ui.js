@@ -42,9 +42,28 @@ const DASHBOARD_HTML = `
           <div class="nav-item" id="nav-usuarios" onclick="navigateTo('usuarios')">
             <span class="nav-icon"></span>
             <span>Usuarios</span>
+            <span class="nav-badge" id="badge-usuarios" style="display:none;background:#f59e0b;color:#fff">0</span>
           </div>
         </div>
       </nav>
+
+      <div style="padding:12px 14px;border-top:1px solid var(--border);margin-bottom:4px">
+        <div style="font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">Leyenda</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
+            <span style="width:9px;height:9px;border-radius:50%;background:#10b981;flex-shrink:0"></span>Máquina activa
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
+            <span style="width:9px;height:9px;border-radius:50%;background:#6b7280;flex-shrink:0"></span>Máquina inactiva
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
+            <span style="width:9px;height:9px;border-radius:50%;background:var(--danger);flex-shrink:0"></span>Incidencia sin resolver
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
+            <span style="width:9px;height:9px;border-radius:50%;background:var(--warning);flex-shrink:0"></span>En seguimiento
+          </div>
+        </div>
+      </div>
 
       <div class="sidebar-footer">
         <div style="margin-bottom:8px"></div>
@@ -111,7 +130,11 @@ const DASHBOARD_HTML = `
           <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--text-secondary)">
             <div style="display:flex;align-items:center;gap:6px">
               <span style="width:12px;height:12px;border-radius:50%;background:var(--success);box-shadow:0 0 0 2px rgba(22,163,74,0.2);display:inline-block"></span>
-              <span><strong>Verde:</strong> Activa / Operativa</span>
+              <span><strong>Verde:</strong> Máquina activa</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="width:12px;height:12px;border-radius:50%;background:var(--text-muted);box-shadow:0 0 0 2px rgba(107,114,128,0.2);display:inline-block"></span>
+              <span><strong>Gris:</strong> Máquina inactiva</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px">
               <span style="width:12px;height:12px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 2px rgba(220,38,38,0.2);display:inline-block"></span>
@@ -120,10 +143,6 @@ const DASHBOARD_HTML = `
             <div style="display:flex;align-items:center;gap:6px">
               <span style="width:12px;height:12px;border-radius:50%;background:var(--warning);box-shadow:0 0 0 2px rgba(245,158,11,0.2);display:inline-block"></span>
               <span><strong>Amarillo:</strong> En seguimiento</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px">
-              <span style="width:12px;height:12px;border-radius:50%;background:var(--text-muted);box-shadow:0 0 0 2px rgba(107,114,128,0.2);display:inline-block"></span>
-              <span><strong>Gris:</strong> Máquina inactiva</span>
             </div>
           </div>
           <!-- KPI Cards en fila horizontal -->
@@ -160,6 +179,16 @@ const DASHBOARD_HTML = `
               </div>
               <button onclick="navigateTo('maquinas')" style="margin-top:10px;width:100%;padding:6px 0;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Ver máquinas →</button>
             </div>
+          </div>
+
+          <!-- Alerta usuarios pendientes de alta (visible solo cuando hay usuarios esperando) -->
+          <div id="kpi-usuarios-pendientes-card" style="display:none;margin-bottom:16px;padding:14px 18px;background:rgba(245,158,11,0.08);border:2px solid #f59e0b;border-radius:12px;align-items:center;gap:16px;cursor:pointer" onclick="navigateTo('usuarios'); setTimeout(()=>filtrarUsuarios('pendientes'),200)">
+            <span style="font-size:32px;flex-shrink:0">⏳</span>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:700;color:#f59e0b;margin-bottom:2px">Usuarios pendientes de activación</div>
+              <div style="font-size:13px;color:var(--text-muted)"><span id="kpi-usuarios-pendientes-count">0</span> usuario(s) esperan ser dados de alta por un administrador.</div>
+            </div>
+            <button style="padding:6px 14px;background:#f59e0b;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">Gestionar →</button>
           </div>
 
           <!-- Layout dividido: usa el mismo grid de 3 columnas para alineación perfecta -->
@@ -216,6 +245,11 @@ const DASHBOARD_HTML = `
                 style="width:160px;padding:8px 12px;font-size:13px">
                 <option value="">Todas las salas</option>
               </select>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-outline btn-sm active" id="btn-maq-todas" onclick="filtrarEstadoMaquinas('todas')" style="border-radius:20px;padding:6px 12px">Todas</button>
+                <button class="btn btn-outline btn-sm" id="btn-maq-activas" onclick="filtrarEstadoMaquinas('activas')" style="border-radius:20px;padding:6px 12px;border-color:#10b981;color:#10b981">Activas</button>
+                <button class="btn btn-outline btn-sm" id="btn-maq-inactivas" onclick="filtrarEstadoMaquinas('inactivas')" style="border-radius:20px;padding:6px 12px;border-color:#6b7280;color:#6b7280">Inactivas</button>
+              </div>
               <button class="btn btn-outline" onclick="abrirModalGestionSalas()" id="btnGestionarSalas">Salas</button>
               <button class="btn btn-primary" onclick="abrirModalNuevaMaquina()" id="btnNuevaMaquina">+ Nueva máquina</button>
             </div>
@@ -243,9 +277,15 @@ const DASHBOARD_HTML = `
                 <option value="maquina">Por máquina</option>
               </select>
               <div style="width:1px;height:24px;background:var(--border);margin:0 2px"></div>
-              <input type="date" id="filtroIncDesde" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
-              <input type="date" id="filtroIncHasta" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
-              <button class="btn btn-outline btn-sm" onclick="exportarCSV()">Exportar CSV</button>
+              <div style="display:flex;align-items:center;gap:4px">
+                <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">Inicio:</span>
+                <input type="date" id="filtroIncDesde" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
+              </div>
+              <div style="display:flex;align-items:center;gap:4px">
+                <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">Fin:</span>
+                <input type="date" id="filtroIncHasta" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="exportarCSV()" title="Exporta solo las incidencias actualmente filtradas">Exportar CSV (filtrado)</button>
             </div>
           </div>
 
@@ -438,7 +478,7 @@ const DASHBOARD_HTML = `
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Notas / Especificaciones adicionales</label>
+          <label class="form-label">Descripcion / Especificaciones adicionales</label>
           <textarea class="form-control" id="editNotas" rows="2"></textarea>
         </div>
       </div>
@@ -486,7 +526,7 @@ const DASHBOARD_HTML = `
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Notas / Especificaciones adicionales</label>
+          <label class="form-label">Descripcion / Especificaciones adicionales</label>
           <textarea class="form-control" id="nuevoMaquinaNotas" rows="2"></textarea>
         </div>
       </div>

@@ -368,6 +368,24 @@ async function cargarDatosBase() {
     incBadge.textContent = pendientesCount;
     incBadge.style.display = pendientesCount > 0 ? 'inline-flex' : 'none';
   }
+
+  // Badge usuarios pendientes de alta
+  const usuariosPendientes = datosUsuarios.filter(u => u.activo === false).length;
+  const usuariosBadge = document.getElementById('badge-usuarios');
+  if (usuariosBadge) {
+    usuariosBadge.textContent = usuariosPendientes;
+    usuariosBadge.style.display = usuariosPendientes > 0 ? 'inline-flex' : 'none';
+  }
+
+  // Alerta en dashboard para usuarios pendientes
+  const alertCard = document.getElementById('kpi-usuarios-pendientes-card');
+  const alertCount = document.getElementById('kpi-usuarios-pendientes-count');
+  if (alertCard) {
+    alertCard.style.display = usuariosPendientes > 0 ? 'flex' : 'none';
+  }
+  if (alertCount) {
+    alertCount.textContent = usuariosPendientes;
+  }
 }
 
 // ── Incidencias ─────────────────────────────────────────────────────────────
@@ -551,6 +569,7 @@ async function renderIncidencias(filtro = 'todas') {
     const bgOp      = isActiva ? 'rgba(16,185,129,0.12)' : 'rgba(75,85,99,0.14)';
     const colorOp   = isActiva ? '#10b981' : '#374151';
     const textOp    = isActiva ? 'ACTIVA' : 'INACTIVA';
+    const mostrarMaquina = !resuelta;
 
     const seguimientoHtml = esSeguimiento ? `
       <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);font-size:12px;color:var(--text-muted)">
@@ -578,11 +597,13 @@ async function renderIncidencias(filtro = 'todas') {
         </div>
         <!-- Footer -->
         <div style="display:flex;align-items:stretch;border-top:1px solid var(--border);margin-top:auto">
+          ${mostrarMaquina ? `
           <div style="flex:1;padding:10px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
             <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Máquina</div>
             <span style="background:${bgOp};color:${colorOp};border:1.5px solid ${colorOp};border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;letter-spacing:0.04em">${textOp}</span>
           </div>
           <div style="width:2px;background:${borderColor};margin:8px 0;flex-shrink:0"></div>
+          ` : ''}
           <div style="flex:1;padding:10px 14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
             <div style="font-size:9px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Estado incidencia</div>
             <span style="font-size:12px;font-weight:700;color:${incColor};background:${incBg};border:1.5px solid ${incColor}40;border-radius:20px;padding:4px 14px">${incText}</span>
@@ -688,45 +709,32 @@ function actualizarVistaDashboard() {
   const kpiSeg = document.getElementById('kpi-en-seguimiento-dash');
   if (kpiSeg) kpiSeg.textContent = incidenciasEnSeguimiento;
 
-  // KPI Máquinas con nuevo sistema de estados
-  const operativas = datosMaquinas.filter(m => {
-    const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'ACTIVA';
-  }).length;
-  
-  const maquinasEnSeguimiento = datosMaquinas.filter(m => {
-    const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'EN SEGUIMIENTO';
-  }).length;
-  
-  const conIncidencia = datosMaquinas.filter(m => {
-    const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'SIN RESOLVER';
-  }).length;
-  
-  const inactivas = datosMaquinas.filter(m => {
-    const estado = calcularEstadoUnificado(m);
-    return estado.texto === 'INACTIVA';
-  }).length;
+  // KPI Máquinas — basado en estado físico (activa/inactiva)
+  const totalActivas   = datosMaquinas.filter(m => (m.estado || 'activa').toLowerCase().trim() !== 'inactiva').length;
+  const totalInactivas = datosMaquinas.filter(m => (m.estado || 'activa').toLowerCase().trim() === 'inactiva').length;
 
   const kpiMaqAct = document.getElementById('kpi-maq-activas');
-  if (kpiMaqAct) kpiMaqAct.textContent = operativas;
+  if (kpiMaqAct) kpiMaqAct.textContent = totalActivas;
   const kpiMaqInact = document.getElementById('kpi-maq-inactivas');
-  if (kpiMaqInact) kpiMaqInact.textContent = inactivas + maquinasEnSeguimiento + conIncidencia;
+  if (kpiMaqInact) kpiMaqInact.textContent = totalInactivas;
   
   const maqInactivasEl = document.getElementById('dashboardMaqInactivas');
   if (maqInactivasEl) {
     const maqConProblemas = datosMaquinas.filter(m => {
-      const estado = calcularEstadoUnificado(m);
-      return estado.texto !== 'ACTIVA';
+      return (m.estado || 'activa').toLowerCase().trim() === 'inactiva';
     });
     
     maqInactivasEl.innerHTML = maqConProblemas.length
       ? maqConProblemas.map(m => {
           const estado = calcularEstadoUnificado(m);
+          const tieneIncidencia = estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO';
           return `
-          <div class="dashboard-maq-inactiva" onclick="navigateTo('maquinas', '${m.id}')" style="cursor:pointer;padding:5px 8px;background:${estado.bg};border:1px solid ${estado.color}40;border-radius:6px;font-size:11px;color:${estado.color};font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all 0.2s ease" title="${m.nombre} · ${m.sala_nombre} - ${estado.descripcion}">
-            ${m.nombre} · ${m.sala_nombre}
+          <div class="dashboard-maq-inactiva" onclick="navigateTo('maquinas', '${m.id}')" style="cursor:pointer;padding:5px 10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;font-size:11px;transition:all 0.2s ease;display:flex;align-items:center;justify-content:space-between;gap:8px" title="${m.nombre} · ${m.sala_nombre}">
+            <span style="color:var(--text-primary);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nombre} · ${m.sala_nombre}</span>
+            <div style="display:flex;gap:4px;flex-shrink:0">
+              <span style="font-size:9px;font-weight:700;color:#4b5563;background:rgba(107,114,128,0.1);border:1px solid rgba(107,114,128,0.3);border-radius:4px;padding:1px 5px">INACTIVA</span>
+              ${tieneIncidencia ? `<span style="font-size:9px;font-weight:700;color:${estado.color};background:${estado.bg};border:1px solid ${estado.color}30;border-radius:4px;padding:1px 5px">${estado.texto}</span>` : ''}
+            </div>
           </div>`;
         }).join('')
       : `<div style="font-size:11px;color:var(--success);text-align:center;padding:4px">Todas activas</div>`;
@@ -745,10 +753,12 @@ function actualizarSubtitulosSecciones() {
   if (elMaq) {
     const totalMaq = datosMaquinas.length;
     const totalSalas = datosSalas.length;
-    const inactivas = datosMaquinas.filter(m => m.estado === 'inactiva').length;
+    const activas   = datosMaquinas.filter(m => (m.estado || 'activa').toLowerCase().trim() !== 'inactiva').length;
+    const inactivas = totalMaq - activas;
     const partes = [
       `${totalMaq} máquina${totalMaq !== 1 ? 's' : ''}`,
       `${totalSalas} sala${totalSalas !== 1 ? 's' : ''}`,
+      `${activas} activa${activas !== 1 ? 's' : ''}`,
     ];
     if (inactivas > 0) partes.push(`${inactivas} inactiva${inactivas !== 1 ? 's' : ''}`);
     elMaq.textContent = partes.join(' · ');
@@ -867,6 +877,12 @@ function renderMaquinas() {
     lista = filtered;
   }
 
+  if (filtroEstadoMaquinasActual === 'activas') {
+    lista = lista.filter(m => (m.estado || 'activa').toLowerCase().trim() !== 'inactiva');
+  } else if (filtroEstadoMaquinasActual === 'inactivas') {
+    lista = lista.filter(m => (m.estado || 'activa').toLowerCase().trim() === 'inactiva');
+  }
+
   if (!lista.length) {
     grid.innerHTML = '<div class="empty-state"><div class="icon"></div><p>No hay máquinas registradas</p></div>';
     return;
@@ -876,63 +892,45 @@ function renderMaquinas() {
     const selectedId = localStorage.getItem('sgi_selected_machine');
     const isSelected = selectedId === String(m.id);
     const estado = calcularEstadoUnificado(m);
-    
-    // Determinar si la máquina está activa pero tiene incidencia sin resolver
+
     const estOp = (m.estado || 'activa').toLowerCase().trim();
     const isActiva = estOp !== 'inactiva';
     const tieneIncidencia = estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO';
-    const activeIncClass = (isActiva && tieneIncidencia) ? 'active-inc' : '';
-    
-    let baseBorder = '';
-    if (estado.texto === 'SIN RESOLVER') {
-      baseBorder = 'border: 2px solid var(--danger);';
-    } else if (estado.texto === 'EN SEGUIMIENTO') {
-      baseBorder = 'border: 2px solid var(--warning);';
-    } else if (estado.texto === 'ACTIVA') {
-      baseBorder = 'border: 2px solid var(--success);';
-    }
-    
-    const highlightStyle = isSelected ? 'border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(79,142,247,0.2)' : baseBorder;
+
+    const highlightStyle = isSelected ? 'border:2px solid var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,0.15)' : '';
+
+    const bgOp    = isActiva ? 'rgba(16,185,129,0.1)' : 'rgba(107,114,128,0.1)';
+    const colorOp = isActiva ? '#10b981' : '#4b5563';
+    const textOp  = isActiva ? 'ACTIVA' : 'INACTIVA';
+
+    const incBadge = tieneIncidencia
+      ? `<span style="font-size:10px;font-weight:600;color:${estado.color};background:${estado.bg};border-radius:6px;padding:2px 7px;white-space:nowrap">${estado.texto}</span>`
+      : '';
 
     return `
-        <div class="maquina-card fade-in ${activeIncClass}"
-             draggable="true"
-             ondragstart="handleDragStart(event, '${m.id}')"
-             onclick="verDetalleMaquina('${m.id}')"
-             style="cursor:grab;${highlightStyle}" title="${estado.descripcion}">
+      <div class="maquina-card fade-in"
+           draggable="true"
+           ondragstart="handleDragStart(event, '${m.id}')"
+           onclick="verDetalleMaquina('${m.id}')"
+           style="cursor:grab;${highlightStyle}" title="${estado.descripcion}">
         <div class="maquina-header">
-          <div>
-            <div class="maquina-nombre" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
-              <span>${m.nombre}</span>
-              ${(function() {
-                const estOp = (m.estado || 'activa').toLowerCase().trim();
-                const isActiva = estOp !== 'inactiva';
-                const bgOp = isActiva ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)';
-                const colorOp = isActiva ? 'var(--ok)' : '#6b7280';
-                const textOp = isActiva ? 'ACTIVA' : 'INACTIVA';
-                const claseOp = isActiva ? 'ok' : 'gris';
-                return `<span class="estado-badge ${claseOp}" style="font-size:9px; padding:1px 6px; background: ${bgOp}; color: ${colorOp}; border: 1px solid ${colorOp}20;">${textOp}</span>`;
-              })()}
-            </div>
-            <div class="maquina-tipo" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap">
-              <span>${m.tipo}</span>
-              ${(function() {
-                if (estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO') {
-                  return `<span class="estado-badge ${estado.clase}" style="font-size:9px; padding:1px 6px; background: ${estado.bg}; color: ${estado.color}; border: 1px solid ${estado.color}20;">${estado.texto}</span>`;
-                }
-                return '';
-              })()}
-            </div>
+          <div style="flex:1;min-width:0">
+            <div class="maquina-nombre">${m.nombre}</div>
+            <div class="maquina-tipo">${m.tipo}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;margin-left:8px">
+            <span style="font-size:10px;font-weight:600;color:${colorOp};background:${bgOp};border:1px solid ${colorOp}30;border-radius:6px;padding:2px 7px;white-space:nowrap">${textOp}</span>
+            ${incBadge}
           </div>
         </div>
         <div class="maquina-info">
-          <span style="font-size:11px; color:var(--accent)">${m.sala_nombre || 'Sin sala'}</span>
+          <span style="font-size:11px;color:var(--accent)">${m.sala_nombre || 'Sin sala'}</span>
           <span>${m.modelo || 'Sin modelo'}</span>
         </div>
-          <div class="maquina-actions">
-            <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); verDetalleMaquina('${m.id}')">Ver</button>
-            ${rolActual === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation(); eliminarMaquina('${m.id}')">Eliminar</button>` : ''}
-          </div>
+        <div class="maquina-actions">
+          <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();verDetalleMaquina('${m.id}')">Ver</button>
+          ${rolActual === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation();eliminarMaquina('${m.id}')">Eliminar</button>` : ''}
+        </div>
       </div>
     `;
   }
@@ -958,7 +956,7 @@ function renderMaquinas() {
           <span style="font-size:22px">${icono}</span>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--text-primary)">${titulo}</div>
-            <div style="font-size:12px;color:var(--text-muted)">${maquinas.length} máquina${maquinas.length !== 1 ? 's' : ''}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${(() => { const act = maquinas.filter(m => (m.estado||'activa').toLowerCase().trim() !== 'inactiva').length; const inact = maquinas.length - act; const p = [`${maquinas.length} máquina${maquinas.length!==1?'s':''}`]; if(act>0) p.push(`${act} activa${act!==1?'s':''}`); if(inact>0) p.push(`${inact} inactiva${inact!==1?'s':''}`); return p.join(' · '); })()}</div>
           </div>
         </div>
         ${gridHtml}
@@ -1041,6 +1039,17 @@ async function handleDrop(e, idSalaDestino) {
 }
 
 function filtrarMaquinas() { renderMaquinas(); }
+
+let filtroEstadoMaquinasActual = 'todas';
+
+function filtrarEstadoMaquinas(filtro) {
+  filtroEstadoMaquinasActual = filtro;
+  ['todas','activas','inactivas'].forEach(f => {
+    const btn = document.getElementById(`btn-maq-${f}`);
+    if (btn) btn.classList.toggle('active', f === filtro);
+  });
+  renderMaquinas();
+}
 
 async function verDetalleMaquina(id) {
   const maq = datosMaquinas.find(m => m.id === id);
@@ -1314,24 +1323,29 @@ function renderQRs() {
 
   grid.innerHTML = lista.map(m => {
     const estado = calcularEstadoUnificado(m);
-    
-    let baseBorder = '';
-    if (estado.texto === 'SIN RESOLVER') {
-      baseBorder = 'border: 2px solid var(--danger);';
-    } else if (estado.texto === 'EN SEGUIMIENTO') {
-      baseBorder = 'border: 2px solid var(--warning);';
-    } else if (estado.texto === 'ACTIVA') {
-      baseBorder = 'border: 2px solid var(--success);';
-    }
+    const estOp = (m.estado || 'activa').toLowerCase().trim();
+    const isActiva = estOp !== 'inactiva';
+    const tieneIncidencia = estado.texto === 'SIN RESOLVER' || estado.texto === 'EN SEGUIMIENTO';
+
+    const bgOp    = isActiva ? 'rgba(16,185,129,0.1)' : 'rgba(107,114,128,0.1)';
+    const colorOp = isActiva ? '#10b981' : '#4b5563';
+    const textOp  = isActiva ? 'ACTIVA' : 'INACTIVA';
+
+    const incBadge = tieneIncidencia
+      ? `<span style="font-size:10px;font-weight:600;color:${estado.color};background:${estado.bg};border-radius:6px;padding:2px 7px;white-space:nowrap">${estado.texto}</span>`
+      : '';
 
     return `
-    <div class="maquina-card fade-in" style="cursor:pointer;${baseBorder}" onclick="verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">
+    <div class="maquina-card fade-in" style="cursor:pointer" onclick="verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">
       <div class="maquina-header">
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="maquina-nombre">${m.nombre}</div>
           <div class="maquina-tipo">${m.sala_nombre} · ${m.tipo}</div>
+          <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
+            <span style="font-size:10px;font-weight:600;color:${colorOp};background:${bgOp};border:1px solid ${colorOp}30;border-radius:6px;padding:2px 7px;white-space:nowrap">${textOp}</span>
+            ${incBadge}
+          </div>
         </div>
-        <span style="font-size:32px"></span>
       </div>
       <div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:13px">
         Haz clic para ver el código QR
@@ -2077,7 +2091,7 @@ async function apiFetch(url, options = {}) {
         client.from('salas').select('*').order('nombre'),
         client.from('equipos').select('*, salas(nombre)').order('nombre'),
         client.from('registros').select('*').order('timestamp', { ascending: false }).limit(500),
-        client.from('perfiles').select('id, nombre, rol, email')
+        client.from('perfiles').select('id, nombre, rol, email, activo')
       ]);
 
       if (salas.error) throw salas.error;
