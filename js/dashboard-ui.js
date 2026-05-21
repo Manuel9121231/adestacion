@@ -344,12 +344,10 @@ const DASHBOARD_HTML = `
             <div style="display:flex;align-items:flex-start;gap:12px">
               <span style="font-size:24px"></span>
               <div>
-                <div style="font-weight:700;margin-bottom:6px">Cómo funciona el sistema de usuarios</div>
+                <div style="font-weight:700;margin-bottom:6px">¿Cómo se gestiona el acceso?</div>
                 <div style="font-size:13px;color:var(--text-muted);line-height:1.7">
-                  1. Los usuarios se registran desde <a href="registro.html" style="color:var(--accent)">registro.html</a> con su email y contraseña.<br>
-                  2. Reciben un <strong>código de verificación</strong> por email para activar su cuenta.<br>
-                  3. Una vez activos, el <strong>Administrador Principal</strong> puede asignarles el rol de Admin o Técnico.<br>
-                  4. Los usuarios con rol <strong>Admin</strong> pueden acceder al Panel de Administración.
+                  Los usuarios se registran con su email y contraseña. Hasta que un administrador los apruebe, aparecen aquí como <strong>Pendientes de alta</strong>.<br><br>
+                  Una vez aprobados, puedes asignarles un rol: <strong>Técnico</strong> para acceso al panel sin permisos de gestión, o <strong>Admin</strong> para acceso completo. Los usuarios sin rol especial solo pueden reportar incidencias desde el portal y consultar el estado de equipos.
                 </div>
               </div>
             </div>
