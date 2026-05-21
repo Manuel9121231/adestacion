@@ -22,32 +22,32 @@ const DASHBOARD_HTML = `
 
       <nav class="sidebar-nav">
         <div class="nav-section">
-          <div class="nav-item active" id="nav-dashboard" onclick="navigateTo('dashboard')">
-            <span class="nav-icon"></span>
-            <span>Resumen</span>
+          <div class="nav-item active" id="nav-dashboard" onclick="navigateTo('dashboard')" title="Resumen">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Resumen</span>
           </div>
-          <div class="nav-item" id="nav-incidencias" onclick="navigateTo('incidencias')">
-            <span class="nav-icon"></span>
-            <span>Incidencias</span>
+          <div class="nav-item" id="nav-incidencias" onclick="navigateTo('incidencias')" title="Incidencias">
+            <span class="nav-icon">🎫</span>
+            <span class="nav-text">Incidencias</span>
             <span class="nav-badge" id="badge-incidencias" style="display:none">0</span>
           </div>
-          <div class="nav-item" id="nav-maquinas" onclick="navigateTo('maquinas')">
-            <span class="nav-icon"></span>
-            <span>Máquinas y Salas</span>
+          <div class="nav-item" id="nav-maquinas" onclick="navigateTo('maquinas')" title="Máquinas y Salas">
+            <span class="nav-icon">🏭</span>
+            <span class="nav-text">Máquinas y Salas</span>
           </div>
-          <div class="nav-item" id="nav-qrcodes" onclick="navigateTo('qrcodes')">
-            <span class="nav-icon"></span>
-            <span>Códigos QR</span>
+          <div class="nav-item" id="nav-qrcodes" onclick="navigateTo('qrcodes')" title="Códigos QR">
+            <span class="nav-icon">🔲</span>
+            <span class="nav-text">Códigos QR</span>
           </div>
-          <div class="nav-item" id="nav-usuarios" onclick="navigateTo('usuarios')">
-            <span class="nav-icon"></span>
-            <span>Usuarios</span>
+          <div class="nav-item" id="nav-usuarios" onclick="navigateTo('usuarios')" title="Usuarios">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">Usuarios</span>
             <span class="nav-badge" id="badge-usuarios" style="display:none;background:#f59e0b;color:#fff">0</span>
           </div>
         </div>
       </nav>
 
-      <div style="padding:12px 14px;border-top:1px solid var(--border);margin-bottom:4px">
+      <div class="sidebar-legend" style="padding:12px 14px;border-top:1px solid var(--border);margin-bottom:4px">
         <div style="font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px">Leyenda</div>
         <div style="display:flex;flex-direction:column;gap:5px">
           <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-secondary)">
@@ -80,6 +80,8 @@ const DASHBOARD_HTML = `
         <div style="display:flex;align-items:center;gap:12px">
           <button class="btn btn-icon btn-outline" id="btnMenuMobile" onclick="toggleSidebar()"
             style="display:none">☰</button>
+          <button class="btn btn-icon btn-text" id="btnMenuDesktop" onclick="toggleSidebarDesktop()"
+            style="font-size:18px; padding:4px;" title="Colapsar menú">☰</button>
           <div>
             <div class="topbar-title" id="topbarTitle">Resumen</div>
             <div style="font-size:12px;color:var(--text-muted)" id="topbarSubtitle">Resumen del sistema</div>

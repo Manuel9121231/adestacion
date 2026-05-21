@@ -682,6 +682,19 @@ function toggleSidebar() {
   if (backdrop) backdrop.classList.toggle('open');
 }
 
+function toggleSidebarDesktop() {
+  const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+  localStorage.setItem('sgi_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+}
+
+// Inicializar el estado del sidebar en escritorio
+(function initSidebar() {
+  const isCollapsed = localStorage.getItem('sgi_sidebar_collapsed') === 'true';
+  if (isCollapsed) {
+    document.body.classList.add('sidebar-collapsed');
+  }
+})();
+
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 async function cargarDashboard() {
   // Los datos ya se cargan en cargarDatosBase(); esta función solo actualiza la vista
