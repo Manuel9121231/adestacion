@@ -41,7 +41,7 @@ body.dark-mode {
   --text-primary:  #ffffff;
   --text-secondary:#94a3b8;
   --text-muted:    #64748b;
-  --border:        rgba(255,255,255,0.08);
+  --border:        rgba(255,255,255,0.18);
   --border-accent: rgba(79,142,247,0.3);
   --shadow:        0 8px 24px rgba(0,0,0,0.4);
   --shadow-glow:   0 0 24px rgba(79,142,247,0.2);
@@ -331,7 +331,7 @@ a { color: var(--accent); text-decoration: none; }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-primary { background: var(--accent); color: white; }
 .btn-primary:hover:not(:disabled) { background: var(--accent-dark); box-shadow: var(--shadow-glow); }
-.btn-outline { background: transparent; border-color: rgba(30,41,59,0.28); color: var(--text-primary); }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
 .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 .btn-danger { background: var(--danger); color: white; }
 .btn-success { background: var(--success); color: white; }
