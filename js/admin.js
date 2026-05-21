@@ -7,20 +7,11 @@ let datosUsuarios = [];
 let datosHistorial = []; // Reutilizar datos ya cargados
 let isCargando = false;
 let cacheSeguimientosNotas = null; // Cache de notas por incidencia_id
-// Detectar base path (útil para GitHub Pages en subcarpetas)
-let serverHost = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+// Base URL para los códigos QR
+let serverHost = 'https://manuel9121231.github.io/adestacion';
 
 async function detectarServidor() {
-  try {
-    const res = await fetch('/api/info');
-    const json = await res.json();
-    if (json.ok && json.data.url) {
-      serverHost = json.data.url;
-      console.log("🔗 QR Host detectado:", serverHost);
-    }
-  } catch (e) {
-    console.warn("⚠️ No se pudo obtener IP local del servidor, usando origin actual.");
-  }
+  // serverHost fijado a GitHub Pages — no se sobreescribe
 }
 
 let rolActual = 'admin'; // Se actualiza al cargar la sesión
@@ -1321,7 +1312,13 @@ function renderQRs() {
     return;
   }
 
-  grid.innerHTML = lista.map(m => {
+  const subtitleEl = document.getElementById('subtitle-qrcodes');
+  if (subtitleEl) {
+    const salas = [...new Set(lista.map(m => m.sala_nombre).filter(Boolean))];
+    subtitleEl.textContent = `${lista.length} código${lista.length !== 1 ? 's' : ''} QR · ${salas.length} sala${salas.length !== 1 ? 's' : ''}`;
+  }
+
+  const cardsHtml = lista.map(m => {
     const estado = calcularEstadoUnificado(m);
     const estOp = (m.estado || 'activa').toLowerCase().trim();
     const isActiva = estOp !== 'inactiva';
@@ -1336,23 +1333,37 @@ function renderQRs() {
       : '';
 
     return `
-    <div class="maquina-card fade-in" style="cursor:pointer" onclick="verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">
-      <div class="maquina-header">
-        <div style="flex:1;min-width:0">
-          <div class="maquina-nombre">${m.nombre}</div>
-          <div class="maquina-tipo">${m.sala_nombre} · ${m.tipo}</div>
-          <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
-            <span style="font-size:10px;font-weight:600;color:${colorOp};background:${bgOp};border:1px solid ${colorOp}30;border-radius:6px;padding:2px 7px;white-space:nowrap">${textOp}</span>
-            ${incBadge}
-          </div>
+    <div class="maquina-card fade-in" style="cursor:pointer;display:flex;flex-direction:column;align-items:center" onclick="verQR('${m.id}', '${escapar(m.nombre)}', '${escapar(m.sala_nombre)}')">
+      <div id="qr-prev-${m.id}" style="width:150px;height:150px;margin:10px auto 4px;flex-shrink:0"></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:10px;letter-spacing:0.02em">Escanear · o clic para ampliar</div>
+      <div style="width:100%;padding-top:10px;border-top:1px solid var(--border)">
+        <div class="maquina-nombre">${m.nombre}</div>
+        <div class="maquina-tipo">${m.sala_nombre} · ${m.tipo}</div>
+        <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
+          <span style="font-size:10px;font-weight:600;color:${colorOp};background:${bgOp};border:1px solid ${colorOp}30;border-radius:6px;padding:2px 7px;white-space:nowrap">${textOp}</span>
+          ${incBadge}
         </div>
-      </div>
-      <div style="text-align:center;padding:8px 0;color:var(--text-muted);font-size:13px">
-        Haz clic para ver el código QR
       </div>
     </div>
     `;
   }).join('');
+
+  grid.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px">${cardsHtml}</div>`;
+
+  lista.forEach(m => {
+    const container = document.getElementById(`qr-prev-${m.id}`);
+    if (!container || typeof QRCode === 'undefined') return;
+    const targetUrl = `${serverHost}/operario.html?maquinaId=${m.id}`;
+    new QRCode(container, {
+      text: targetUrl,
+      width: 150,
+      height: 150,
+      colorDark: '#1a1a2e',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M,
+      quietZone: 6
+    });
+  });
 }
 
 function filtrarQRs() { renderQRs(); }
@@ -1401,35 +1412,51 @@ function imprimirTodosLosQRs() {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Imprimir todos los QRs</title>
+      <title>Códigos QR — Gestor de Máquinas</title>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
       <style>
-        body { font-family: sans-serif; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; justify-content: center; }
-        .qr-label { border: 1px solid #eee; padding: 15px; border-radius: 8px; text-align: center; width: 220px; page-break-inside: avoid; }
-        .qr-name { font-weight: bold; font-size: 16px; margin-bottom: 4px; }
-        .qr-sala { font-size: 12px; color: #666; margin-bottom: 10px; }
-        .qr-canvas { display: flex; justify-content: center; }
-        @media print { body { padding: 10px; } }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; color: #111; }
+        .print-header { text-align: center; padding: 20px 20px 14px; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+        .print-header h1 { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+        .print-header p { font-size: 11px; color: #6b7280; margin-top: 4px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 0 16px 20px; }
+        .qr-label { border: 1.5px solid #d1d5db; padding: 14px 12px 10px; border-radius: 10px; text-align: center; break-inside: avoid; page-break-inside: avoid; }
+        .qr-canvas { display: flex; justify-content: center; margin-bottom: 8px; }
+        .qr-canvas img, .qr-canvas canvas { max-width: 100% !important; height: auto !important; display: block; }
+        .qr-name { font-weight: 700; font-size: 13px; color: #1a1a2e; margin-bottom: 2px; }
+        .qr-sala { font-size: 10px; color: #6b7280; }
+        .qr-url { font-size: 7.5px; color: #9ca3af; word-break: break-all; margin-top: 6px; line-height: 1.4; }
+        @media print {
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .print-header { margin-bottom: 14px; }
+        }
       </style>
     </head>
     <body>
+      <div class="print-header">
+        <h1>Gestor de Máquinas — Códigos QR</h1>
+        <p>${lista.length} máquina${lista.length !== 1 ? 's' : ''} · Generado el ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+      </div>
+      <div class="grid">
       ${lista.map(m => `
         <div class="qr-label">
-          <div class="qr-name">${m.nombre}</div>
-          <div class="qr-sala">${m.sala_nombre}</div>
           <div class="qr-canvas" id="canvas-${m.id}"></div>
+          <div class="qr-name">${m.nombre}</div>
+          <div class="qr-sala">${m.sala_nombre || '—'}</div>
         </div>
       `).join('')}
+      </div>
       <script>
         window.onload = () => {
           const maquinas = ${JSON.stringify(lista)};
           maquinas.forEach(m => {
             new QRCode(document.getElementById('canvas-' + m.id), {
               text: "${baseOrigin}/operario.html?maquinaId=" + m.id,
-              width: 220,
-              height: 220,
-              correctLevel: QRCode.CorrectLevel.L,
-              quietZone: 12
+              width: 180,
+              height: 180,
+              correctLevel: QRCode.CorrectLevel.M,
+              quietZone: 8
             });
           });
           setTimeout(() => { window.print(); window.close(); }, 1200);

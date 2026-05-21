@@ -388,19 +388,22 @@ const DASHBOARD_HTML = `
           <div class="section-header">
             <div>
               <div class="section-title">Códigos QR</div>
-              <div class="section-subtitle">QR individuales para cada máquina — escanear con el móvil del usuario</div>
+              <div class="section-subtitle" id="subtitle-qrcodes">QR individuales para cada máquina</div>
             </div>
-            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
               <div style="position:relative;display:flex;align-items:center">
                 <svg style="position:absolute;left:10px;width:15px;height:15px;color:var(--text-muted);pointer-events:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="buscarQR" class="form-control"
-                  oninput="filtrarQRs()" style="width:180px;padding:8px 12px 8px 32px;font-size:13px">
+                <input type="text" id="buscarQR" class="form-control" placeholder="Buscar máquina..."
+                  oninput="filtrarQRs()" style="width:220px;padding:8px 12px 8px 32px;font-size:13px">
               </div>
               <select class="form-control" id="filtroSalaQR" onchange="filtrarQRs()"
                 style="width:160px;padding:8px 12px;font-size:13px">
                 <option value="">Todas las salas</option>
               </select>
-              <button class="btn btn-primary" onclick="imprimirTodosLosQRs()">Imprimir Todos los QRs</button>
+              <button class="btn btn-outline" onclick="imprimirTodosLosQRs()" style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Imprimir todos
+              </button>
             </div>
           </div>
 
