@@ -9,10 +9,10 @@ ALTER TABLE public.perfiles
 ALTER COLUMN activo SET DEFAULT false;
 
 -- Paso 2: Actualizar perfiles existentes pendientes de activación
--- (usuarios que tienen rol = null o activo = null)
+-- (SOLO usuarios que tienen rol = null - NO afectar a usuarios con rol)
 UPDATE public.perfiles 
 SET activo = false 
-WHERE rol IS NULL OR activo IS NULL;
+WHERE rol IS NULL;
 
 -- Paso 3: Verificar el cambio (opcional)
 SELECT id, email, nombre, rol, activo 
