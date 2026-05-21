@@ -402,7 +402,7 @@ async function renderIncidencias(filtro = 'todas') {
   // Actualizar label de filtro activo
   const filtroLabelEl = document.getElementById('filtro-incidencias-label');
   if (filtroLabelEl) {
-    const nombresFiltro = { 'todas': 'Todas', 'pendientes': 'Sin resolver', 'seguimiento': 'En seguimiento', 'resueltas': 'Resueltas' };
+    const nombresFiltro = { 'todas': 'Abiertas', 'pendientes': 'Sin resolver', 'seguimiento': 'En seguimiento', 'resueltas': 'Resueltas' };
     filtroLabelEl.textContent = 'Filtrado por: ' + nombresFiltro[filtro];
   }
 
@@ -462,7 +462,7 @@ async function renderIncidencias(filtro = 'todas') {
   if (filtro === 'todas') {
     mostrarCard(cardPendientes, true);
     mostrarCard(cardSeguimiento, true);
-    mostrarCard(cardResueltas, true);
+    mostrarCard(cardResueltas, false);
   } else if (filtro === 'pendientes') {
     mostrarCard(cardPendientes, true);
     mostrarCard(cardSeguimiento, false);

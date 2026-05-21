@@ -290,7 +290,7 @@ const DASHBOARD_HTML = `
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <div id="filtro-incidencias-label" style="font-size:12px;color:var(--text-muted);font-weight:500;white-space:nowrap"></div>
-              <button class="btn btn-outline btn-sm active" id="btn-inc-todas" onclick="renderIncidencias('todas')">Todas</button>
+              <button class="btn btn-outline btn-sm active" id="btn-inc-todas" onclick="renderIncidencias('todas')">Abiertas</button>
               <button class="btn btn-outline btn-sm" id="btn-inc-pendientes" onclick="renderIncidencias('pendientes')" style="border-color:var(--danger);color:var(--danger)">Sin resolver</button>
               <button class="btn btn-outline btn-sm" id="btn-inc-seguimiento" onclick="toggleSeguimiento()" style="border-color:var(--warning);color:var(--warning)">En seguimiento</button>
               <button class="btn btn-outline btn-sm" id="btn-inc-resueltas" onclick="renderIncidencias('resueltas')" style="border-color:var(--success);color:var(--success)" title="Ver incidencias resueltas">Resueltas</button>
