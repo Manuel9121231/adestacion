@@ -65,12 +65,7 @@ const DASHBOARD_HTML = `
         </div>
       </div>
 
-      <div class="sidebar-footer">
-        <div style="margin-bottom:8px"></div>
-        <button class="btn btn-primary btn-sm btn-full" onclick="window.location.href='index.html'" style="margin-bottom:8px;font-size:11px;padding:6px">Volver al Inicio</button>
-        <button class="btn btn-outline btn-sm btn-full" onclick="window.location.href='estado.html'" style="margin-bottom:8px;font-size:11px;padding:6px">Estado de Equipos</button>
-        <button class="btn btn-outline btn-sm btn-full" onclick="cerrarSesionAdmin()" style="font-size:11px;padding:6px">Cerrar Sesión</button>
-      </div>
+
     </aside>
     <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 
@@ -106,7 +101,15 @@ const DASHBOARD_HTML = `
                  <div class="account-dropdown-role" id="dropdownUserRole">Rol</div>
                  <div class="account-dropdown-email" id="dropdownUserEmail">correo@ejemplo.com</div>
                </div>
-               <button class="account-dropdown-item danger" onclick="cerrarSesionAdmin()">
+               <button class="account-dropdown-item" onclick="window.location.href='index.html'">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                 Volver al Inicio
+               </button>
+               <button class="account-dropdown-item" onclick="window.location.href='estado.html'">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                 Estado de Equipos
+               </button>
+               <button class="account-dropdown-item danger" style="border-top: 1px solid var(--border);" onclick="cerrarSesionAdmin()">
                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                  Cerrar sesión
                </button>
