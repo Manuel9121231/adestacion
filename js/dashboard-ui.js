@@ -205,7 +205,7 @@ const DASHBOARD_HTML = `
                     <tr>
                       <th>Máquina</th>
                       <th>Sala</th>
-                      <th>Operario</th>
+                      <th>Por</th>
                       <th>Reportado</th>
                       <th></th>
                     </tr>
@@ -642,7 +642,7 @@ const DASHBOARD_HTML = `
           <thead>
             <tr>
               <th>Fecha</th>
-              <th>Operario</th>
+              <th>Por</th>
               <th>Tipo</th>
               <th>Nota</th>
               <th></th>

@@ -1811,7 +1811,7 @@ async function verHistorialMaquina(nombreMaquina) {
 }
 
 function exportarCSV() {
-  const rows = [['ID', 'Máquina', 'Sala', 'Operario', 'Fecha', 'Observaciones']];
+  const rows = [['ID', 'Máquina', 'Sala', 'Por', 'Fecha', 'Observaciones']];
   const datos = incidenciasVisibles.length ? incidenciasVisibles : datosHistorial.filter(r => r.tipo === 'Incidencia');
   datos.forEach(r => rows.push([r.id, r.maquina, r.sala, r.operario, r.completado_en, r.observaciones || '']));
   const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
