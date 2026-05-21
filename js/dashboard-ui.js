@@ -328,7 +328,7 @@ const DASHBOARD_HTML = `
             </div>
             <div style="display:flex;gap:8px;align-items:center">
               <div style="position:relative;display:inline-block">
-                <button class="btn btn-outline btn-sm" id="btnRolesHelp" onclick="toggleRolesHelp()" style="font-weight:700;padding:6px 12px">Roles</button>
+                <button class="btn btn-outline btn-sm" id="btnRolesHelp" onclick="toggleRolesHelp()" style="font-weight:700;padding:6px 12px">Guía de roles</button>
                 <div id="rolesHelpPopover" style="display:none;position:absolute;right:0;top:calc(100% + 8px);z-index:200;width:300px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.15);padding:18px 20px;font-size:13px;line-height:1.6">
                   <div style="font-weight:700;margin-bottom:12px;font-size:14px">Roles del sistema</div>
                   <div style="margin-bottom:10px"><span style="background:rgba(239,68,68,0.1);color:#dc2626;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Usuario</span><br><span style="color:var(--text-secondary)">Solo puede registrar reportes desde el portal de reportes. Sin acceso al panel.</span></div>
@@ -336,7 +336,6 @@ const DASHBOARD_HTML = `
                   <div><span style="background:rgba(79,142,247,0.1);color:#3b82f6;border-radius:6px;padding:2px 8px;font-weight:600;font-size:12px">Administrador</span><br><span style="color:var(--text-secondary)">Acceso completo: crear/editar máquinas, gestionar usuarios y todas las secciones.</span></div>
                 </div>
               </div>
-              <button class="btn btn-outline btn-sm" onclick="renderUsuarios()">Actualizar</button>
             </div>
           </div>
 

@@ -1911,6 +1911,20 @@ async function renderUsuarios() {
       perfilesFiltrados = perfiles.filter(u => u.rol === filtroRolUsuarios);
     }
 
+    // Actualizar subtítulo con datos reales de la base de datos
+    const elUsr = document.getElementById('subtitle-usuarios');
+    if (elUsr) {
+      const total = perfiles.length;
+      const admins = perfiles.filter(u => u.rol === 'admin').length;
+      const tecnicos = perfiles.filter(u => u.rol === 'tecnico').length;
+      const pendientes = perfiles.filter(u => u.activo === false).length;
+      const partes = [`${total} usuario${total !== 1 ? 's' : ''}`];
+      if (admins > 0) partes.push(`${admins} admin${admins !== 1 ? 's' : ''}`);
+      if (tecnicos > 0) partes.push(`${tecnicos} técnico${tecnicos !== 1 ? 's' : ''}`);
+      if (pendientes > 0) partes.push(`${pendientes} pendiente${pendientes !== 1 ? 's' : ''} de alta`);
+      elUsr.textContent = partes.join(' · ');
+    }
+
     if (!perfilesFiltrados.length) {
       const mensaje = filtroRolUsuarios === 'pendientes'
         ? 'No hay usuarios pendientes de alta'
