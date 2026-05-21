@@ -890,6 +890,39 @@ function renderMaquinas() {
 
     const highlightStyle = isSelected ? 'border:2px solid var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,0.15)' : '';
 
+    // Logic to match estado.html exactly for the colored outlines and dot
+    let borderStyle = '';
+    let dotColor = '';
+    let dotShadow = '';
+
+    if (tieneIncidencia && estado.texto === 'EN SEGUIMIENTO') {
+      if (isActiva) {
+        borderStyle = 'border: 2px solid var(--success); box-shadow: 0 0 0 1px var(--success), 0 0 0 3px rgba(245, 158, 11, 0.3);';
+      } else {
+        borderStyle = 'border: 2px solid #f59e0b; box-shadow: var(--shadow-card);';
+      }
+      dotColor = '#f59e0b';
+      dotShadow = '0 0 8px #f59e0b';
+    } else if (tieneIncidencia && isActiva) {
+      borderStyle = 'border: 2px solid var(--success); box-shadow: 0 0 0 1px var(--success), 0 0 0 3px rgba(239, 68, 68, 0.3);';
+      dotColor = '#ef4444';
+      dotShadow = '0 0 8px #ef4444';
+    } else if (tieneIncidencia && !isActiva) {
+      borderStyle = 'border: 2px solid #ef4444; box-shadow: var(--shadow-card);';
+      dotColor = '#ef4444';
+      dotShadow = '0 0 8px #ef4444';
+    } else if (!isActiva) {
+      borderStyle = 'border: 1px solid #6b7280; opacity: 0.85; box-shadow: var(--shadow-card);';
+      dotColor = '#6b7280';
+      dotShadow = '0 0 6px #6b7280';
+    } else {
+      borderStyle = 'border: 2px solid var(--success); box-shadow: var(--shadow-card);';
+      dotColor = 'var(--success)';
+      dotShadow = '0 0 8px var(--success)';
+    }
+
+    const combinedBorderStyle = isSelected ? highlightStyle : borderStyle;
+
     const bgOp    = isActiva ? 'rgba(16,185,129,0.1)' : 'rgba(107,114,128,0.1)';
     const colorOp = isActiva ? '#10b981' : '#4b5563';
     const textOp  = isActiva ? 'ACTIVA' : 'INACTIVA';
@@ -898,27 +931,33 @@ function renderMaquinas() {
       ? `<span style="font-size:10px;font-weight:600;color:${estado.color};background:${estado.bg};border-radius:6px;padding:2px 7px;white-space:nowrap">${estado.texto}</span>`
       : '';
 
+    const dotHtml = `<div style="width:10px;height:10px;border-radius:50%;margin-top:6px;flex-shrink:0;background:${dotColor};box-shadow:${dotShadow};margin-right:10px;"></div>`;
+
     return `
       <div class="maquina-card fade-in"
            draggable="true"
            ondragstart="handleDragStart(event, '${m.id}')"
            onclick="verDetalleMaquina('${m.id}')"
-           style="cursor:grab;${highlightStyle}" title="${estado.descripcion}">
-        <div class="maquina-header">
-          <div style="flex:1;min-width:0">
-            <div class="maquina-nombre">${m.nombre}</div>
-            <div class="maquina-tipo">${m.tipo}</div>
+           style="cursor:grab;${combinedBorderStyle}" title="${estado.descripcion}">
+        <div class="maquina-header" style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+          <div style="display:flex;align-items:flex-start;flex:1;min-width:0">
+            ${dotHtml}
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+              <div class="maquina-nombre" style="font-weight:700;font-size:16px;color:var(--text-primary);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.nombre}</div>
+              <div class="maquina-tipo" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--text-muted);font-weight:500;">
+                <span>${m.tipo || ''}</span>
+                <span style="font-size:9px;font-weight:700;color:${colorOp};background:${bgOp};border:1px solid ${colorOp}30;border-radius:6px;padding:2px 7px;white-space:nowrap">${textOp}</span>
+              </div>
+            </div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;margin-left:8px">
-            <span style="font-size:10px;font-weight:600;color:${colorOp};background:${bgOp};border:1px solid ${colorOp}30;border-radius:6px;padding:2px 7px;white-space:nowrap">${textOp}</span>
-            ${incBadge}
-          </div>
+          <!-- inc badge handled separately below -->
         </div>
-        <div class="maquina-info">
-          <span style="font-size:11px;color:var(--accent)">${m.sala_nombre || 'Sin sala'}</span>
+        <div class="maquina-info" style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;display:flex;flex-direction:column;gap:2px;padding-left:20px;">
+          <span style="color:var(--accent);font-weight:600">${m.sala_nombre || 'Sin sala'}</span>
           <span>${m.modelo || 'Sin modelo'}</span>
         </div>
-        <div class="maquina-actions">
+        ${tieneIncidencia ? `<div style="padding-top:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;margin-bottom:12px;padding-left:20px;">${incBadge}</div>` : ''}
+        <div class="maquina-actions" style="display:flex;gap:8px;margin-top:auto;justify-content:space-between;align-items:flex-end">
           <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();verDetalleMaquina('${m.id}')">Ver</button>
           ${rolActual === 'admin' ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger)" onclick="event.stopPropagation();eliminarMaquina('${m.id}')">Eliminar</button>` : ''}
         </div>
@@ -942,12 +981,12 @@ function renderMaquinas() {
            ondragover="handleDragOver(event)"
            ondragleave="handleDragLeave(event)"
            ondrop="handleDrop(event, '${idSala}')"
-           style="margin-bottom:32px; padding:16px; border-radius:16px; border: 2px dashed transparent; background: ${color}">
-        <div class="espacio-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+           style="margin-bottom:40px; padding:20px; border-radius:16px; border: 1px solid var(--border); background: var(--bg-card); box-shadow: var(--shadow);">
+        <div class="espacio-header" style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border)">
           <span style="font-size:22px">${icono}</span>
           <div>
-            <div style="font-size:16px;font-weight:700;color:var(--text-primary)">${titulo}</div>
-            <div style="font-size:12px;color:var(--text-muted)">${(() => { const act = maquinas.filter(m => (m.estado||'activa').toLowerCase().trim() !== 'inactiva').length; const inact = maquinas.length - act; const p = [`${maquinas.length} máquina${maquinas.length!==1?'s':''}`]; if(act>0) p.push(`${act} activa${act!==1?'s':''}`); if(inact>0) p.push(`${inact} inactiva${inact!==1?'s':''}`); return p.join(' · '); })()}</div>
+            <div style="font-size:18px;font-weight:700;color:var(--text-primary);margin:0">${titulo}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">${(() => { const act = maquinas.filter(m => (m.estado||'activa').toLowerCase().trim() !== 'inactiva').length; const inact = maquinas.length - act; const p = [`${maquinas.length} máquina${maquinas.length!==1?'s':''}`]; if(act>0) p.push(`${act} activa${act!==1?'s':''}`); if(inact>0) p.push(`${inact} inactiva${inact!==1?'s':''}`); return p.join(' · '); })()}</div>
           </div>
         </div>
         ${gridHtml}

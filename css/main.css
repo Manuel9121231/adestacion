@@ -286,7 +286,6 @@ a { color: var(--accent); text-decoration: none; }
 
 .maquina-card {
   background: var(--bg-card);
-  border: 1px solid rgba(30,41,59,0.18);
   border-radius: var(--radius);
   padding: 20px;
   cursor: pointer;
