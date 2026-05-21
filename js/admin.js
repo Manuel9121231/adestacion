@@ -902,6 +902,7 @@ function renderMaquinas() {
       <div class="maquina-card fade-in"
            draggable="true"
            ondragstart="handleDragStart(event, '${m.id}')"
+           ondragend="handleDragEnd(event)"
            onclick="verDetalleMaquina('${m.id}')"
            style="cursor:grab;${highlightStyle}" title="${estado.descripcion}">
         <div class="maquina-header">
@@ -995,6 +996,10 @@ function handleDragStart(e, id) {
   e.currentTarget.style.opacity = '0.4';
 }
 
+function handleDragEnd(e) {
+  e.currentTarget.style.opacity = '1';
+}
+
 function handleDragOver(e) {
   e.preventDefault();
   e.currentTarget.style.borderColor = 'var(--accent)';
@@ -1013,6 +1018,24 @@ async function handleDrop(e, idSalaDestino) {
   e.currentTarget.style.background = '';
 
   if (!idMaquina) return;
+
+  const maquina = datosMaquinas.find(m => String(m.id) === idMaquina);
+  const salaDestino = datosSalas.find(s => String(s.id) === String(idSalaDestino));
+  const nombreMaquina = maquina?.nombre || 'Máquina';
+  const nombreSalaDestino = salaDestino?.nombre || (idSalaDestino ? 'Sin sala asignada' : 'Sin sala asignada');
+  const nombreSalaOrigen = maquina?.sala_nombre || 'Sin sala';
+
+  if (String(maquina?.sala_id) === String(idSalaDestino)) {
+    return; // Misma sala, no hacer nada
+  }
+
+  const confirmado = await customConfirm(
+    'Mover máquina',
+    `¿Quieres mover "${nombreMaquina}" de "${nombreSalaOrigen}" a "${nombreSalaDestino}"?`,
+    ''
+  );
+
+  if (!confirmado) return;
 
   try {
     const { error } = await window.supabaseClient
