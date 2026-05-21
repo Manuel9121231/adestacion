@@ -231,7 +231,12 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-maquinas">
           <div class="section-header">
             <div>
-              <div class="section-title">Máquinas y Salas</div>
+              <div class="section-title" style="display:flex;align-items:center;gap:8px">
+                Máquinas y Salas
+                <button class="btn btn-text btn-sm" onclick="toggleGuia('help-maquinas')" style="padding:2px" title="Mostrar guía">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </button>
+              </div>
               <div class="section-subtitle" id="subtitle-maquinas">Cargando...</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -254,6 +259,20 @@ const DASHBOARD_HTML = `
               <button class="btn btn-primary" onclick="abrirModalNuevaMaquina()" id="btnNuevaMaquina">+ Nueva máquina</button>
             </div>
           </div>
+          <div id="help-maquinas" class="table-wrap" style="display:none;margin-bottom:20px;background:rgba(79,142,247,0.05);border:1px solid rgba(79,142,247,0.2);border-radius:16px;padding:20px">
+            <div style="display:flex;align-items:flex-start;gap:12px">
+              <span style="font-size:24px"></span>
+              <div style="flex:1">
+                <div style="font-weight:700;margin-bottom:4px">¿Cómo gestionar máquinas y salas?</div>
+                <div style="font-size:13px;color:var(--text-muted);line-height:1.7">
+                  Empieza creando las <strong>salas</strong> del centro. Después, asigna cada máquina a su sala. Desde aquí puedes editar, eliminar o cambiar el estado operativo de cualquier equipo.<br><br>
+                  En cada tarjeta verás las incidencias abiertas de esa máquina en tiempo real.
+                </div>
+              </div>
+              <button class="btn btn-text btn-sm" onclick="toggleGuia('help-maquinas')" style="color:var(--text-muted);padding:2px 6px">✕</button>
+            </div>
+          </div>
+
           <div class="grid-maquinas" id="gridMaquinas"></div>
         </div>
 
@@ -261,7 +280,12 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-incidencias">
           <div class="section-header">
             <div>
-              <div class="section-title">Incidencias</div>
+              <div class="section-title" style="display:flex;align-items:center;gap:8px">
+                Incidencias
+                <button class="btn btn-text btn-sm" onclick="toggleGuia('help-incidencias')" style="padding:2px" title="Mostrar guía">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </button>
+              </div>
               <div class="section-subtitle" id="subtitle-incidencias">Cargando...</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -286,6 +310,21 @@ const DASHBOARD_HTML = `
                 <input type="date" id="filtroIncHasta" onchange="renderIncidencias(filtroIncActual || 'todas')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-primary)">
               </div>
               <button class="btn btn-outline btn-sm" onclick="exportarCSV()" title="Exporta solo las incidencias actualmente filtradas">Exportar CSV (filtrado)</button>
+            </div>
+          </div>
+
+          <div id="help-incidencias" class="table-wrap" style="display:none;margin-bottom:20px;background:rgba(79,142,247,0.05);border:1px solid rgba(79,142,247,0.2);border-radius:16px;padding:20px">
+            <div style="display:flex;align-items:flex-start;gap:12px">
+              <span style="font-size:24px"></span>
+              <div style="flex:1">
+                <div style="font-weight:700;margin-bottom:4px">¿Cómo funcionan las incidencias?</div>
+                <div style="font-size:13px;color:var(--text-muted);line-height:1.7">
+                  Un usuario reporta un problema escaneando el QR de una máquina. La incidencia aparece aquí como <strong style="color:var(--danger)">Sin resolver</strong>.<br><br>
+                  Cuando un técnico empieza a trabajar en ella, puede añadir notas de seguimiento y la incidencia pasa a <strong style="color:var(--warning)">En seguimiento</strong>. Una vez solucionada, se marca como <strong style="color:var(--success)">Resuelta</strong>.<br><br>
+                  Puedes filtrar por estado, por rango de fechas, ordenar como prefieras y exportar el resultado a CSV.
+                </div>
+              </div>
+              <button class="btn btn-text btn-sm" onclick="toggleGuia('help-incidencias')" style="color:var(--text-muted);padding:2px 6px">✕</button>
             </div>
           </div>
 
