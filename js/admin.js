@@ -1904,7 +1904,8 @@ async function renderUsuarios() {
         : '<span class="estado-badge" style="background:#f59e0b20;color:#f59e0b">Pendiente de alta</span>';
       const altaButton = activo
         ? `<button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="toggleAltaUsuario('${u.id}', false)" title="Dar de baja">Dar de baja</button>`
-        : `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success);padding:4px 8px" onclick="toggleAltaUsuario('${u.id}', true)" title="Dar de alta">Dar de alta</button>`;
+        : `<button class="btn btn-outline btn-sm" style="color:var(--success);border-color:var(--success);padding:4px 8px" onclick="toggleAltaUsuario('${u.id}', true)" title="Dar de alta">✓ Dar de alta</button>
+           <button class="btn btn-outline btn-sm" style="color:var(--danger);border-color:var(--danger);padding:4px 8px" onclick="eliminarUsuario('${u.id}')" title="Rechazar y eliminar">✕ Rechazar</button>`;
       return `
       <tr>
         <td data-label="Nombre">
