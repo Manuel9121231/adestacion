@@ -411,13 +411,10 @@ const DASHBOARD_HTML = `
             style="background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.3);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">
             <span style="font-size:20px"></span>
             <div>
-              <div style="font-weight:600;margin-bottom:4px">Instrucciones de uso</div>
+              <div style="font-weight:600;margin-bottom:4px">¿Cómo funciona?</div>
               <div style="font-size:13px;color:var(--text-secondary)">
-                1. Imprime o muestra en pantalla el QR de cada máquina.<br>
-                2. El usuario escanea el QR con la cámara del móvil.<br>
-                3. La impresora queda <strong>pre-seleccionada automáticamente</strong>.<br>
-                4. El usuario describe la incidencia y puede añadir fotos.<br>
-                5. El registro queda guardado en la base de datos del sistema.
+                Cada máquina tiene su propio código QR. Pégalo cerca de la máquina o tenlo a mano en pantalla.<br>
+                Cuando alguien tenga un problema, solo tiene que escanearlo con el móvil y la máquina quedará seleccionada automáticamente para la creación de una incidencia.
               </div>
             </div>
           </div>
