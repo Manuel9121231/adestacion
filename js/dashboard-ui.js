@@ -323,7 +323,12 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-usuarios">
           <div class="section-header">
             <div>
-              <div class="section-title">Usuarios del Sistema</div>
+              <div class="section-title" style="display:flex;align-items:center;gap:8px">
+                Usuarios del Sistema
+                <button class="btn btn-text btn-sm" onclick="toggleGuia('help-usuarios')" style="padding:2px" title="Mostrar guía">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </button>
+              </div>
               <div class="section-subtitle" id="subtitle-usuarios">Cargando...</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
@@ -339,16 +344,17 @@ const DASHBOARD_HTML = `
             </div>
           </div>
 
-          <div class="table-wrap" style="margin-bottom:24px;background:rgba(79,142,247,0.05);border:1px solid rgba(79,142,247,0.2);border-radius:16px;padding:20px">
+          <div id="help-usuarios" class="table-wrap" style="margin-bottom:20px;background:rgba(79,142,247,0.05);border:1px solid rgba(79,142,247,0.2);border-radius:16px;padding:20px">
             <div style="display:flex;align-items:flex-start;gap:12px">
               <span style="font-size:24px"></span>
-              <div>
-                <div style="font-weight:700;margin-bottom:6px">¿Cómo se gestiona el acceso?</div>
+              <div style="flex:1">
+                <div style="font-weight:700;margin-bottom:4px">¿Cómo se gestiona el acceso?</div>
                 <div style="font-size:13px;color:var(--text-muted);line-height:1.7">
                   Los usuarios se registran con su email y contraseña. Hasta que un administrador los apruebe, aparecen aquí como <strong>Pendientes de alta</strong>.<br><br>
                   Una vez aprobados, puedes asignarles un rol: <strong>Técnico</strong> para acceso al panel sin permisos de gestión, o <strong>Admin</strong> para acceso completo. Los usuarios sin rol especial solo pueden reportar incidencias desde el portal y consultar el estado de equipos.
                 </div>
               </div>
+              <button class="btn btn-text btn-sm" onclick="toggleGuia('help-usuarios')" style="color:var(--text-muted);padding:2px 6px">✕</button>
             </div>
           </div>
 
@@ -384,7 +390,12 @@ const DASHBOARD_HTML = `
         <div class="section fade-in" id="section-qrcodes">
           <div class="section-header">
             <div>
-              <div class="section-title">Códigos QR</div>
+              <div class="section-title" style="display:flex;align-items:center;gap:8px">
+                Códigos QR
+                <button class="btn btn-text btn-sm" onclick="toggleGuia('help-qrcodes')" style="padding:2px" title="Mostrar guía">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </button>
+              </div>
               <div class="section-subtitle" id="subtitle-qrcodes">QR individuales para cada máquina</div>
             </div>
             <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
@@ -404,15 +415,17 @@ const DASHBOARD_HTML = `
             </div>
           </div>
 
-          <div
-            style="background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.3);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start">
-            <span style="font-size:20px"></span>
-            <div>
-              <div style="font-weight:600;margin-bottom:4px">¿Cómo funciona?</div>
-              <div style="font-size:13px;color:var(--text-secondary)">
-                Cada máquina tiene su propio código QR. Pégalo cerca de la máquina o tenlo a mano en pantalla.<br>
-                Cuando alguien tenga un problema, solo tiene que escanearlo con el móvil y la máquina quedará seleccionada automáticamente para la creación de una incidencia.
+          <div id="help-qrcodes" class="table-wrap" style="margin-bottom:20px;background:rgba(79,142,247,0.05);border:1px solid rgba(79,142,247,0.2);border-radius:16px;padding:20px">
+            <div style="display:flex;align-items:flex-start;gap:12px">
+              <span style="font-size:24px"></span>
+              <div style="flex:1">
+                <div style="font-weight:700;margin-bottom:4px">¿Cómo funciona?</div>
+                <div style="font-size:13px;color:var(--text-muted);line-height:1.7">
+                  Cada máquina tiene su propio código QR. Pégalo cerca de la máquina o tenlo a mano en pantalla.<br>
+                  Cuando alguien tenga un problema, solo tiene que escanearlo con el móvil y la máquina quedará seleccionada automáticamente para la creación de una incidencia.
+                </div>
               </div>
+              <button class="btn btn-text btn-sm" onclick="toggleGuia('help-qrcodes')" style="color:var(--text-muted);padding:2px 6px">✕</button>
             </div>
           </div>
 

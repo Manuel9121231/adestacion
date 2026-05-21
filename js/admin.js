@@ -1859,6 +1859,11 @@ const ROL_BADGES = {
   usuario: { label: 'Usuario', cls: '' },
 };
 
+function toggleGuia(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
 function toggleRolesHelp() {
   const pop = document.getElementById('rolesHelpPopover');
   if (!pop) return;
