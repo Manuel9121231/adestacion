@@ -1168,7 +1168,38 @@ function asegurarElementosDOM() {
     window.location.href = 'index.html';
   }
 
+  function checkUserActivation() {
+    try {
+      const sessionStr = localStorage.getItem('sgi_user_session');
+      const adminSessionStr = localStorage.getItem('sgi_admin_session');
+
+      // Admins can always access
+      if (adminSessionStr) return true;
+
+      // No session - allow public access (estado is public)
+      if (!sessionStr) return true;
+
+      const session = JSON.parse(sessionStr);
+      // Check if user is active
+      const activo = session.activo === true;
+
+      if (!activo) {
+        // Redirect to index where they'll see the "pendiente de alta" screen
+        window.location.href = 'index.html';
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Error checking user activation:', err);
+      return true; // Allow access on error to avoid breaking the app
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    // Check if user is active before loading content
+    if (!checkUserActivation()) return;
+
     // Pequeño retraso para asegurar que todos los elementos del DOM estén disponibles
     setTimeout(() => {
       loadStatus();
