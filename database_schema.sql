@@ -36,7 +36,7 @@ CREATE TABLE public.perfiles (
   email text NOT NULL,
   nombre text,
   rol text DEFAULT 'usuario'::text,
-  activo boolean DEFAULT true,
+  activo boolean DEFAULT false,
   creado_en timestamp with time zone DEFAULT now(),
   CONSTRAINT perfiles_pkey PRIMARY KEY (id),
   CONSTRAINT perfiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
